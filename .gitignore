@@ -1,2 +1,2 @@
-arm-gcc/*
-components/*
+components/
+gcc-arm-none-eabi/
