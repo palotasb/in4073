@@ -42,6 +42,7 @@ void timers_init(void);
 uint32_t get_time_us(void);
 bool check_timer_flag(void);
 void clear_timer_flag(void);
+void set_timer_handler(void (*handler)(void));
 
 // GPIO
 void gpio_init(void);
@@ -73,6 +74,7 @@ void uart_put(uint8_t);
 void twi_init(void);
 bool i2c_write(uint8_t slave_addr, uint8_t reg_addr, uint8_t length, uint8_t const *data);
 bool i2c_read(uint8_t slave_addr, uint8_t reg_addr, uint8_t length, uint8_t *data);
+
 
 // MPU wrapper
 int16_t phi, theta, psi;

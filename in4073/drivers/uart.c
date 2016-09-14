@@ -9,6 +9,7 @@
  */
 
 #include "in4073.h"
+#include "interrupt_prio.h"
 
 bool txd_available = true;
 
@@ -81,6 +82,6 @@ void uart_init(void)
                           	(UART_INTENSET_ERROR_Set << UART_INTENSET_ERROR_Pos);
 
 	NVIC_ClearPendingIRQ(UART0_IRQn);
-	NVIC_SetPriority(UART0_IRQn, 3); // either 1 or 3, 3 being low. (sd present)
+	NVIC_SetPriority(UART0_IRQn, UART0_INT_PRIO); // either 1 or 3, 3 being low. (sd present)
 	NVIC_EnableIRQ(UART0_IRQn);
 }

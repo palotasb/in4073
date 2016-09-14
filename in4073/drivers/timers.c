@@ -10,14 +10,17 @@
  */
 
 #include "in4073.h"
+#include "interrupt_prio.h"
  
 static bool TIMER2_flag;
 static uint32_t global_time;
+static void (*timer_handler)(void);
 
 void timers_init(void)
 {
 	global_time = 0;
 	TIMER2_flag = false;
+	timer_handler = NULL;
 
 	NRF_TIMER2->PRESCALER 	= 0x4UL; // 1us 
 	NRF_TIMER2->INTENSET	= TIMER_INTENSET_COMPARE0_Msk | TIMER_INTENSET_COMPARE1_Msk | TIMER_INTENSET_COMPARE2_Msk;
@@ -36,13 +39,17 @@ void timers_init(void)
 
 	NRF_TIMER2->TASKS_START	= 1;
 	NRF_TIMER1->TASKS_START	= 1;
+
+	NVIC_ClearPendingIRQ(SWI0_IRQn);
+	NVIC_SetPriority(SWI0_IRQn, SWI0_INT_PRIO);
 	
 	NVIC_ClearPendingIRQ(TIMER2_IRQn);
-	NVIC_SetPriority(TIMER2_IRQn, 3);
+	NVIC_SetPriority(TIMER2_IRQn, TIMER2_INT_PRIO);
 	NVIC_ClearPendingIRQ(TIMER1_IRQn);
-	NVIC_SetPriority(TIMER1_IRQn, 3);
+	NVIC_SetPriority(TIMER1_IRQn, TIMER1_INT_PRIO);
 	NVIC_EnableIRQ(TIMER2_IRQn);
 	NVIC_EnableIRQ(TIMER1_IRQn);
+	NVIC_EnableIRQ(SWI0_IRQn);
 }
 
 
@@ -60,6 +67,7 @@ void TIMER2_IRQHandler(void)
     	{
 		NRF_TIMER2->CC[1] += TIMER_PERIOD;
 		TIMER2_flag = true;
+		NVIC_SetPendingIRQ(SWI0_IRQn);	//issue software interrupt
 		NRF_TIMER2->EVENTS_COMPARE[1] = 0;
     	}
 
@@ -96,6 +104,18 @@ void TIMER1_IRQHandler(void)
 		nrf_gpio_pin_clear(MOTOR_3_PIN);
 		NRF_TIMER1->EVENTS_COMPARE[3] = 0;
     	}
+}
+
+
+void SWI0_IRQHandler(void) {
+	if(timer_handler != NULL)
+		timer_handler();
+}
+
+void set_timer_handler(void (*handler)(void)){
+	NVIC_DisableIRQ(SWI0_IRQn);
+	timer_handler = handler;
+	NVIC_EnableIRQ(SWI0_IRQn);
 }
 
 

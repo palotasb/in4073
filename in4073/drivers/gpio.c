@@ -9,6 +9,7 @@
  */
 
 #include "in4073.h"
+#include "interrupt_prio.h"
 
 static bool sensor_int_flag = false;
 
@@ -20,7 +21,7 @@ void gpio_init(void)
 
 	NRF_GPIOTE->INTENSET = GPIOTE_INTENSET_IN0_Msk;
 	NVIC_ClearPendingIRQ(GPIOTE_IRQn);
-	NVIC_SetPriority(GPIOTE_IRQn, 3); // either 1 or 3, 3 being low. (sd present)
+	NVIC_SetPriority(GPIOTE_IRQn, GPIOTE_INT_PRIO); // either 1 or 3, 3 being low. (sd present)
 
 	//motors
 	nrf_gpio_cfg_output(MOTOR_0_PIN);

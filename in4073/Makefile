@@ -55,7 +55,7 @@ $(abspath ./invensense/inv_mpu_dmp_motion_driver.c) \
 $(abspath ./invensense/ml.c) \
 $(abspath ./invensense/mpu_wrapper.c) \
 $(abspath ../components/libraries/util/app_error.c) \
-$(abspath ../components/libraries/timer/app_timer.c) \
+# $(abspath ../components/libraries/timer/app_timer.c) \
 $(abspath ../components/libraries/util/nrf_assert.c) \
 $(abspath ../components/drivers_nrf/common/nrf_drv_common.c) \
 $(abspath ../components/drivers_nrf/pstorage/pstorage.c) \

@@ -11,6 +11,7 @@
  */
 
 #include "in4073.h"
+#include "interrupt_prio.h"
 
 static volatile bool sent = false;
 static volatile bool read = false;
@@ -133,6 +134,6 @@ void twi_init(void)
 	NRF_TWI0->ENABLE          = TWI_ENABLE_ENABLE_Enabled;
 
 	NVIC_ClearPendingIRQ(SPI0_TWI0_IRQn);
-	NVIC_SetPriority(SPI0_TWI0_IRQn, 3);
+	NVIC_SetPriority(SPI0_TWI0_IRQn, SPI0_TWI0_INT_PRIO);
 	NVIC_EnableIRQ(SPI0_TWI0_IRQn);
 }

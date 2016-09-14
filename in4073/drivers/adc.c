@@ -10,6 +10,7 @@
  */
 
 #include "in4073.h"
+#include "interrupt_prio.h"
 
 //#define BATTERY_VOLTAGE 4 //these are AIN, not ports p0.01 = ain2
 //#define BATTERY_AMPERAGE 2
@@ -36,7 +37,7 @@ void adc_init(void)
 
 	/* Enable interrupt on ADC sample ready event*/     
    	NRF_ADC->INTENSET = ADC_INTENSET_END_Msk;   
-    	NVIC_SetPriority(ADC_IRQn, 3);  
+    	NVIC_SetPriority(ADC_IRQn, ADC_INT_PRIO);  
     	NVIC_EnableIRQ(ADC_IRQn);
 }
 
