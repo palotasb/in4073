@@ -11,6 +11,8 @@
 #ifndef IN4073_H__
 #define IN4073_H__
 
+#define QUADCOPTER  1
+
 #include <inttypes.h>
 #include <stdio.h>
 #include "nrf_gpio.h"
@@ -18,6 +20,8 @@
 #include "inv_mpu.h"
 #include "inv_mpu_dmp_motion_driver.h"
 #include "ml.h"
+#include "serialcomm.h"
+#include "modes.h"
 
 #define RED				22
 #define YELLOW				24
@@ -64,6 +68,7 @@ char dequeue(queue *q);
 #define TX_PIN_NUMBER  14
 queue rx_queue;
 queue tx_queue;
+queue text_queue;
 void uart_init(void);
 void uart_put(uint8_t);
 

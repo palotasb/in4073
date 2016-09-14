@@ -1,216 +1,175 @@
 /*------------------------------------------------------------
- * Simple pc terminal in C
- * 
- * Arjan J.C. van Gemund (+ mods by Ioannis Protonotarios)
- *
- * read more: http://mirror.datenwolf.net/serial/
- *------------------------------------------------------------
- */
+* Simple pc terminal in C
+*
+* Sujay Narayana
+* Embedded Software Group
+*
+* 11-09-2016
+*------------------------------------------------------------
+*/
+
+#define PC_TERMINAL	1
 
 #include <stdio.h>
-#include <termios.h>
-#include <unistd.h>
-#include <string.h>
-#include <inttypes.h>
+#include <conio.h>
+#include <windows.h>
+#include <limits.h>
+#include "../common.h"
+
+HANDLE hSerial;
+void pc_rx_complete(message_t*);
+void pc_tx_byte(uint8_t);
+serialcomm_t sc;
+frame_t rx_frame;
+
+char term_getchar()
+{
+	if (_kbhit())
+	{
+		return _getch();
+	}
+
+	return -1;
+}
+
 
 /*------------------------------------------------------------
- * console I/O
- *------------------------------------------------------------
- */
-struct termios 	savetty;
+* Serial I/O
+* 8 bits, 1 stopbit, no parity,
+* 115,200 baud
+*------------------------------------------------------------
+*/
 
-void	term_initio()
+void rs232_open()
 {
-	struct termios tty;
 
-	tcgetattr(0, &savetty);
-	tcgetattr(0, &tty);
+	DCB dcbSerialParams = { 0 };
+	
+	//Open Serial port in blocking mode
+	hSerial = CreateFile(
+		"\\\\.\\COM3", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
-	tty.c_lflag &= ~(ECHO|ECHONL|ICANON|IEXTEN);
-	tty.c_cc[VTIME] = 0;
-	tty.c_cc[VMIN] = 0;
+	if (hSerial == INVALID_HANDLE_VALUE)
+	{
+		printf("\r\nCOM port cannot be opened\r\n");
+		exit(1);
+	}
 
-	tcsetattr(0, TCSADRAIN, &tty);
+	PurgeComm(hSerial, PURGE_TXABORT | PURGE_TXCLEAR | PURGE_RXABORT | PURGE_RXCLEAR);
+	dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
+	if (GetCommState(hSerial, &dcbSerialParams) == 0)
+	{
+		printf("\r\nError reading COM properties\r\n");
+		CloseHandle(hSerial);
+		exit(1);
+	}
+
+	dcbSerialParams.BaudRate = CBR_115200;
+	dcbSerialParams.ByteSize = 8;
+	dcbSerialParams.StopBits = ONESTOPBIT;
+	dcbSerialParams.Parity = NOPARITY;
+	if (SetCommState(hSerial, &dcbSerialParams) == 0)
+	{
+		printf("\r\nError setting COM properties\r\n");
+		CloseHandle(hSerial);
+		exit(1);
+	}
 }
-
-void	term_exitio()
-{
-	tcsetattr(0, TCSADRAIN, &savetty);
-}
-
-void	term_puts(char *s) 
-{ 
-	fprintf(stderr,"%s",s); 
-}
-
-void	term_putchar(char c) 
-{ 
-	putc(c,stderr); 
-}
-
-int	term_getchar_nb() 
-{ 
-        static unsigned char 	line [2];
-
-        if (read(0,line,1)) // note: destructive read
-        		return (int) line[0];
-        
-        return -1;
-}
-
-int	term_getchar() 
-{ 
-        int    c;
-
-        while ((c = term_getchar_nb()) == -1)
-                ;
-        return c;
-}
-
-/*------------------------------------------------------------
- * Serial I/O 
- * 8 bits, 1 stopbit, no parity, 
- * 115,200 baud
- *------------------------------------------------------------
- */
-#include <termios.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <assert.h>
-#include <time.h>
-
-int serial_device = 0;
-int fd_RS232;
-
-void rs232_open(void)
-{
-  	char 		*name;
-  	int 		result;  
-  	struct termios	tty;
-
-       	fd_RS232 = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY);  // Hardcode your serial port here, or request it as an argument at runtime
-
-	assert(fd_RS232>=0);
-
-  	result = isatty(fd_RS232);
-  	assert(result == 1);
-
-  	name = ttyname(fd_RS232);
-  	assert(name != 0);
-
-  	result = tcgetattr(fd_RS232, &tty);	
-	assert(result == 0);
-
-	tty.c_iflag = IGNBRK; /* ignore break condition */
-	tty.c_oflag = 0;
-	tty.c_lflag = 0;
-
-	tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8; /* 8 bits-per-character */
-	tty.c_cflag |= CLOCAL | CREAD; /* Ignore model status + read input */		
-
-	cfsetospeed(&tty, B115200); 
-	cfsetispeed(&tty, B115200); 
-
-	tty.c_cc[VMIN]  = 0;
-	tty.c_cc[VTIME] = 1; // added timeout
-
-	tty.c_iflag &= ~(IXON|IXOFF|IXANY);
-
-	result = tcsetattr (fd_RS232, TCSANOW, &tty); /* non-canonical */
-
-	tcflush(fd_RS232, TCIOFLUSH); /* flush I/O buffer */
-}
-
 
 void 	rs232_close(void)
 {
-  	int 	result;
-
-  	result = close(fd_RS232);
-  	assert (result==0);
+	CloseHandle(hSerial);
 }
 
 
-int	rs232_getchar_nb()
+int rs232_getchar()
 {
-	int 		result;
-	unsigned char 	c;
-
-	result = read(fd_RS232, &c, 1);
-
-	if (result == 0) 
-		return -1;
-	
-	else 
+	unsigned char data[1];
+	DWORD bytes_read;
+	while (!ReadFile(hSerial, data, 1, &bytes_read, NULL))
 	{
-		assert(result == 1);   
-		return (int) c;
+	}
+	if (bytes_read != 1)
+		return -1;
+	return data[0];
+}
+
+void rs232_putchar(char c)
+{
+	char data[1];
+	DWORD bytes_written = 0;
+
+	data[0] = c;
+	if (!WriteFile(hSerial, data, 1, &bytes_written, NULL))
+	{
+		printf("\r\nError writing data to COM port\r\n");
 	}
 }
 
-
-int 	rs232_getchar()
+int main()
 {
-	int 	c;
-
-	while ((c = rs232_getchar_nb()) == -1) 
-		;
-	return c;
-}
-
-
-int 	rs232_putchar(char c)
-{ 
-	int result;
-
-	do {
-		result = (int) write(fd_RS232, &c, 1);
-	} while (result == 0);   
-
-	assert(result == 1);
-	return result;
-}
-
-
-/*----------------------------------------------------------------
- * main -- execute terminal
- *----------------------------------------------------------------
- */
-int main(int argc, char **argv)
-{
-	char	c;
-	
-	term_puts("\nTerminal program - Embedded Real-Time Systems\n");
-
-	term_initio();
+	int c;
+	printf("\r\nTerminal program - Embedded Real-Time Systems\r\n");
 	rs232_open();
 
-	term_puts("Type ^C to exit\n");
+    serialcomm_init(&sc);
+    sc.rx_frame = &rx_frame;
+    sc.rx_complete_callback = &pc_rx_complete;
+    sc.tx_byte = (void (*)(unsigned char)) &rs232_putchar;
+    serialcomm_send_start(&sc);
+    serialcomm_send_restart_request(&sc);
 
-	/* discard any incoming text
-	 */
-	while ((c = rs232_getchar_nb()) != -1)
-		fputc(c,stderr);
-	
-	/* send & receive
-	 */
-	for (;;) 
+	for (;;)
 	{
-		if ((c = term_getchar_nb()) != -1) 
-			rs232_putchar(c);
-		
-		if ((c = rs232_getchar_nb()) != -1) 
-			term_putchar(c);
+		if ((c = term_getchar()) != -1) {
+			serialcomm_quick_send(&sc, MESSAGE_SET_KEYCODE_ID, c, 0);
+		}
 
+		//rs232_getchar() is blocking. It is also possible to set serial rx to non-blocking mode by changing the flags in CreateFile
+		while ((c = rs232_getchar()) != -1) {
+			serialcomm_receive_char(&sc, (unsigned char) c);
+			// printf("%3u = 0x%02hx %c\n", (unsigned char) c, (unsigned char) c, ('A' <= c && c <= 'Z') ? c : ' ');
+		}
+	
 	}
 
-	term_exitio();
 	rs232_close();
-	term_puts("\n<exit>\n");
-  	
-	return 0;
+	printf("\r\n<exit>\r\n");
 }
 
-
+void pc_rx_complete(message_t* message) {
+    switch (message->ID) {
+        case MESSAGE_TIME_MODE_VOLTAGE_ID:
+            printf("T%10u M%2d V%5d | ",
+            	MESSAGE_TIME_VALUE(message),
+            	MESSAGE_MODE_VALUE(message),
+            	MESSAGE_VOLTAGE_VALUE(message));
+            break;
+        case MESSAGE_SPQR_ID:
+        	printf("P%6d Q%6d R%6d | ",
+        		MESSAGE_SP_VALUE(message),
+        		MESSAGE_SQ_VALUE(message),
+        		MESSAGE_SR_VALUE(message));
+        	break;
+        case MESSAGE_AE1234_ID:
+        	printf("A %3d %3d %3d %3d | ",
+        		MESSAGE_AE1_VALUE(message),
+        		MESSAGE_AE2_VALUE(message),
+        		MESSAGE_AE3_VALUE(message),
+        		MESSAGE_AE4_VALUE(message));
+        	break;
+        case MESSAGE_TEMP_PRESSURE_ID:
+        	printf("T%4d P%6d\n",
+        		MESSAGE_TEMP_VALUE(message), MESSAGE_PRESSURE_VALUE(message));
+        	break;
+        case MESSAGE_PHI_THETA_PSI_ID:
+        	printf("P%6d T%6d P%6d | ",
+        		MESSAGE_PHI_VALUE(message),
+        		MESSAGE_THETA_VALUE(message),
+        		MESSAGE_PSI_VALUE(message));
+        	break;
+        default:
+        	break;
+    }
+}

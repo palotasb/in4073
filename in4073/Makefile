@@ -40,6 +40,7 @@ C_SOURCE_FILES += \
 $(abspath ../components/toolchain/system_nrf51.c) \
 $(abspath ../components/drivers_nrf/delay/nrf_delay.c) \
 $(abspath ./in4073.c) \
+$(abspath ./serialcomm.c) \
 $(abspath ./control.c) \
 $(abspath ./drivers/gpio.c) \
 $(abspath ./drivers/timers.c) \
@@ -218,15 +219,18 @@ clean:
 cleanobj:
 	$(RM) $(BUILD_DIRECTORIES)/*.o
 
-upload: default
-	dfu_serial/./serial_dfu.py  _build/in4073.bin
+upload:
+	python dfu_serial/./serial_dfu.py -p COM3 _build/in4073.bin
 
 pc: 
-	cd pc_terminal/; make
+	cd pc_terminal
+	make
 
 pc-run: 
-	cd pc_terminal/; make run
+	cd pc_terminal
+	make run
 	
 upload-run: default pc
-	dfu_serial/./serial_dfu.py  _build/in4073.bin
-	cd pc_terminal/; make run
+	python dfu_serial/./serial_dfu.py -p COM3 _build/in4073.bin
+	cd pc_terminal
+	make run
