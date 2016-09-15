@@ -260,8 +260,18 @@ typedef struct frame {
     uint8_t     checksum;
 } frame_t;
 
+// The size of a frame in bytes
 #define FRAME_SIZE (MESSAGE_SIZE + 1)
 
+/*------------------------------------------------------------------
+ * serialcomm_status_t -- The status of the serial communication
+ * channel
+ *------------------------------------------------------------------
+ * Fields:
+ *  - message_buffer: The message within the frame
+ *  - checksum: the checksum of the message
+ * Author: Boldizsar Palotas
+ */
 typedef enum serialcomm_status {
     SERIALCOMM_STATUS_Prestart = 0,
     SERIALCOMM_STATUS_Start,
@@ -294,8 +304,6 @@ typedef struct serialcomm {
 void serialcomm_init(serialcomm_t* sc);
 
 void serialcomm_receive_char(serialcomm_t* sc, uint8_t c);
-
-void serialcomm_rx_reset(serialcomm_t* sc);
 
 void serialcomm_send(serialcomm_t* sc);
 
