@@ -10,7 +10,7 @@
 
 // The handle of the FILE that is associated with the RS232 serial line.
 #ifndef PC_SERIAL_HANDLE
-#define PC_SERIAL_HANDLE  "/dev/tty1"
+#define PC_SERIAL_HANDLE  "/dev/ttyUSB0"
 // on mac it might be "/dev/tty.usbserial-DN00P2T1"
 // on windows it might be "\\\\.\\COM3"
 #endif
