@@ -47,8 +47,8 @@ typedef struct message {
  * MESSAGE_XYZ_VALUE -- Reference to the element XYZ in the message
  *------------------------------------------------------------------
  * Parameters:
- *  - message_qc2pc_t * message: pointer to the message containing the
- *    data
+ *  - message_qc2pc_t* message: pointer to the message containing
+ *    the data
  * Author:
  *  - Boldizsar Palotas
  */
@@ -178,7 +178,7 @@ typedef struct message {
 // MESSAGE 10
 #define MESSAGE_PQR_ID                  10
 
-#define MESSAGE_P_ID                        MESSAGE_PQR_ID
+#define MESSAGE_P_ID                    MESSAGE_PQR_ID
 #define MESSAGE_P_VALUE(message)        ((message)->value.v16[0])
 
 #define MESSAGE_Q_ID                    MESSAGE_PQR_ID
@@ -206,36 +206,36 @@ typedef struct message {
 // MESSAGE 0
 #define MESSAGE_SET_MODE_ID             0
 
-#define MESSAGE_SET_MODE_VALUE(message)          ((message)->value.v8[0])
+#define MESSAGE_SET_MODE_VALUE(message) ((message)->value.v8[0])
 
 // MESSAGE 1
 #define MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID   1
 
 #define MESSAGE_SET_LIFT_ID             MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID
-#define MESSAGE_SET_LIFT_VALUE(message)          ((message)->value.v16[0])
+#define MESSAGE_SET_LIFT_VALUE(message) ((message)->value.v16[0])
 
 #define MESSAGE_SET_ROLL_ID             MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID
-#define MESSAGE_SET_ROLL_VALUE(message)          ((message)->value.v16[1])
+#define MESSAGE_SET_ROLL_VALUE(message) ((message)->value.v16[1])
 
 #define MESSAGE_SET_PITCH_ID            MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID
-#define MESSAGE_SET_PITCH_VALUE(message)         ((message)->value.v16[2])
+#define MESSAGE_SET_PITCH_VALUE(message)    ((message)->value.v16[2])
 
 #define MESSAGE_SET_YAW_ID              MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID
-#define MESSAGE_SET_YAW_VALUE(message)           ((message)->value.v16[3])
+#define MESSAGE_SET_YAW_VALUE(message)  ((message)->value.v16[3])
 
 // MESSAGE 2
 #define MESSAGE_SET_P12_ID              2
 
 #define MESSAGE_SET_P1_ID               MESSAGE_SET_P12_ID
-#define MESSAGE_SET_P1_VALUE(message)            ((message)->value.v16[0])
+#define MESSAGE_SET_P1_VALUE(message)   ((message)->value.v16[0])
 
 #define MESSAGE_SET_P2_ID               MESSAGE_SET_P12_ID
-#define MESSAGE_SET_P2_VALUE(message)            ((message)->value.v16[1])
+#define MESSAGE_SET_P2_VALUE(message)   ((message)->value.v16[1])
 
 // MESSAGE 3
 #define MESSAGE_SET_KEYCODE_ID          3
 
-#define MESSAGE_SET_KEYCODE_VALUE(message)       ((message)->value.v8[0])
+#define MESSAGE_SET_KEYCODE_VALUE(message)  ((message)->value.v8[0])
 
 // Special frames
 

@@ -132,6 +132,11 @@ ASMFLAGS += -DS110
 ASMFLAGS += -DBLE_STACK_SUPPORT_REQD
 #default target - first one defined
 
+DFUFLAGS = 
+ifneq ($(wildcard local.makefile),) 
+include local.makefile
+endif
+
 default: clean in4073
 
 #building all targets
@@ -219,18 +224,15 @@ clean:
 cleanobj:
 	$(RM) $(BUILD_DIRECTORIES)/*.o
 
-upload:
-	python dfu_serial/./serial_dfu.py -p COM3 _build/in4073.bin
+upload: default
+	python dfu_serial/./serial_dfu.py $(DFUFLAGS)  _build/in4073.bin
 
 pc: 
-	cd pc_terminal
-	make
+	cd pc_terminal/; make
 
 pc-run: 
-	cd pc_terminal
-	make run
+	cd pc_terminal/; make run
 	
 upload-run: default pc
-	python dfu_serial/./serial_dfu.py -p COM3 _build/in4073.bin
-	cd pc_terminal
-	make run
+	python dfu_serial/./serial_dfu.py $(DFUFLAGS) _build/in4073.bin
+	cd pc_terminal/; make run
