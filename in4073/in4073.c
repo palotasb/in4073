@@ -14,7 +14,7 @@
  */
 
 #include "in4073.h"
-
+#include "log.h"
 /*------------------------------------------------------------------
  * process_key -- process command keys
  *------------------------------------------------------------------
@@ -72,7 +72,8 @@ int main(void)
 	twi_init();
 	imu_init(true, 100);	
 	baro_init();
-	spi_flash_init();
+//	spi_flash_init();
+	log_init();
 //	ble_init();
 
 	uint32_t counter = 0;

@@ -499,7 +499,7 @@ bool flash_write_byte(uint32_t address, uint8_t data)
  * @retval true if operation is successful.
  * @retval false if operation is failed.
  */
-bool flash_write_bytes(uint32_t address, uint8_t *data, uint32_t count)
+bool flash_write_bytes(uint32_t address, uint8_t *data, uint32_t count)	
 {
 	if(!flash_write_enable())
 	{
