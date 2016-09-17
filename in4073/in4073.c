@@ -90,6 +90,7 @@ int main(void)
 
     uint32_t counter = 0;
     demo_done = false;
+	 unsigned char c;
 
     while (!demo_done)
     {   
@@ -103,14 +104,19 @@ int main(void)
         switch (sc.status) {
             case SERIALCOMM_STATUS_OK:
                 nrf_gpio_pin_clear(GREEN);
+					 c = 'O';
                 break;
             case SERIALCOMM_STATUS_Prestart:
                 nrf_gpio_pin_clear(RED);
+					 c = 'P';
                 break;
             case SERIALCOMM_STATUS_Start:
                 nrf_gpio_pin_clear(YELLOW);
+					 c = 'S';
                 break;
-            default: break;
+            default: 
+					c = 'D';
+					break;
         }
 
         if (check_timer_flag()) 
@@ -163,9 +169,9 @@ int main(void)
             serialcomm_send(&sc);
 
             message->ID                     = MESSAGE_TEXT_ID;
-            message->value.v8[0]            = 'E';
-            message->value.v8[1]            = 'N';
-            message->value.v8[2]            = 'D';
+            message->value.v8[0]            = c;
+            message->value.v8[1]            = ' ';
+            message->value.v8[2]            = ' ';
             message->value.v8[3]            = ' ';
             message->value.v8[4]            = 'M';
             message->value.v8[5]            = 'S';

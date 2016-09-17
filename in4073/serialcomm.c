@@ -206,8 +206,9 @@ void serialcomm_quick_send(serialcomm_t* sc, uint8_t id, uint32_t value_a, uint3
  *  function in the Prestart and Start branches.
  */
 uint8_t frame_checksum(frame_t* frame) {
+	 int i;
     uint8_t chkbuf = frame->message.ID;
-    for (int i = 0; i < MESSAGE_VALUE_SIZE; i++) {
+    for (i = 0; i < MESSAGE_VALUE_SIZE; i++) {
         chkbuf ^= frame->message.value.v8[i];
     }
     return chkbuf;
@@ -222,11 +223,12 @@ uint8_t frame_checksum(frame_t* frame) {
  *  Author: Boldizsar Palotas
  */
 void serialcomm_send(serialcomm_t* sc) {
+	int tx_ptr;
     if (sc->tx_byte == 0)
         return;
     sc->tx_byte(sc->tx_frame->message.ID);
     DEBUG_PRINT("< SEND %3u = 0x%02hx ID\n", sc->tx_frame->message.ID, sc->tx_frame->message.ID);
-    for (int tx_ptr = 0; tx_ptr < MESSAGE_VALUE_SIZE; tx_ptr++) {
+    for (tx_ptr = 0; tx_ptr < MESSAGE_VALUE_SIZE; tx_ptr++) {
         uint8_t c = sc->tx_frame->message.value.v8[tx_ptr];
         sc->tx_byte(c);
         DEBUG_PRINT("< SEND %3u = 0x%02hx #%d\n", c, c, tx_ptr);

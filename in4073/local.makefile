@@ -1,2 +1,0 @@
-
-DFUFLAGS += -p COM3
