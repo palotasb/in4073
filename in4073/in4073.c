@@ -77,9 +77,6 @@ void process_key(uint8_t c)
  */
 int main(void)
 {
-
-	 struct  LOG_FORMAT logitem;
-
     uart_init();
     gpio_init();
     timers_init();
@@ -101,11 +98,6 @@ int main(void)
     uint32_t counter = 0;
     demo_done = false;
 
- // Init message structure for sending data
-   frame_t status_frame;
-   message_t* message = &status_frame.message;
-   sc.tx_frame = &status_frame;
-
     while (!demo_done)
     {   
         // TODO set mode
@@ -118,36 +110,9 @@ int main(void)
 
             adc_request_sample();
             read_baro();
-				//send_status();
+				send_status();
 
-				if(quadcopter_mode == 2) {
-						logitem.time = 12;
-						logitem.bat_volt = 34;
-						logitem.mode = 56;
-						log_write(&logitem);
-						logitem.time = 11;
-						logitem.bat_volt = 22;
-						logitem.mode = 33;
-						log_write(&logitem);
-						quadcopter_mode = 0;
-				}
-				if(quadcopter_mode == 0 && counter%20 == 0){
-				   message->ID                     = MESSAGE_TEMP_PRESSURE_ID;
-					MESSAGE_TEMP_VALUE(message)     = 12345;
-					MESSAGE_PRESSURE_VALUE(message) = log_getsize();
-					serialcomm_send(&sc);
-				}
-				if(quadcopter_mode == 3){
-					for(int i = 0; i < log_getsize(); i++){
-						message->ID                     = MESSAGE_TIME_MODE_VOLTAGE_ID;
-						log_read(i, &logitem);
-						MESSAGE_TIME_VALUE(message)     = logitem.time;
-						MESSAGE_MODE_VALUE(message)     = logitem.mode;
-						MESSAGE_VOLTAGE_VALUE(message)  = logitem.bat_volt;
-						serialcomm_send(&sc);
-					}
-					quadcopter_mode = 0;
-				}
+				
 
 
             // printf("%10ld | ", get_time_us());
