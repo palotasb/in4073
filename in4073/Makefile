@@ -40,6 +40,8 @@ C_SOURCE_FILES += \
 $(abspath ../components/toolchain/system_nrf51.c) \
 $(abspath ../components/drivers_nrf/delay/nrf_delay.c) \
 $(abspath ./in4073.c) \
+$(abspath ./log.c) \
+$(abspath ./serialcomm.c) \
 $(abspath ./control.c) \
 $(abspath ./drivers/gpio.c) \
 $(abspath ./drivers/timers.c) \
@@ -131,6 +133,11 @@ ASMFLAGS += -DS110
 ASMFLAGS += -DBLE_STACK_SUPPORT_REQD
 #default target - first one defined
 
+DFUFLAGS = 
+ifneq ($(wildcard local.makefile),) 
+include local.makefile
+endif
+
 default: clean in4073
 
 #building all targets
@@ -219,14 +226,24 @@ cleanobj:
 	$(RM) $(BUILD_DIRECTORIES)/*.o
 
 upload: default
-	dfu_serial/./serial_dfu.py  _build/in4073.bin
+	python dfu_serial/./serial_dfu.py $(DFUFLAGS)  _build/in4073.bin
 
 pc: 
 	cd pc_terminal/; make
 
 pc-run: 
 	cd pc_terminal/; make run
+
+pc-nj:
+	cd pc_terminal/; make run-nj
+
 	
 upload-run: default pc
-	dfu_serial/./serial_dfu.py  _build/in4073.bin
+	python dfu_serial/./serial_dfu.py $(DFUFLAGS) _build/in4073.bin
 	cd pc_terminal/; make run
+
+upload-run-nj: default pc
+	python dfu_serial/./serial_dfu.py $(DFUFLAGS) _build/in4073.bin
+	cd pc_terminal/; make run-nj
+
+
