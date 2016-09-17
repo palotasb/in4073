@@ -8,7 +8,10 @@
 
 struct  LOG_FORMAT {
 	uint32_t time;
-	uint16_t ae[4];
+	uint16_t bat_volt;
+	uint16_t mode;
+
+	/*uint16_t ae[4];
 	int16_t phi;
 	int16_t theta;
 	int16_t psi;
@@ -17,7 +20,7 @@ struct  LOG_FORMAT {
 	int16_t sr;
 	int32_t pressure;
 	int32_t temperature;
-	uint16_t bat_volt;
+	uint16_t bat_volt;*/
 };
 
 

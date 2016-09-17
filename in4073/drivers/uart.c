@@ -29,10 +29,10 @@ int _write(int file, const char * p_char, int len)
 
 	for (i = 0; i < len; i++)
 	{
-     		uart_put(*p_char++);
-    	}
+ 		enqueue(&text_queue, *p_char++);
+	}
 
-    	return len;
+	return len;
 }
 
 
@@ -62,6 +62,7 @@ void uart_init(void)
 {
 	init_queue(&rx_queue); // Initialize receive queue
 	init_queue(&tx_queue); // Initialize transmit queue
+    init_queue(&text_queue); // Initialize text transmit queue
 
 	nrf_gpio_cfg_output(TX_PIN_NUMBER);
 	nrf_gpio_cfg_input(RX_PIN_NUMBER, NRF_GPIO_PIN_NOPULL); 

@@ -1,2 +1,8 @@
 components/
 gcc-arm-none-eabi/
+arm-gcc/
+*.pyc
+*.exe
+*.d
+*.o
+local.makefile
