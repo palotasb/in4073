@@ -326,7 +326,7 @@ void run_terminal(char* serial, char* js) {
 	//if this part is executed, either something went wrong or the program is aborted on purpose
 	//this means that panicmode is issued until the program is terminated
 	term_puts("\n########## !!PANIC MODE ACTIVATED!!##########\n");
-	term_puts("\nSending panicmode commands to drone until the program is terminalted (<CTRL + C>)");
+	term_puts("\nSending panicmode commands to the drone until the program is terminated (<CTRL + C>)");
 	//send panic
 	while(1){
 		serialcomm_quick_send(&sc,	MESSAGE_SET_MODE_ID,	PANICMODE,0);

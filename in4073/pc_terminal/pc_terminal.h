@@ -3,21 +3,17 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
+#include "../common.h"
 
 #define JS_DEV	"/dev/input/js0"
-#define SERIAL_DEV	"/dev/ttyUSB0"
 
-//mode definitions
-#define		SAFEMODE 	 0
-#define		PANICMODE 	 1
-#define		MANUALMODE   2
-#define		CALMODE		 3
-#define		YAWCTRLMODE  4
-#define		FULLCRTLMODE 5
-#define		YAWMODE		 6
-#define		HEIGHTMODE	 7
-#define		WIRELESSMODE 8
-#define		INVALIDMODE	 255
+#ifndef __WINDOWS
+	#define SERIAL_DEV	"/dev/ttyUSB0"
+#else
+	#define SERIAL_DEV	PC_SERIAL_HANDLE="\\\\.\\COM3"
+#endif
+
+
 
 
 typedef struct keyboad_state {

@@ -19,7 +19,7 @@ void qc_rx_complete(message_t*);
 void qc_tx_byte(uint8_t);
 serialcomm_t sc;
 frame_t rx_frame;
-quadcopter_mode_t quadcopter_mode = MODE_0_SAFE;
+int quadcopter_mode = SAFEMODE;
 
 /*------------------------------------------------------------------
  * process_key -- process command keys
