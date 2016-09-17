@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 
 inline int min(int a, int b) {
@@ -20,8 +21,18 @@ inline int max(int a, int b) {
 
 void pc_rx_complete(message_t*);
 void pc_tx_byte(uint8_t);
-serialcomm_t sc;
-frame_t rx_frame;
+void mon_delay_ms(unsigned int ms);
+
+void    mon_delay_ms(unsigned int ms)
+{
+        struct timespec req, rem;
+
+        req.tv_sec = ms / 1000;
+        req.tv_nsec = 1000000 * (ms % 1000);
+        nanosleep(&req,&rem);
+}
+
+
 
 /******************************
 init_manualmode_state()
@@ -178,23 +189,26 @@ int main(int argc, char *argv[])
 
 void run_terminal(char* serial, char* js) {
 
+	bool do_serial, do_js;
 	bool error = false;
 	bool abort = false;
 	char* errormsg = "";
+	uint8_t mode = SAFEMODE;
+	serialcomm_t sc;
+	frame_t rx_frame;
 	int c;
-	operation_mode mode = SAFEMODE;
 
 	keyboad_state kb_state; 
 	joystick_state js_state;
 	manualmode_state mm_state;
 
-	bool do_serial, do_js;
+
 
 	do_serial = (serial != NULL);
 	do_js = (js != NULL);
 
 	mm_state = init_manualmode_state();
-	kb_state = init_keyboard_state();
+	init_keyboard_state(&kb_state);
 	init_joystick_state(&js_state);
 
 	if(do_serial){
@@ -242,7 +256,7 @@ void run_terminal(char* serial, char* js) {
 		}
 
 		//check for keyboard presses
-		kb_state = read_keyboard(kb_state);
+		read_keyboard(&kb_state);
 
 
 		//check joystick
@@ -258,19 +272,35 @@ void run_terminal(char* serial, char* js) {
 		if(kb_state.updated || js_state.updated){
 			js_state.updated = false;
 			kb_state.updated = false;
-			if(kb_state.mode_change){
+
+		//check if mode is changed
+			if(kb_state.mode != INVALIDMODE){
 				mode = kb_state.mode;
-				kb_state.mode_change = false;
+				kb_state.mode = INVALIDMODE;
+				//issue mode command
+				serialcomm_quick_send(	&sc, 
+												MESSAGE_SET_MODE_ID, 
+												(mode & 0xFF),
+												0);
+
 			}
 			if(js_state.abort){
 				mode = PANICMODE;
 				js_state.abort = false;
+				//issue switchmode command
+				serialcomm_quick_send(	&sc, 
+												MESSAGE_SET_MODE_ID, 
+												(mode & 0xFF),
+												0);
 			}
 				
 			switch(mode){
 				case SAFEMODE:
 					term_puts("\nSafemode active. controls disabled\n");
 						//ensure all controls stay zero when switching back
+					zero_keyboard_state(&kb_state);
+					zero_joystick_state(&js_state);
+
 					break; 
 				case PANICMODE:
 					abort = true;
@@ -282,7 +312,6 @@ void run_terminal(char* serial, char* js) {
 													MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID, 
 													(mm_state.lift & 0xFFFF) | (mm_state.roll << 16),
 													(mm_state.pitch & 0xFFFF) | (mm_state.yaw << 16));
-					print_manualmode_state(mm_state);
 			}
 
 
@@ -294,11 +323,17 @@ void run_terminal(char* serial, char* js) {
 		term_puts(errormsg);
 	}
 
-
-	term_puts("\nPANIC MODE ACTIVATED.  \n");
+	//if this part is executed, either something went wrong or the program is aborted on purpose
+	//this means that panicmode is issued until the program is terminated
+	term_puts("\n########## !!PANIC MODE ACTIVATED!!##########\n");
+	term_puts("\nSending panicmode commands to drone until the program is terminalted (<CTRL + C>)");
 	//send panic
+	while(1){
+		serialcomm_quick_send(&sc,	MESSAGE_SET_MODE_ID,	PANICMODE,0);
+		mon_delay_ms(20);
+	}
 
-
+	//this part is never executed but is still here for estetic reasons.
 	if(do_serial)
 		rs232_close();
 	if(do_js)

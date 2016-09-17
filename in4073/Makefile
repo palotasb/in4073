@@ -232,7 +232,17 @@ pc:
 
 pc-run: 
 	cd pc_terminal/; make run
+
+pc-nj:
+	cd pc_terminal/; make run-nj
+
 	
 upload-run: default pc
 	python dfu_serial/./serial_dfu.py $(DFUFLAGS) _build/in4073.bin
 	cd pc_terminal/; make run
+
+upload-run-nj: default pc
+	python dfu_serial/./serial_dfu.py $(DFUFLAGS) _build/in4073.bin
+	cd pc_terminal/; make run-nj
+
+

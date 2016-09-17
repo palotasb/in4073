@@ -8,3 +8,6 @@ all:
 run: all
 	$(EXEC)
 
+run-nj: all
+	$(EXEC) -nj
+

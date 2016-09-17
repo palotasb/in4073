@@ -98,9 +98,9 @@ int main(void)
         while (rx_queue.count)
             serialcomm_receive_char(&sc, dequeue(&rx_queue));
 
-        nrf_gpio_pin_set(GREEN);
-        nrf_gpio_pin_set(YELLOW);
-        nrf_gpio_pin_set(RED);
+       // nrf_gpio_pin_set(GREEN);
+        //nrf_gpio_pin_set(YELLOW);
+        //nrf_gpio_pin_set(RED);
         switch (sc.status) {
             case SERIALCOMM_STATUS_OK:
                 nrf_gpio_pin_clear(GREEN);
@@ -204,9 +204,17 @@ int main(void)
 }
 
 void qc_rx_complete(message_t* message) {
+	uint8_t mode = 0;
     switch (message->ID) {
         case MESSAGE_SET_KEYCODE_ID:
             process_key(MESSAGE_SET_KEYCODE_VALUE(message));
+            break;
+        case MESSAGE_SET_MODE_ID:
+            mode = MESSAGE_SET_MODE_VALUE(message);
+				if(mode == 0)
+					nrf_gpio_pin_clear(YELLOW);
+				else if(mode == 1)
+					nrf_gpio_pin_clear(RED);
             break;
         default:
             break;

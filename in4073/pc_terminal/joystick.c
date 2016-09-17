@@ -34,6 +34,30 @@ void init_joystick_state(joystick_state *js) {
 }
 
 /******************************
+zero_joystick_state()
+*******************************
+Description:
+	Sets all controlled values in the 
+	joystick state struct to zero.
+
+inputs:
+	joystick_state *js
+		pointer to joystick_state structure.
+		After the call the roll pitch yaw and 
+		lift values are set to 0
+
+Author:
+	Koos Eerden
+*******************************/
+
+void zero_joystick_state(joystick_state *js) {
+	js->lift = 0;
+	js->roll = 0;
+	js->pitch = 0;
+	js->yaw = 0;
+}
+
+/******************************
 open_joystick()
 *******************************
 Description:

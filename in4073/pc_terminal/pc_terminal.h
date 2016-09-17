@@ -7,24 +7,22 @@
 #define JS_DEV	"/dev/input/js0"
 #define SERIAL_DEV	"/dev/ttyUSB0"
 
-typedef enum {
-		SAFEMODE 	 = 0,
-		PANICMODE 	 = 1,
-		MANUALMODE   = 2,
-		CALMODE		 = 3,
-		YAWCTRLMODE  = 4,
-		FULLCRTLMODE = 5,
-		YAWMODE		 = 6,
-		HEIGHTMODE	 = 7,
-		WIRELESSMODE = 8,
-		SHUTDOWNMODE = 15
-} operation_mode;
+//mode definitions
+#define		SAFEMODE 	 0
+#define		PANICMODE 	 1
+#define		MANUALMODE   2
+#define		CALMODE		 3
+#define		YAWCTRLMODE  4
+#define		FULLCRTLMODE 5
+#define		YAWMODE		 6
+#define		HEIGHTMODE	 7
+#define		WIRELESSMODE 8
+#define		INVALIDMODE	 255
 
 
 typedef struct keyboad_state {
 	bool updated;
-	operation_mode mode;
-	bool mode_change;
+	uint8_t mode;
 	int8_t lift;
 	int8_t roll;
 	int8_t pitch;
@@ -60,14 +58,16 @@ manualmode_state update_manualmode_state(keyboad_state kb, joystick_state js);
 void print_manualmode_state(manualmode_state state);
 
 void init_joystick_state(joystick_state *js);
+void zero_joystick_state(joystick_state *js);
 int open_joystick(const char *path, joystick_state *js);
 int read_joystick(joystick_state *current);
 int close_joystick(joystick_state *js);
 void print_joystick_state(joystick_state *js);
 
-keyboad_state init_keyboard_state();
-void print_keyboard_state(keyboad_state state);
-keyboad_state read_keyboard(keyboad_state current);
+void init_keyboard_state(keyboad_state *state);
+void zero_keyboard_state(keyboad_state *state);
+void print_keyboard_state(keyboad_state *state);
+void read_keyboard(keyboad_state *state);
 
 void print_help();
 void run_terminal(char* serial, char* js) ;
