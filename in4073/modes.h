@@ -2,6 +2,11 @@
 #define MODES_H
 
 //mode definitions
+//please note that a using enum is a bad idea, since its type is compiler dependent
+//Since we are sending these values over the UART, it is safer to use constants
+//
+
+
 #define		SAFEMODE 	 0
 #define		PANICMODE 	 1
 #define		MANUALMODE   2
