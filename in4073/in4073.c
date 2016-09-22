@@ -68,7 +68,7 @@ void init_all(void) {
     baro_init();
     spi_flash_init();
     //ble_init();
-    
+qc_mode_tables[0].test = 123; //DEBUG    
     // HAL & software init
     qc_hal_init(&qc_hal);
     init_modes();
