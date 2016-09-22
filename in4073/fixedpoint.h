@@ -1,75 +1,77 @@
 #ifndef FIXEDPOINT_H
 #define FIXEDPOINT_H
 
-// Typedef fixedpoint types to give semantic meaning to fixed point variables and values.
+#include <inttypes.h>
 
-// Fixed point unsigned value with 32 bits integer 0 bits fraction
-typedef uint32_t    uf32p0;
-// Fixed point unsigned value with 24 bits integer 8 bits fraction
-typedef uint32_t    uf24p8;
-// Fixed point unsigned value with 16 bits integer 16 bits fraction
-typedef uint32_t    uf16p16;
-// Fixed point unsigned value with 8 bits integer 24 bits fraction
-typedef uint32_t    uf8p24;
-// Fixed point unsigned value with 0 bits integer 32 bits fraction
-typedef uint32_t    uf0p32;
+// Fixedpoint unsigned numbers of different widths.
+typedef uint32_t        uq32_t;
+typedef uint16_t        uq16_t;
+typedef uint8_t         uq8_t;
 
-// Fixed point signed value with 32 bits integer 0 bits fraction
-typedef int32_t     f32p0;
-// Fixed point signed value with 24 bits integer 8 bits fraction
-typedef int32_t     f24p8;
-// Fixed point signed value with 16 bits integer 16 bits fraction
-typedef int32_t     f16p16;
-// Fixed point signed value with 8 bits integer 24 bits fraction
-typedef int32_t     f8p24;
-// Fixed point signed value with 0 bits integer 32 bits fraction
-typedef int32_t     f0p32;
+typedef int32_t         q32_t;
+typedef int16_t         q16_t;
+typedef int8_t          q8_t;
 
-// Fixed point unsigned value with 16 bits integer 0 bits fraction
-typedef uint16_t    uf16p0;
-// Fixed point unsigned value with 8 bits integer 8 bits fraction
-typedef uint16_t    uf8p8;
-// Fixed point unsigned value with 0 bits integer 16 bits fraction
-typedef uint16_t    uf0p16;
+#define ufp32_t(frac)   uq32_t
+#define ufp16_t(frac)   uq16_t
+#define ufp8_t(frac)    uq8_t
 
-// Fixed point signed value with 16 bits integer 0 bits fraction
-typedef int16_t     f16p0;
-// Fixed point signed value with 8 bits integer 8 bits fraction
-typedef int16_t     f8p8;
-// Fixed point signed value with 0 bits integer 16 bits fraction
-typedef int16_t     f0p16;
+#define fp32_t(frac)    q32_t
+#define fp16_t(frac)    q16_t
+#define fp8_t(frac)     q8_t
 
-// Fixed point unsigned value with 8 bits integer 0 bits fraction
-typedef uint8_t     uf8p0;
-// Fixed point unsigned value with 0 bits integer 8 bits fraction
-typedef uint8_t     uf0p8;
+#define f16p16_t        fp32_t(16)
+#define f8p8_t          fp16_t(16)
 
-// Fixed point signed value with 8 bits integer 0 bits fraction
-typedef int8_t      if8p0;
-// Fixed point signed value with 0 bits integer 8 bits fraction
-typedef int8_t      if0p8;
+// UTILITY DEFINITIONS
+// ===================
 
-#define FP_P0(i)    (i)
-#define FP_P8(i)    ((i) << 8)
-#define FP_P16(i)   ((i) << 16)
-#define FP_P24(i)   ((i) << 24)
-#define FP_P32(i)   ((i) << 32)
+// FP_FP_INT(i, frac) -- Create generic f_.frac fixedpoint number
+// with integer part i and fractional part 0
+#define FP_INT(i, frac) \
+    ((i) << (frac))
 
-#define FP_XP8(a, b)    (((a) <<  8) | (b))
-#define FP_XP16(a, b)   (((a) << 16) | (b))
-#define FP_XP24(a, b)   (((a) << 24) | (b))
-#define FP_XP32(a, b)   (((a) << 32) | (b))
+// FP_XP(a, b, frac) -- Create generic f_.frac fixedpoint number
+// with integer part a and fractional part (b / (2 ** frac))
+#define FP_INT_FRAC(a, b, frac) \
+    (((a) << (frac)) | (b))
 
-#define FP_INT_P0(i)    (i)
-#define FP_INT_P8(i)    ((i) >> 8)
-#define FP_INT_P16(i)   ((i) >> 16)
-#define FP_INT_P24(i)   ((i) >> 24)
-#define FP_INT_P32(i)   ((i) >> 32)
+// INT_FP(fp, frac) -- Get integer part of f_.frac fixedpoint number
+#define INT_FP(fp, frac) \
+    ((fp) >> (frac))
 
-#define FP_FRAC_P0(i)   0
-#define FP_FRAC_P8(i)   ((i) & 0xFF)
-#define FP_FRAC_P16(i)  ((i) & 0xFFFF)
-#define FP_FRAC_P24(i)  ((i) & 0xFFFFFF)
-#define FP_FRAC_P32(i)  ((i) & 0xFFFFFFFF)
+// FRAC_FP(i, frac) -- Get fractional part of f_.frac fixedpoint number
+// 0b000111111 = (1 << (frac)) - 1
+//      ^#frac
+#define FRAC_FP(i, frac) \
+    ((i) & ((1ul << (frac)) - 1))
+
+// FLOAT_FP(fp, frac) -- Convert f_.frac format fixedpoint fp to float
+#define FLOAT_FP(fp, frac) \
+    ((float)(fp) / (1ul << (frac)))
+
+// FP_FLOAT(f, frac) -- Convert float f to f_.frac format fixedpoint
+#define FP_FLOAT(f, frac) \
+    ((f) * (1ul << (frac)))
+
+#define MUL_FP3(fpa, fpb, shra, shrb, shrr)  \
+    ((((fpa) >> (shra)) * ((fpb) >> (shrb))) >> (shrr))
+
+#define MUL_FP_PRESH(fpa, fpb, shra, shrb)   \
+    MUL_FP3((fpa), (fpb), (shra), (shrb), 0)
+
+#define MUL_FP_POSTSH(fpa, fpb, shrr) \
+    MUL_FP3((fpa), (fpb), 0, 0, (shrr))
+
+#define FP_EXTEND(fp, fraca, fracb) \
+    ((fp) << ((fraca) - (fracb)))
+
+#define FP_CHUNK(fp, fraca, fracb) \
+    ((fp) >> ((fracb) - (fraca)))
+
+#ifdef QUADCOPTER
+    // Function to to integer square root
+    uint32_t fp_sqrt(uint32_t n);
+#endif // QUADCOPTER
 
 #endif // FIXEDPOINT_H

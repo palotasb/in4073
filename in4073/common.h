@@ -3,10 +3,12 @@
 
 #ifdef ARM
     #ifndef QUADCOPTER
+        // QUADCOPTER is defined if the code is being compiled for the QC
         #define QUADCOPTER 1
     #endif
 #else
     #ifndef PC_TERMINAL
+        // PC_TERMINAL is defined if the code is being compiled for the PC terminal
         #define PC_TERMINAL 1
     #endif
 #endif
@@ -24,6 +26,7 @@
 
 #include "serialcomm.h"
 #include "fixedpoint.h"
-#include "modes.h"
+#include "qc_mode.h"
+#include "qc_state.h"
 
 #endif // COMMON_H

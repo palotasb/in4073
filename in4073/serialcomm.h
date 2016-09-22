@@ -47,7 +47,7 @@ typedef struct message {
  * MESSAGE_XYZ_VALUE -- Reference to the element XYZ in the message
  *------------------------------------------------------------------
  * Parameters:
- *  - message_qc2pc_t* message: pointer to the message containing
+ *  - message_t* message: pointer to the message containing
  *    the data
  * Author:
  *  - Boldizsar Palotas
@@ -232,10 +232,43 @@ typedef struct message {
 #define MESSAGE_SET_P2_ID               MESSAGE_SET_P12_ID
 #define MESSAGE_SET_P2_VALUE(message)   ((message)->value.v16[1])
 
+#define MESSAGE_SET_YAWP_ID             MESSAGE_SET_P12_ID
+#define MESSAGE_YAWP_VALUE(message)     ((message)->value.v16[2])
+
 // MESSAGE 3
 #define MESSAGE_SET_KEYCODE_ID          3
 
 #define MESSAGE_SET_KEYCODE_VALUE(message)  ((message)->value.v8[0])
+
+// MESSAGE 4
+#define MESSAGE_SET_OPTION_ID           4
+
+#define MESSAGE_OPTNUM_ID               MESSAGE_SET_OPTION_ID
+#define MESSAGE_OPTNUM_VALUE(message)   ((message)->value.v16[0])
+
+#define MESSAGE_OPTMOD_ID               MESSAGE_SET_OPTION_ID
+#define MESSAGE_OPTMOD_VALUE(message)   ((message)->value.v16[1])
+
+#define MESSAGE_OPTVAL_ID               MESSAGE_SET_OPTION_ID
+#define MESSAGE_OPTVAL_VALUE(message)   ((message)->value.v32[1])
+
+// MESSAGE 5
+#define MESSAGE_SET_LOGMSK_ID           5
+
+#define MESSAGE_SET_LOGMSK_VALUE(message)   ((message)->value.v32[0])
+
+// MESSAGE 6
+#define MESSAGE_LOG_CTL_ID              6
+
+#define MESSAGE_LOG_CTL_VALUE           ((message)->value.v32[0])
+#define MESSAGE_LOG_CTL_VALUE_STOP      0
+#define MESSAGE_LOG_CTL_VALUE_START     1
+#define MESSAGE_LOG_CTL_VALUE_READ      2
+
+// MESSAGE 7
+#define MESSAGE_SET_TELEMSK_ID          5
+
+#define MESSAGE_SET_TELEMSK_VALUE(message)  ((message)->value.v32[0])
 
 // Special frames
 

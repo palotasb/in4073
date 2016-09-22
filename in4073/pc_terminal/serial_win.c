@@ -2,6 +2,7 @@
 #include <conio.h>
 #include <windows.h>
 #include <stdio.h>
+
 HANDLE hSerial;
 
 // Most code taken or adapted from:
