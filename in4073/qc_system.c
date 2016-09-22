@@ -1,5 +1,6 @@
 #include "qc_system.h"
 
+#define SAFE_VOLTAGE 1050
 
 /** =======================================================
  *  qc_system_init -- Initialise a model of the quadcopter
@@ -60,6 +61,9 @@ void qc_system_init(qc_system_t* system,
  *  Author: Boldizsar Palotas
 **/
 void qc_system_step(qc_system_t* system) {
+    if (system->state->sensor.voltage < SAFE_VOLTAGE) {
+        qc_system_set_mode(system, MODE_1_PANIC);
+    }
     system->hal->get_inputs_fn(system->state);
     qc_command_tick(system->command);  
 	system->current_mode_table->control_fn(system->state);
