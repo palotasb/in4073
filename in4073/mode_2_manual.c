@@ -65,8 +65,8 @@ void control_fn(qc_state_t* state) {
     // ae_3^2 = -1/4b Z +     0 L + -1/2b M + -1/4d N
     // ae_4^2 = -1/4b Z +  1/2b L +     0 M +  1/4d N
 
-    f24p8_t b = FP_P8(1);
-    f24p8_t d = FP_P8(1);
+    f24p8_t b = FP_INT(1, 8);
+    f24p8_t d = FP_INT(1, 8);
     f24p8_t m1_4b = - b / 4;
     f24p8_t p1_2b =   b / 2;
     f24p8_t p1_4d =   d / 4;

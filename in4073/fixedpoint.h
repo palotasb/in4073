@@ -21,6 +21,7 @@ typedef int8_t          q8_t;
 #define fp8_t(frac)     q8_t
 
 #define f16p16_t        fp32_t(16)
+#define f24p8_t         fp32_t(8)
 #define f8p8_t          fp16_t(16)
 
 // UTILITY DEFINITIONS

@@ -1,7 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#ifdef ARM
+#ifdef NRF51
     #ifndef QUADCOPTER
         // QUADCOPTER is defined if the code is being compiled for the QC
         #define QUADCOPTER 1

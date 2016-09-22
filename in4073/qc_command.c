@@ -99,14 +99,14 @@ void qc_command_set_mode(qc_command_t* command, qc_mode_t mode) {
 void qc_command_set_lift_roll_pitch_yaw(qc_command_t* command,
     f8p8_t lift, f8p8_t roll, f8p8_t pitch, f8p8_t yaw
 ) {
-    command->system->state->orient.lift  = F16P16_F8P8(lift);
-    command->system->state->orient.roll  = F16P16_F8P8(roll);
-    command->system->state->orient.pitch = F16P16_F8P8(pitch);
-    command->system->state->orient.yaw   = F16P16_F8P8(yaw);
+    command->system->state->orient.lift  = (lift);
+    command->system->state->orient.roll  = (roll);
+    command->system->state->orient.pitch = (pitch);
+    command->system->state->orient.yaw   = (yaw);
 }
 
-void qc_command_tick(qc_command_tick) {
-    if (timer < COMMAND_TIMEOUT) {
+void qc_command_tick(qc_command_t* command) {
+    if (command->timer < COMMAND_TIMEOUT) {
         command->timer++;
     } else {
         qc_command_set_mode(command, MODE_1_PANIC);

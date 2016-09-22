@@ -30,4 +30,6 @@ void qc_command_init(qc_command_t* command,
 
 void qc_command_rx_message(qc_command_t* command, message_t* message);
 
+void qc_command_tick(qc_command_t* command);
+
 #endif // QC_COMMAND_H

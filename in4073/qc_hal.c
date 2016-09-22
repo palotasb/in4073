@@ -62,7 +62,7 @@ void qc_hal_get_inputs(qc_state_t* state) {
     read_baro();
     state->sensor.temperature   = temperature;
     state->sensor.pressure      = pressure;
-    state->sensor.battery       = bat_volt;
+    state->sensor.voltage       = bat_volt;
     state->sensor.sax   = sax;
     state->sensor.say   = say;
     state->sensor.saz   = say;
