@@ -1,5 +1,6 @@
 #include "qc_system.h"
 
+
 /** =======================================================
  *  qc_system_init -- Initialise a model of the quadcopter
  *  =======================================================
@@ -32,7 +33,7 @@ void qc_system_init(qc_system_t* system,
     // Init system module
     system->mode                = mode;
     system->mode_tables         = mode_tables;
-    system->current_mode_table  = &(system->mode_tables[0]);
+    system->current_mode_table  = &(system->mode_tables[(int) mode]);
     system->state               = state;
     system->command             = command;
     system->serialcomm          = serialcomm;
@@ -81,8 +82,8 @@ void qc_system_step(qc_system_t* system) {
 void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
     if (!system->current_mode_table->trans_fn(system->state, mode))
         return;
-  //  qc_mode_t old_mode = system->mode;
-   // system->mode = mode;
-   // system->current_mode_table = &system->mode_tables[(int) mode];
-   // system->current_mode_table->enter_fn(system->state, old_mode);
+    qc_mode_t old_mode = system->mode;
+    system->mode = mode;
+    system->current_mode_table = &system->mode_tables[(int) mode];
+    system->current_mode_table->enter_fn(system->state, old_mode);
 }
