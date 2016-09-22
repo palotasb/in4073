@@ -247,7 +247,17 @@ pc-run:
 pc-nj:
 	cd pc_terminal/; make run-nj
 
-	
+upload-only:
+	python dfu_serial/./serial_dfu.py $(DFUFLAGS)  _build/in4073.bin
+
+upload-only-run:
+	python dfu_serial/./serial_dfu.py $(DFUFLAGS)  _build/in4073.bin
+	cd pc_terminal/; make run
+
+upload-only-run-nj:
+	python dfu_serial/./serial_dfu.py $(DFUFLAGS)  _build/in4073.bin
+	cd pc_terminal/; make run-nj
+
 upload-run: default pc
 	python dfu_serial/./serial_dfu.py $(DFUFLAGS) _build/in4073.bin
 	cd pc_terminal/; make run
