@@ -61,10 +61,10 @@ void qc_system_init(qc_system_t* system,
  *  Author: Boldizsar Palotas
 **/
 void qc_system_step(qc_system_t* system) {
+    system->hal->get_inputs_fn(system->state);
     if (system->state->sensor.voltage < SAFE_VOLTAGE) {
         qc_system_set_mode(system, MODE_1_PANIC);
     }
-    system->hal->get_inputs_fn(system->state);
     qc_command_tick(system->command);  
 	system->current_mode_table->control_fn(system->state);
     system->hal->enable_motors_fn(
