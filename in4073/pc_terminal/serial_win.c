@@ -48,8 +48,7 @@ int rs232_open(char* dev)
     dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
     if (GetCommState(hSerial, &dcbSerialParams) == 0)
     {
-        printf("\r\nError reading COM properties\r\n");
-        CloseHandle(hSerial);
+                CloseHandle(hSerial);
         return 2;
     }
 
@@ -59,9 +58,18 @@ int rs232_open(char* dev)
     dcbSerialParams.Parity = NOPARITY;
     if (SetCommState(hSerial, &dcbSerialParams) == 0)
     {
-        printf("\r\nError setting COM properties\r\n");
-        CloseHandle(hSerial);
+                CloseHandle(hSerial);
         return 3;
+    }
+    COMMTIMEOUTS timeouts = { 0 };
+    timeouts.ReadIntervalTimeout         = 1; // in milliseconds
+    timeouts.ReadTotalTimeoutConstant    = 5; // in milliseconds
+    timeouts.ReadTotalTimeoutMultiplier  = 1; // in milliseconds
+    timeouts.WriteTotalTimeoutConstant   = 50; // in milliseconds
+    timeouts.WriteTotalTimeoutMultiplier = 50; // in milliseconds
+    if (!SetCommTimeouts(hSerial, &timeouts)) {
+        CloseHandle(hSerial);
+        return 4;
     }
 	return 0;
 }
@@ -90,16 +98,16 @@ int rs232_getchar_nb(void)
 {
     unsigned char data[1];
     DWORD bytes_read;
-	int result;
-    if (!ReadFile(hSerial, data, 1, &bytes_read, NULL) || bytes_read != 1){
-		if(GetLastError() != ERROR_IO_PENDING)
+	int result, error = 0;
+    if ((!ReadFile(hSerial, data, 1, &bytes_read, NULL) && (error = GetLastError(), 1)) || bytes_read != 1){
+		if(error != ERROR_IO_PENDING)
 			result = -1;
 		else
 			result = -2;
 	} else {
 		result = (int) data[0];
     }
-       
+               
     return result;
 }
 
