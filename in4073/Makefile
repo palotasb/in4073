@@ -42,7 +42,17 @@ $(abspath ../components/drivers_nrf/delay/nrf_delay.c) \
 $(abspath ./in4073.c) \
 $(abspath ./log.c) \
 $(abspath ./serialcomm.c) \
-$(abspath ./control.c) \
+$(abspath ./qc_system.c) \
+$(abspath ./qc_state.c) \
+$(abspath ./qc_command.c) \
+$(abspath ./qc_hal.c) \
+$(abspath ./fixedpoint.c) \
+$(abspath ./mode_0_safe.c) \
+$(abspath ./mode_1_panic.c) \
+$(abspath ./mode_2_manual.c) \
+$(abspath ./mode_3_calibrate.c) \
+$(abspath ./mode_4_yaw.c) \
+$(abspath ./mode_5_full.c) \
 $(abspath ./drivers/gpio.c) \
 $(abspath ./drivers/timers.c) \
 $(abspath ./drivers/uart.c) \
@@ -237,7 +247,17 @@ pc-run:
 pc-nj:
 	cd pc_terminal/; make run-nj
 
-	
+upload-only:
+	python dfu_serial/./serial_dfu.py $(DFUFLAGS)  _build/in4073.bin
+
+upload-only-run:
+	python dfu_serial/./serial_dfu.py $(DFUFLAGS)  _build/in4073.bin
+	cd pc_terminal/; make run
+
+upload-only-run-nj:
+	python dfu_serial/./serial_dfu.py $(DFUFLAGS)  _build/in4073.bin
+	cd pc_terminal/; make run-nj
+
 upload-run: default pc
 	python dfu_serial/./serial_dfu.py $(DFUFLAGS) _build/in4073.bin
 	cd pc_terminal/; make run

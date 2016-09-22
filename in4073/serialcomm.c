@@ -78,7 +78,6 @@ void serialcomm_send_start(serialcomm_t* sc) {
  void serialcomm_receive_char(serialcomm_t* sc, uint8_t c) {
     if (sc->status == SERIALCOMM_STATUS_OK) {
         // Normal operation: fill buffer
-        DEBUG_PRINT("> SC_OK ");
         if (sc->rx_cnt == MESSAGE_SIZE) {   // End of frame
             serialcomm_rx_end(sc, c);
             sc->rx_cnt = 0;
@@ -101,7 +100,6 @@ void serialcomm_send_start(serialcomm_t* sc) {
         }
     } else if (sc->status == SERIALCOMM_STATUS_Prestart) {
         // Error: wait for at least a full START FRAME
-        DEBUG_PRINT("> SC_PS ");
         if (c == FRAME_START_VALUE) {
             sc->rx_cnt++;
             if (sc->rx_cnt == FRAME_SIZE) {
@@ -112,7 +110,6 @@ void serialcomm_send_start(serialcomm_t* sc) {
         }
     } else if (sc->status == SERIALCOMM_STATUS_Start) {
         // After error: wait for start of first frame that is not a START FRAME
-        DEBUG_PRINT("> SC_ST ");
         if (c != FRAME_START_VALUE) {
             sc->status = SERIALCOMM_STATUS_OK;
             sc->rx_frame->message.ID = c;
@@ -227,13 +224,10 @@ void serialcomm_send(serialcomm_t* sc) {
     if (sc->tx_byte == 0)
         return;
     sc->tx_byte(sc->tx_frame->message.ID);
-    DEBUG_PRINT("< SEND %3u = 0x%02hx ID\n", sc->tx_frame->message.ID, sc->tx_frame->message.ID);
     for (tx_ptr = 0; tx_ptr < MESSAGE_VALUE_SIZE; tx_ptr++) {
         uint8_t c = sc->tx_frame->message.value.v8[tx_ptr];
         sc->tx_byte(c);
-        DEBUG_PRINT("< SEND %3u = 0x%02hx #%d\n", c, c, tx_ptr);
     }
     sc->tx_frame->checksum = frame_checksum(sc->tx_frame);
     sc->tx_byte(sc->tx_frame->checksum);
-    DEBUG_PRINT("< SEND %3u = 0x%02hx CHK\n", sc->tx_frame->checksum, sc->tx_frame->checksum);
 }

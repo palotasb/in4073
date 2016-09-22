@@ -20,8 +20,13 @@
 #include "inv_mpu.h"
 #include "inv_mpu_dmp_motion_driver.h"
 #include "ml.h"
-#include "serialcomm.h"
-#include "modes.h"
+#include "qc_system.h"
+#include "mode_0_safe.h"
+#include "mode_1_panic.h"
+#include "mode_2_manual.h"
+#include "mode_3_calibrate.h"
+#include "mode_4_yaw.h"
+#include "mode_5_full.h"
 
 #define RED				22
 #define YELLOW				24

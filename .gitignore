@@ -5,4 +5,7 @@ arm-gcc/
 *.exe
 *.d
 *.o
+*log.txt
+*.log
+*telemetry.txt
 local.makefile

@@ -4,8 +4,6 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-
-
 struct  LOG_FORMAT {
 	uint32_t time;
 	uint16_t mode;
