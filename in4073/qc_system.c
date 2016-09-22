@@ -62,11 +62,11 @@ void qc_system_init(qc_system_t* system,
 void qc_system_step(qc_system_t* system) {
     system->hal->get_inputs_fn(system->state);
     qc_command_tick(system->command);  
-//	system->current_mode_table->control_fn(system->state);
-//    system->hal->enable_motors_fn(
-//        system->current_mode_table->motor_on_fn(system->state)
-//        && system->state->option.enable_motors);
-//    system->hal->set_outputs_fn(system->state);
+	system->current_mode_table->control_fn(system->state);
+    system->hal->enable_motors_fn(
+        system->current_mode_table->motor_on_fn(system->state)
+        && system->state->option.enable_motors);
+    system->hal->set_outputs_fn(system->state);
 }
 
 /** =======================================================
