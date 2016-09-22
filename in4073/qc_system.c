@@ -32,7 +32,7 @@ void qc_system_init(qc_system_t* system,
     // Init system module
     system->mode                = mode;
     system->mode_tables         = mode_tables;
-    system->current_mode_table  = &system->mode_tables[(int) mode];
+    system->current_mode_table  = &(system->mode_tables[0]);
     system->state               = state;
     system->command             = command;
     system->serialcomm          = serialcomm;
@@ -60,12 +60,12 @@ void qc_system_init(qc_system_t* system,
 **/
 void qc_system_step(qc_system_t* system) {
     system->hal->get_inputs_fn(system->state);
-    qc_command_tick(system->command);
-    system->current_mode_table->control_fn(system->state);
-    system->hal->enable_motors_fn(
-        system->current_mode_table->motor_on_fn(system->state)
-        && system->state->option.enable_motors);
-    system->hal->set_outputs_fn(system->state);
+    qc_command_tick(system->command);  
+//	system->current_mode_table->control_fn(system->state);
+//    system->hal->enable_motors_fn(
+//        system->current_mode_table->motor_on_fn(system->state)
+//        && system->state->option.enable_motors);
+//    system->hal->set_outputs_fn(system->state);
 }
 
 /** =======================================================
@@ -81,8 +81,8 @@ void qc_system_step(qc_system_t* system) {
 void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
     if (!system->current_mode_table->trans_fn(system->state, mode))
         return;
-    qc_mode_t old_mode = system->mode;
-    system->mode = mode;
-    system->current_mode_table = &system->mode_tables[(int) mode];
-    system->current_mode_table->enter_fn(system->state, old_mode);
+  //  qc_mode_t old_mode = system->mode;
+   // system->mode = mode;
+   // system->current_mode_table = &system->mode_tables[(int) mode];
+   // system->current_mode_table->enter_fn(system->state, old_mode);
 }

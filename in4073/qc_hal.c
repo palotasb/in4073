@@ -1,16 +1,11 @@
 #include "qc_hal.h"
+#include "in4073.h"
 #include "nrf51.h"
 
 static void qc_hal_tx_byte(uint8_t byte);
 static void qc_hal_get_inputs(qc_state_t* state);
 static void qc_hal_set_outputs(qc_state_t* state);
 static void qc_hal_enable_motors(bool);
-
-extern int pressure, battery, bat_volt, temperature;
-extern void read_baro(void);
-extern void uart_put(uint8_t);
-extern void adc_request_sample(void);
-extern int sax, say, saz, sp, sq, sr;
 
 static bool motors_enabled = false;
 
@@ -58,17 +53,20 @@ void qc_hal_tx_byte(uint8_t byte) {
  *  Author: Boldizsar Palotas
 **/
 void qc_hal_get_inputs(qc_state_t* state) {
-    adc_request_sample();
+  
+	 adc_request_sample();
     read_baro();
+
     state->sensor.temperature   = temperature;
     state->sensor.pressure      = pressure;
     state->sensor.voltage       = bat_volt;
-    state->sensor.sax   = sax;
+    state->sensor.sax   		  = sax;
     state->sensor.say   = say;
-    state->sensor.saz   = say;
+    state->sensor.saz   = saz;
     state->sensor.sp    = sp;
     state->sensor.sq    = sq;
-    state->sensor.sr    = sr;
+    state->sensor.sr    = sr; 
+
 }
 
 /** =======================================================

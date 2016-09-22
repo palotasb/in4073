@@ -101,7 +101,7 @@ void led_display(void) {
     static uint32_t counter;
     if (counter++ %20 == 0)
         nrf_gpio_pin_toggle(BLUE);
-
+/*
     switch (serialcomm.status) {
         case SERIALCOMM_STATUS_OK:
             nrf_gpio_pin_set(YELLOW);
@@ -120,4 +120,5 @@ void led_display(void) {
             break;
         default: break;
     }
+*/
 }

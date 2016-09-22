@@ -1,4 +1,5 @@
 #include "mode_2_manual.h"
+#include "in4073.h"
 
 /** MODE 2 (MANUAL) description
  *  ===========================
@@ -117,6 +118,9 @@ void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
     qc_state_clear_spin(state);
     qc_state_clear_pos(state);
     qc_state_clear_att(state);
+	nrf_gpio_pin_set(YELLOW);
+	nrf_gpio_pin_set(RED);
+	nrf_gpio_pin_clear(GREEN);
 }
 
 /** =======================================================
