@@ -30,6 +30,7 @@ void qc_command_init(qc_command_t* command,
 ) {
     command->serialcomm = serialcomm;
     command->timer = 0;
+    command->system = system;
 
     serialcomm_init(serialcomm);
     serialcomm->rx_frame                = &command->rx_frame;
@@ -84,10 +85,12 @@ void qc_command_set_mode(qc_command_t* command, qc_mode_t mode) {
 }
 
 /** =======================================================
- *  qc_command_set_mode -- Dispatch SET LRPY. message
+ *  qc_command_set_lift_roll_pitch_yaw --
+ *  Dispatch SET_LIFT_ROLL_PITCH_YAW message
  *  =======================================================
  *  Dispatches the orientation (controller setpoint)
  *  message -- lift, roll, pitch and yaw.
+ *
  *  Parameters:
  *  - command: Pointer to the command struct.
  *  - lift: The lift value as defined in qc_state_t.
