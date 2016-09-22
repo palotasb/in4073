@@ -112,7 +112,7 @@ void read_keyboard(pc_command_t* command) {
 				command->mode_updated = true;
 				break;
 			case '5':
-				command->mode = MODE_5_FULL;
+				command->mode = MODE_5_FULL_CONTROL;
 				command->mode_updated = true;
 				break;
 

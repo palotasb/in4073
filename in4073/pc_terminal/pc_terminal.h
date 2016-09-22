@@ -4,9 +4,13 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include "../common.h"
+
+#include <stdio.h>
 #include "serial.h"
 #include "console.h"
 #include "joystick.h"
+#include "pc_command.h"
+#include "pc_log.h"
 
 #define JS_DEV	"/dev/input/js0"
 
@@ -23,5 +27,6 @@ int max(int a, int b);
 
 void print_help(void);
 void run_terminal(char* serial, char* js);
+void read_keyboard(pc_command_t* command);
 
 #endif

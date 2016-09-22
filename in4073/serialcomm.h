@@ -233,7 +233,7 @@ typedef struct message {
 #define MESSAGE_SET_P2_VALUE(message)   ((message)->value.v16[1])
 
 #define MESSAGE_SET_YAWP_ID             MESSAGE_SET_P12_ID
-#define MESSAGE_YAWP_VALUE(message)     ((message)->value.v16[2])
+#define MESSAGE_SET_YAWP_VALUE(message) ((message)->value.v16[2])
 
 // MESSAGE 3
 #define MESSAGE_SET_KEYCODE_ID          3
@@ -260,7 +260,7 @@ typedef struct message {
 // MESSAGE 6
 #define MESSAGE_LOG_CTL_ID              6
 
-#define MESSAGE_LOG_CTL_VALUE           ((message)->value.v32[0])
+#define MESSAGE_LOG_CTL_VALUE(message)  ((message)->value.v32[0])
 #define MESSAGE_LOG_CTL_VALUE_STOP      0
 #define MESSAGE_LOG_CTL_VALUE_START     1
 #define MESSAGE_LOG_CTL_VALUE_READ      2

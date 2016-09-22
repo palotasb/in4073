@@ -1,6 +1,9 @@
 #include "pc_log.h"
 #include "../serialcomm.h"
 #include "../fixedpoint.h"
+#include "../qc_mode.h"
+#include <string.h>
+#include <stdarg.h>
 
 // Value to print in placeof on unknown number
 #define _NAN    "NaN"
@@ -21,7 +24,7 @@ bool pc_log_init(pc_log_t* log, const char* filename) {
         return false;
     qc_state_init(&log->state);
     log->time = 0;
-    log->mode = MODE_UNKWONW;
+    log->mode = MODE_UNKNOWN;
     log->initialised = false;
     pc_log_clear(log);
     return true;
@@ -70,14 +73,14 @@ void pc_log_receive(pc_log_t* log, message_t* message) {
             break;
         case MESSAGE_TEMP_PRESSURE_ID:
             log->state.sensor.temperature = MESSAGE_TEMP_VALUE(message);
-            log->state.sensor.pressure =    MESSAGE_PRESSUE_VALUE(message);
+            log->state.sensor.pressure =    MESSAGE_PRESSURE_VALUE(message);
             log->set[PC_LOG_temperature] =  true;
             log->set[PC_LOG_pressure] =     true;
             break;
         case MESSAGE_XYZPOS_ID:
-            log->state.pos.x = MESSAGE_XPOS_ID(message);
-            log->state.pos.y = MESSAGE_YPOS_ID(message);
-            log->state.pos.z = MESSAGE_ZPOS_ID(message);
+            log->state.pos.x = MESSAGE_XPOS_VALUE(message);
+            log->state.pos.y = MESSAGE_YPOS_VALUE(message);
+            log->state.pos.z = MESSAGE_ZPOS_VALUE(message);
             log->set[PC_LOG_x] = true;
             log->set[PC_LOG_y] = true;
             log->set[PC_LOG_z] = true;
@@ -129,7 +132,7 @@ void pc_log_close(pc_log_t* log) {
 }
 
 void pc_log_clear(pc_log_t* log) {
-    for (int i = 0; i < PC_LOG_ITEM_COUNT) {
+    for (int i = 0; i < PC_LOG_ITEM_COUNT; i++) {
         log->set[i] = false;
     }
 }
@@ -187,7 +190,8 @@ void pc_log_print(pc_log_t* log, const char * fmt, pc_log_item_t item, ...) {
         va_end(argptr);
     } else {
         // If no value then print as many NANs as many %_ format arguments we got
-        while ((char* result = strchr(fmt, '%')) != 0) {
+        char* result;
+        while ((result = strchr(fmt, '%')) != 0) {
             fprintf(log->file, _NAN _SEP);
             result = result + 2;
         }

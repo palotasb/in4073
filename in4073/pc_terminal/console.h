@@ -7,5 +7,6 @@ void	term_puts(char *s);
 void	term_putchar(char c);
 int	term_getchar_nb() ;
 int	term_getchar();
+void    term_puts(char *s) ;
 
 #endif

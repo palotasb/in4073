@@ -9,7 +9,7 @@ else
 PLATFORM_CFILES = console_unix.c serial_unix.c joystick_unix.c
 endif
 
-CFILES = pc_terminal.c pc_log.c keyboard.c serial.c joystick.c ../serialcomm.c $(PLATFORM_CFILES)
+CFILES = pc_terminal.c pc_command.c pc_log.c keyboard.c serial.c joystick.c console.c ../serialcomm.c ../qc_state.c $(PLATFORM_CFILES)
 
 all: 
 	$(CC) $(CFLAGS) $(CFILES) -o $(EXEC)

@@ -1,4 +1,5 @@
 #include "console.h"
+#include <stdio.h>
 
 int	term_getchar() 
 { 

@@ -2,12 +2,9 @@
 #include "console.h"
 #include "serial.h"
 #include "../common.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "pc_command.h"
-#include "pc_log.h"
 
 /** PC TERMINAL BLOCK DIAGRAM
  *  =========================
@@ -119,7 +116,6 @@ void run_terminal(char* serial, char* js) {
 	bool error = false;
 	bool abort = false;
 	char* errormsg = "";
-	uint8_t mode = MODE_0_SAFE;
 	serialcomm_t sc;
 	frame_t rx_frame;
 	frame_t tx_frame;
@@ -149,7 +145,7 @@ void run_terminal(char* serial, char* js) {
 	}
 
 	if (do_js){
-		if(open_joystick(js, &js_state)){
+		if(open_joystick(js)){
 			term_puts("Error: could not open joystick\n");
 			exit(1);
 		}
@@ -204,7 +200,7 @@ void run_terminal(char* serial, char* js) {
 	if(do_serial)
 		rs232_close();
 	if(do_js)
-		close_joystick(&js_state);
+		close_joystick();
 	
 	term_puts("\n<exit>\n");
 	term_exitio();
@@ -229,7 +225,7 @@ void pc_rx_complete(message_t* message) {
     switch (message->ID) {
     	case MESSAGE_TIME_MODE_VOLTAGE_ID:
     		if (MESSAGE_MODE_VALUE(message) == MODE_1_PANIC)
-    			command->mode_panic_status = 0;
+    			command.mode_panic_status = 0;
     		break;
         default:
         	break;

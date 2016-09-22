@@ -50,6 +50,6 @@ int open_joystick(const char *path);
 int close_joystick(void);
 int read_joystick(pc_command_t *command);
 void read_js_event(struct js_event* evt);
-int read_js_events(struct js_event* evt) 
+int read_js_events(struct js_event* evt);
 
 #endif /* _LINUX_JOYSTICK_H */

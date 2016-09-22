@@ -1,4 +1,5 @@
 #include "pc_command.h"
+#include "pc_terminal.h"
 
 // mode_panic_status:
 //  0: no panic
@@ -10,10 +11,18 @@ void pc_command_init(pc_command_t* command) {
     command->mode               = 0;
     command->mode_updated       = false;
     command->mode_panic_status  = 0;
-    qc_command_clear_orient(&command->orient_js);
-    qc_command_clear_orient(&command->orient_kb);
+    command->orient_js.lift=0;
+    command->orient_js.roll=0;
+    command->orient_js.pitch=0;
+    command->orient_js.yaw=0;
+    command->orient_kb.lift=0;
+    command->orient_kb.roll=0;
+    command->orient_kb.pitch=0;
+    command->orient_kb.yaw=0;
     command->orient_updated     = false;
-    qc_command_clear_trim(&command->trim);
+    command->trim.p1 = 0;
+    command->trim.p2 = 0;
+    command->trim.yaw_p = 0;
     command->trim_updated       = false;
     command->log_mask           = 0;
     command->log_mask_updated   = false;
@@ -66,10 +75,10 @@ bool pc_command_get_message(pc_command_t* command, message_t* message_out) {
     }
     if (command->orient_updated) {
         message_out->ID = MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID;
-        MESSAGE_LIFT_VALUE(message_out)     = max(min(command->orient_kb.lift   + command->orient_js.lift, 127), -128);
-        MESSAGE_ROLL_VALUE(message_out)     = max(min(command->orient_kb.roll   + command->orient_js.roll, 127), -128);
-        MESSAGE_PITCH_VALUE(message_out)    = max(min(command->orient_kb.pitch  + command->orient_js.pitch, 127), -128);
-        MESSAGE_YAW_VALUE(message_out)      = max(min(command->orient_kb.yaw    + command->orient_js.yaw, 127), -128);
+        MESSAGE_SET_LIFT_VALUE(message_out)     = max(min(command->orient_kb.lift   + command->orient_js.lift, 127), -128);
+        MESSAGE_SET_ROLL_VALUE(message_out)     = max(min(command->orient_kb.roll   + command->orient_js.roll, 127), -128);
+        MESSAGE_SET_PITCH_VALUE(message_out)    = max(min(command->orient_kb.pitch  + command->orient_js.pitch, 127), -128);
+        MESSAGE_SET_YAW_VALUE(message_out)      = max(min(command->orient_kb.yaw    + command->orient_js.yaw, 127), -128);
         command->orient_updated = false;
         return true;
     }

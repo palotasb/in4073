@@ -1,5 +1,6 @@
 #include "serial.h"
 #include <conio.h>
+#include <stdbool.h>
 #include <windows.h>
 #include <stdio.h>
 
@@ -89,14 +90,15 @@ int rs232_getchar_nb(void)
 {
     unsigned char data[1];
     DWORD bytes_read;
-	 int result;
+	int result;
     if (!ReadFile(hSerial, data, 1, &bytes_read, NULL) || bytes_read != 1){
 		if(GetLastError() != ERROR_IO_PENDING)
 			result = -1;
 		else
 			result = -2;
-	 } else
-		result = (int) data[0]
+	} else {
+		result = (int) data[0];
+    }
        
     return result;
 }
@@ -117,7 +119,7 @@ int rs232_putchar(char c)
 
     data[0] = c;
 	 do{
-		result = WriteFile(hSerial, data, 1, &bytes_written, NULL)
+		result = WriteFile(hSerial, data, 1, &bytes_written, NULL);
 		if(!result)
 			result = (GetLastError() == ERROR_IO_PENDING);
 

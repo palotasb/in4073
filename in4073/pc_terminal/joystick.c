@@ -33,8 +33,8 @@ int read_joystick(pc_command_t *command)
 				switch (js.number){
 					case 0:
 						if (js.value == 1) {
-							state->mode = MODE_1_PANIC;
-							state->mode_updated = true;
+							command->mode = MODE_1_PANIC;
+							command->mode_updated = true;
 						}
 						break;
 				}
@@ -46,13 +46,13 @@ int read_joystick(pc_command_t *command)
 						command->orient_js.roll = - (js.value / 256 );
 						break;
 					case 1: //y axis, pitch inverted
-						state->orient_js.pitch = (js.value / 256);
+						command->orient_js.pitch = (js.value / 256);
 						break;			
 					case 2: //z axis, yaw
-						state->orient_js.yaw = (js.value / 256);
+						command->orient_js.yaw = (js.value / 256);
 						break;	
 					case 3: //throttle, lift
-						state->orient_js.lift = -(js.value / 256);
+						command->orient_js.lift = -(js.value / 256);
 						break;		
 				}
 				command->orient_updated = true;	

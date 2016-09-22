@@ -3,9 +3,8 @@
 
 #include <stdio.h>
 #include "../common.h"
-#include "qc_mode.h"
-
-struct message;
+#include "../qc_mode.h"
+#include "../serialcomm.h"
 
 typedef enum pc_log_item {
     PC_LOG_time,
@@ -64,7 +63,7 @@ typedef struct pc_log {
 
 bool pc_log_init(pc_log_t* log, const char* filename);
 
-void pc_log_receive(pc_log_t* log, struct message*);
+void pc_log_receive(pc_log_t* log, message_t*);
 
 void pc_log_close(pc_log_t* log);
 
