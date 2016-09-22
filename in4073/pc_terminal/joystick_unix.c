@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+
 
 #include <asm/types.h>
 #include <linux/input.h>
@@ -86,7 +90,7 @@ struct JS_DATA_SAVE_TYPE {
 	struct JS_DATA_TYPE JS_CORR;
 };
 
-FILE* fd;
+int fd;
 
 
 /******************************
@@ -138,7 +142,7 @@ Author:
 int close_joystick(void) {
 	int err = close(fd);
 	if(!err)
-		sfd = 0;
+		fd = 0;
 	return err;
 }
 

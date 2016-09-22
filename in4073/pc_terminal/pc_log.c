@@ -132,7 +132,8 @@ void pc_log_close(pc_log_t* log) {
 }
 
 void pc_log_clear(pc_log_t* log) {
-    for (int i = 0; i < PC_LOG_ITEM_COUNT; i++) {
+	int i;
+    for (i = 0; i < PC_LOG_ITEM_COUNT; i++) {
         log->set[i] = false;
     }
 }
