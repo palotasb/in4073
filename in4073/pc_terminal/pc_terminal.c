@@ -4,6 +4,7 @@
 #include "../common.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <time.h>
 
 /** PC TERMINAL BLOCK DIAGRAM
@@ -163,13 +164,15 @@ void run_terminal(char* serial, char* js) {
 	{
 		//handle input
 		if(do_serial){
-			if ((c = rs232_getchar_nb()) >= 0) 
+			if ((c = rs232_getchar_nb()) >= 0) {
 				serialcomm_receive_char(&sc, (uint8_t) c);
-			else if (c == -1) {
+			} /*else if (c == -1) {
 				error = true;
 				errormsg = "couldn't read serial device";
-			}
+			}*/
+
 			while (pc_command_get_message(&command, &tx_frame.message)) {
+				fprintf(stderr, "Sending MSG %d\n", tx_frame.message.ID);
 				serialcomm_send(&sc);
 				// Don't completely block communications...
 				if ((c = rs232_getchar_nb()) >= 0) 
@@ -215,6 +218,8 @@ void run_terminal(char* serial, char* js) {
  *  Author: Boldizsar Palotas
  */
 void pc_rx_complete(message_t* message) {
+	char str_buf[9] = {'\0'};
+
 	// Pass everything to logging first
 	if (command.in_log_not_telemetry) {
 		pc_log_receive(&pc_log, message);
@@ -226,6 +231,10 @@ void pc_rx_complete(message_t* message) {
     	case MESSAGE_TIME_MODE_VOLTAGE_ID:
     		if (MESSAGE_MODE_VALUE(message) == MODE_1_PANIC)
     			command.mode_panic_status = 0;
+    		break;
+    	case MESSAGE_TEXT_ID:
+    		memcpy(str_buf, message->value.v8, 8);
+    		fprintf(stderr, "%s", str_buf);
     		break;
         default:
         	break;

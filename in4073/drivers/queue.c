@@ -19,6 +19,9 @@ void init_queue(queue *q){
 
 void enqueue(queue *q,char x){
 
+	if (q->count == QUEUE_SIZE)
+		return;
+
 	q->last = (q->last + 1) % QUEUE_SIZE;
 	q->Data[ q->last ] = x;
 	q->count += 1;

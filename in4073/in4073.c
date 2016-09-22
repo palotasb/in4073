@@ -36,6 +36,7 @@ static void qc_rx_complete(message_t*);
 static void init_modes(void);
 static void led_display(void);
 static void init_all(void);
+static void transmit_text(void);
 
 int main(void) {
     init_all();
@@ -50,6 +51,10 @@ int main(void) {
         if (check_sensor_int_flag()) {
             get_dmp_data();
             clear_sensor_int_flag();
+        }
+
+        if (text_queue.count) {
+            transmit_text();
         }
 
         while (rx_queue.count)
@@ -93,14 +98,27 @@ void init_modes(void) {
     mode_0_safe_init(&qc_mode_tables[MODE_5_FULL_CONTROL]);
 }
 
+void transmit_text(void) {
+    message_value_t msgv;
+    msgv.v32[0] = 0;
+    msgv.v32[1] = 0;
+    for (int i = 0; i < MESSAGE_VALUE_SIZE && text_queue.count; i++) {
+        msgv.v8[i] = dequeue(&text_queue);
+    }
+    serialcomm_quick_send(&serialcomm, MESSAGE_TEXT_ID, msgv.v32[0], msgv.v32[1]);
+}
+
 void qc_rx_complete(message_t* message) {
     qc_command_rx_message(&qc_command, message);
 }
 
 void led_display(void) {
     static uint32_t counter;
-    if (counter++ %20 == 0)
+    if (counter++ %20 == 0) {
         nrf_gpio_pin_toggle(BLUE);
+    }
+    if ((counter & 0x3F) == 0)
+        printf("QC: I'm alive!\n");
 /*
     switch (serialcomm.status) {
         case SERIALCOMM_STATUS_OK:
