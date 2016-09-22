@@ -70,7 +70,7 @@ bool pc_command_get_message(pc_command_t* command, message_t* message_out) {
     if (command->mode_updated) {
         message_out->ID = MESSAGE_SET_MODE_ID;
         MESSAGE_SET_MODE_VALUE(message_out) = command->mode;
-        // Don't clear mode_updated flag until we get acknowledgement (done separately)
+        command->mode_updated = false;
         return true;
     }
     if (command->orient_updated) {
