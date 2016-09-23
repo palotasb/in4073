@@ -258,6 +258,10 @@ void pc_rx_complete(message_t* message) {
     		memcpy(str_buf, message->value.v8, 8);
     		fprintf(stderr, "%s", str_buf);
     		break;
+    	case MESSAGE_END_LOG_ID:
+    		fprintf(stderr, "> End of log.\n");
+    		command.in_log_not_telemetry = false;
+    		break;
         default:
         	break;
     }

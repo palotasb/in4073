@@ -75,9 +75,12 @@ typedef struct qc_system {
     qc_mode_table_t*    mode_tables;
     qc_mode_table_t*    current_mode_table;
     qc_state_t*         state;
-    struct qc_command* command;
+    struct qc_command*  command;
     serialcomm_t*       serialcomm;
     qc_hal_t*           hal;
+    uint32_t            do_logging;
+    uint32_t            log_mask;
+    uint32_t            telemetry_mask;
 } qc_system_t;
 
 void qc_system_init(qc_system_t* system,

@@ -64,6 +64,27 @@ void qc_command_rx_message(qc_command_t* command, message_t* message) {
                 MESSAGE_SET_PITCH_VALUE(message),
                 MESSAGE_SET_YAW_VALUE(message));
             break;
+        case MESSAGE_SET_LOGMSK_ID:
+            command->system->log_mask = MESSAGE_LOGMSK_VALUE(message);
+            break;
+        case MESSAGE_LOG_CTL_ID:
+            switch (MESSAGE_LOG_CTL_VALUE(message)) {
+                case MESSAGE_LOG_CTL_VALUE_STOP:
+                    command->system->do_logging = true;
+                    break;
+                case MESSAGE_LOG_CTL_VALUE_START:
+                    command->system->do_logging = false;
+                    break;
+                case MESSAGE_LOG_CTL_VALUE_READ:
+                    log_readback();
+                    break;
+                case MESSAGE_LOG_CTL_VALUE_RESET:
+                    log_reset();
+                    break;
+                default:
+                    break;
+            }
+            break;
         default:
             break;
     }
