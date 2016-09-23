@@ -182,6 +182,7 @@ void run_terminal(char* serial, char* js) {
 				if ((c = rs232_getchar_nb()) >= 0) 
 					serialcomm_receive_char(&sc, (uint8_t) c);
 				read_keyboard(&command);
+			}
 
 			if (250 < time_get_ms() - last_msg) {
 				serialcomm_quick_send(&sc, MESSAGE_KEEP_ALIVE_ID, 0, 0);
