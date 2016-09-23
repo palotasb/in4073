@@ -9,4 +9,6 @@ int	term_getchar_nb() ;
 int	term_getchar();
 void    term_puts(char *s) ;
 
+unsigned long long time_get_ms(void);
+
 #endif

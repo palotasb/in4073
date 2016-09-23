@@ -270,6 +270,9 @@ typedef struct message {
 
 #define MESSAGE_SET_TELEMSK_VALUE(message)  ((message)->value.v32[0])
 
+// MESSAGE 8
+#define MESSAGE_KEEP_ALIVE_ID           8
+
 // Special frames
 
 #define FRAME_START_ID                  0xFF

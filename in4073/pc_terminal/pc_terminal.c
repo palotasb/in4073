@@ -25,6 +25,7 @@
 
 void pc_rx_complete(message_t*);
 void pc_tx_byte(uint8_t);
+unsigned long long timespec_ms(struct timespec*);
 
 pc_command_t	command;
 pc_log_t		pc_log;
@@ -160,6 +161,8 @@ void run_terminal(char* serial, char* js) {
 
 	term_initio();
 	
+	unsigned long long last_msg;
+
 	while (!error && !abort) 
 	{
 		//handle input
@@ -174,10 +177,15 @@ void run_terminal(char* serial, char* js) {
 			while (pc_command_get_message(&command, &tx_frame.message)) {
 				fprintf(stderr, "Sending MSG %d\n", tx_frame.message.ID);
 				serialcomm_send(&sc);
+				last_msg = time_get_ms();
 				// Don't completely block communications...
 				if ((c = rs232_getchar_nb()) >= 0) 
 					serialcomm_receive_char(&sc, (uint8_t) c);
 				read_keyboard(&command);
+
+			if (250 < time_get_ms() - last_msg) {
+				serialcomm_quick_send(&sc, MESSAGE_KEEP_ALIVE_ID, 0, 0);
+				last_msg = time_get_ms();
 			}
 		}
 

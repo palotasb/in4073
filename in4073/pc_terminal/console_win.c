@@ -1,7 +1,9 @@
-#include "console.h"
+#define _WIN32_WINNT 0x0600
 #include <conio.h>
 #include <windows.h>
 #include <stdio.h>
+#include "console.h"
+
 
 /*------------------------------------------------------------
  * console I/O
@@ -40,4 +42,16 @@ int term_getchar_nb(void) {
     if (_kbhit()) 
         return _getch(); 
     return -1;
+}
+
+unsigned long long time_get_ms(void) {
+    LARGE_INTEGER freq, cnt;
+    unsigned long long f, c;
+    if (QueryPerformanceFrequency(&freq) && QueryPerformanceCounter(&cnt)) {
+        f = freq.QuadPart / 1000;
+        c = cnt.QuadPart / f;
+    } else {
+        c = 0;
+    }
+    return c;
 }

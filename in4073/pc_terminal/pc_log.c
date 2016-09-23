@@ -191,10 +191,14 @@ void pc_log_print(pc_log_t* log, const char * fmt, pc_log_item_t item, ...) {
         va_end(argptr);
     } else {
         // If no value then print as many NANs as many %_ format arguments we got
-        char* result;
-        while ((result = strchr(fmt, '%')) != 0) {
+        const char * result = fmt;
+        while (result && (result = strchr(result, '%')) != 0) {
             fprintf(log->file, _NAN _SEP);
-            result = result + 2;
+            if (result[1] == '\0' || result[2] == '\0') {
+                result = 0;
+            } else {
+                result = result + 2;
+            }
         }
     }
 }
