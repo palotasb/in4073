@@ -133,7 +133,7 @@ void run_terminal(char* serial, char* js) {
 
 	if(do_serial){
 		if(rs232_open(serial)){
-			term_puts("Error: could not open serial device\n");
+			fprintf(stderr, "Error: could not open serial device\n");
 			exit(1);
 		}
 		// Serial communication protocol initialisation
@@ -148,13 +148,20 @@ void run_terminal(char* serial, char* js) {
 
 	if (do_js){
 		if(open_joystick(js)){
-			term_puts("Error: could not open joystick\n");
+			fprintf(stderr, "Error: could not open joystick\n");
 			exit(1);
 		}
 	}
 
-	term_puts("\nTerminal program - Embedded Real-Time Systems\n");
-	term_puts("Press esc to abort\n");
+	fprintf(stderr, "========================================================\n");
+	fprintf(stderr, "Terminal program - Embedded Real-Time Systems\n");
+	fprintf(stderr, "--------------------------------------------------------\n\n");
+	fprintf(stderr, "Press the number keys to enter modes.\n");
+	fprintf(stderr, "Press ESC or 1 (one) to enter PANIC mode.\n");
+	fprintf(stderr, "Press E to enable motors (after startup and each panic).\n");
+	fprintf(stderr, "Press R to disable motors manually.\n\n");
+	fprintf(stderr, "Press Ctrl+C to exit terminal program.\n");
+	fprintf(stderr, "========================================================\n\n");
 	
 	/* send & receive
 	 */
@@ -175,7 +182,11 @@ void run_terminal(char* serial, char* js) {
 			}*/
 
 			while (pc_command_get_message(&command, &tx_frame.message)) {
-				fprintf(stderr, "Sending MSG %d\n", tx_frame.message.ID);
+				fprintf(stderr, "< Sending %s v32:[%d %d] v16:[%d %d %d %d] v8:[%d %d %d %d  %d %d %d %d]\n",
+					message_id_to_qc_name(tx_frame.message.ID),
+					tx_frame.message.value.v32[0], tx_frame.message.value.v32[1],
+					tx_frame.message.value.v16[0], tx_frame.message.value.v16[1], tx_frame.message.value.v16[2], tx_frame.message.value.v16[3],
+					tx_frame.message.value.v8[0], tx_frame.message.value.v8[1], tx_frame.message.value.v8[2], tx_frame.message.value.v8[3], tx_frame.message.value.v8[4], tx_frame.message.value.v8[5], tx_frame.message.value.v8[6], tx_frame.message.value.v8[7]);
 				serialcomm_send(&sc);
 				last_msg = time_get_ms();
 				// Don't completely block communications...
@@ -204,8 +215,7 @@ void run_terminal(char* serial, char* js) {
 	}
 
 	if(error){
-		term_puts("\nError: ");
-		term_puts(errormsg);
+		fprintf(stderr, "Error: %s\n", errormsg);
 	}
 
 	//this part is never executed but is still here for estetic reasons.
@@ -214,7 +224,7 @@ void run_terminal(char* serial, char* js) {
 	if(do_js)
 		close_joystick();
 	
-	term_puts("\n<exit>\n");
+	fprintf(stderr, "\n<exit>\n");
 	term_exitio();
 }
 
@@ -235,11 +245,14 @@ void pc_rx_complete(message_t* message) {
 	} else {
 		pc_log_receive(&pc_telemetry, message);
 	}
+
     // Special handling
     switch (message->ID) {
     	case MESSAGE_TIME_MODE_VOLTAGE_ID:
-    		if (MESSAGE_MODE_VALUE(message) == MODE_1_PANIC)
+    		fprintf(stderr, "> Entered mode %d\n", MESSAGE_MODE_VALUE(message));
+    		if (MESSAGE_MODE_VALUE(message) == MODE_1_PANIC) {
     			command.mode_panic_status = 0;
+    		}
     		break;
     	case MESSAGE_TEXT_ID:
     		memcpy(str_buf, message->value.v8, 8);
