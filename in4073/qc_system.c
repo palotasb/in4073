@@ -1,4 +1,5 @@
 #include "qc_system.h"
+#include "in4073.h"
 
 #define SAFE_VOLTAGE 1050
 
@@ -86,8 +87,13 @@ void qc_system_step(qc_system_t* system) {
 void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
     if (!system->current_mode_table->trans_fn(system->state, mode))
         return;
+
     qc_mode_t old_mode = system->mode;
     system->mode = mode;
     system->current_mode_table = &system->mode_tables[(int) mode];
     system->current_mode_table->enter_fn(system->state, old_mode);
+
+    serialcomm_quick_send(system->serialcomm, MESSAGE_TIME_MODE_VOLTAGE_ID,
+        get_time_us(),
+        system->mode | (system->state->sensor.voltage << 16) );
 }

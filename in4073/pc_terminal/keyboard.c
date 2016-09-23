@@ -61,6 +61,7 @@ void read_keyboard(pc_command_t* command) {
 				c2 = term_getchar_nb();
 				if (c2 == -1) {
 					command->mode = MODE_1_PANIC;
+					command->mode_panic_status = 1;
 					command->mode_updated = true;
 				} else if(c2 == '['){
 					c3 = term_getchar_nb();	
@@ -92,11 +93,11 @@ void read_keyboard(pc_command_t* command) {
 			case '`':
 			case '0':
 				command->mode = MODE_0_SAFE;
-				command->mode_panic_status = 0;
 				command->mode_updated = true;
 				break;
 			case '1':
 				command->mode = MODE_1_PANIC;
+				command->mode_panic_status = 1;
 				command->mode_updated = true;
 				break;
 			case '2':
@@ -213,6 +214,7 @@ void read_keyboard(pc_command_t* command) {
 				command->reboot = true;
 				break;
 			default:
+				fprintf(stderr, "Unknown key (%d)\n", c);
 				break;
 		}
 	}
