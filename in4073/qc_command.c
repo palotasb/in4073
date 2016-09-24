@@ -1,4 +1,7 @@
 #include "qc_command.h"
+#include <stdio.h>
+#include "log.h"
+#include "in4073.h"
 
 static void qc_command_set_mode(qc_command_t* command, qc_mode_t mode);
 static void qc_command_set_lift_roll_pitch_yaw(qc_command_t* command,
@@ -64,19 +67,30 @@ void qc_command_rx_message(qc_command_t* command, message_t* message) {
                 MESSAGE_SET_PITCH_VALUE(message),
                 MESSAGE_SET_YAW_VALUE(message));
             break;
+        case MESSAGE_SET_TELEMSK_ID:
+            command->system->telemetry_mask = MESSAGE_SET_TELEMSK_VALUE(message);
+            break;
         case MESSAGE_SET_LOGMSK_ID:
-            command->system->log_mask = MESSAGE_LOGMSK_VALUE(message);
+            command->system->log_mask = MESSAGE_SET_LOGMSK_VALUE(message);
             break;
         case MESSAGE_LOG_CTL_ID:
             switch (MESSAGE_LOG_CTL_VALUE(message)) {
-                case MESSAGE_LOG_CTL_VALUE_STOP:
+                case MESSAGE_LOG_CTL_VALUE_START:
+                    printf("> Start logging\n");
                     command->system->do_logging = true;
                     break;
-                case MESSAGE_LOG_CTL_VALUE_START:
+                case MESSAGE_LOG_CTL_VALUE_STOP:
+                    printf("> Stop logging\n");
                     command->system->do_logging = false;
                     break;
                 case MESSAGE_LOG_CTL_VALUE_READ:
+                    if (command->system->mode != MODE_0_SAFE) {
+                        printf("> Not in SAFE mode!");
+                        break;
+                    }
+                    printf("> Read\n");
                     log_readback();
+                    command->system->do_logging = false;
                     break;
                 case MESSAGE_LOG_CTL_VALUE_RESET:
                     log_reset();

@@ -61,7 +61,7 @@ static uint32_t log_item(uint32_t index);
 uint32_t logsize;
 
 // Serial communication ling
-serialcomm_t* sc;
+serialcomm_t* sc = 0;
 
 // Return address of ID of item No. i
 uint32_t log_id(uint32_t i) {
@@ -84,7 +84,7 @@ bool log_init(serialcomm_t* serialcomm) {
 
 bool log_write(message_t* item) {
 	if (LOG_MAX_ITEMS < logsize) {
-		printf("Log full!");
+		printf("> Log full!\n");
 		return false;
 	}
 
@@ -94,16 +94,17 @@ bool log_write(message_t* item) {
 		logsize++;
 		return true;
 	} else {
+		printf("> Log wr err!\n");
 		return false;
 	}
 }
 
-bool log_read(int index, message_t* item) {
+bool log_read(uint32_t index, message_t* item) {
 	if (LOG_MAX_ITEMS < index)
 		return false;
 
-	bool result1 = flash_read_bytes(log_id(logsize) &item->ID, 1);
-	bool result2 = flash_read_bytes(log_item(logsize), item->value.v8, 8);
+	bool result1 = flash_read_bytes(log_id(index), &item->ID, 1);
+	bool result2 = flash_read_bytes(log_item(index), item->value.v8, 8);
 	if (result1 && result2) {
 		return true;
 	} else {
@@ -112,15 +113,27 @@ bool log_read(int index, message_t* item) {
 }
 
 void log_readback(void) {
-	for (int i = 0; i < logsize; i++) {
-		message_t msg
-		log_read(i, &fmsg);
+	message_t msg;
+	printf("> Log read (sum %lu)\n", logsize);
+	if (!sc)
+		printf("> Log serial error\n");
+	serialcomm_quick_send(sc, MESSAGE_LOG_START_ID, 0, 0);
+	int i;
+	for (i = 0; i < logsize; i++) {
+		if (!log_read(i, &msg)) {
+			break;
+		}
 		serialcomm_quick_send(sc, msg.ID, msg.value.v32[0], msg.value.v32[1]);
 	}
 	serialcomm_quick_send(sc, MESSAGE_LOG_END_ID, 0, 0);
+	if (i != logsize)
+		printf("> Log rd err at %d\n", i);
 	log_reset();
 }
 
 void log_reset(void) {
+	printf("> Log reset\n");
 	logsize = 0;
+	if (!flash_chip_erase())
+		printf("> Chip erase failed!\n");;
 }

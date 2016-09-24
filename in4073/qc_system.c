@@ -1,5 +1,6 @@
 #include "qc_system.h"
 #include "in4073.h"
+#include "log.h"
 
 #define SAFE_VOLTAGE 1050
 
@@ -52,7 +53,8 @@ void qc_system_init(qc_system_t* system,
 
     // Init other members
     qc_state_init(system->state);
-    // qc_logging_init(system->log, ...);
+    if (!log_init(system->serialcomm))
+        printf("> Log init error\n");
     // qc_telemetry_init(system->telemetry, ...);
 }
 
@@ -78,7 +80,7 @@ void qc_system_step(qc_system_t* system) {
         && system->state->option.enable_motors);
     system->hal->set_outputs_fn(system->state);
 
-    qc_system_log_data(system->state);
+    qc_system_log_data(system);
 }
 
 /** =======================================================
@@ -107,7 +109,7 @@ void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
 
 static void qc_system_log_data(qc_system_t* system) {
     uint32_t bit_mask, index;
-    for (bit_mask = 0x01, index = 0; bit_mask; bit_mask =<< 1, index++) {
+    for (bit_mask = 0x01, index = 0; bit_mask; bit_mask = bit_mask << 1, index++) {
         message_t msg;
         msg.ID = index;
         switch (index) {
@@ -172,14 +174,16 @@ static void qc_system_log_data(qc_system_t* system) {
                 MESSAGE_YAWP_VALUE(&msg) = system->state->trim.yaw_p;
                 break;
             default:
+                continue;
                 break;
         }
 
         if (system->do_logging && system->log_mask & bit_mask) {
             log_write(&msg);
         }
-        if (system->telem_mask & bit_mask) {
-            serialcomm_quick_send(&sc, msg.ID, msg.value.v32[0], msg.value.v32[1]);
+
+        if (system->telemetry_mask & bit_mask) {
+            serialcomm_quick_send(system->serialcomm, msg.ID, msg.value.v32[0], msg.value.v32[1]);
         }
     }
 }

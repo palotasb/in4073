@@ -245,6 +245,7 @@ void serialcomm_send(serialcomm_t* sc) {
         "LOG_CTL",
         "SET_TELEMSK",
         "KEEP_ALIVE",
+        "REBOOT",
         0
     };
 
@@ -268,6 +269,10 @@ void serialcomm_send(serialcomm_t* sc) {
         "UVW",
         "PQR",
         "P12",
+        "LOG_END",
+        "LOG_START",
+        0, // 14
+        0, // 15
         "TEXT",
         0
     };

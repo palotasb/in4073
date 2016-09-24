@@ -8,6 +8,7 @@ static void qc_hal_set_outputs(qc_state_t* state);
 static void qc_hal_enable_motors(bool);
 
 static bool motors_enabled = false;
+static bool enable_uart_output = true;
 
 /** =======================================================
  *  qc_hal_init -- Initialise the quadcopter HAL module.
@@ -37,6 +38,13 @@ void qc_hal_init(qc_hal_t* hal) {
  *  Author: Boldizsar Palotas
 **/
 void qc_hal_tx_byte(uint8_t byte) {
+    if (!enable_uart_output)
+        return;
+    uint32_t to = 1000;
+    while (tx_queue.count == QUEUE_SIZE && to--) {
+            nrf_gpio_pin_clear(YELLOW);
+    };
+    nrf_gpio_pin_set(YELLOW);
     uart_put(byte);
 }
 

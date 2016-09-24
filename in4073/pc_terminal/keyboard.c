@@ -200,9 +200,8 @@ void read_keyboard(pc_command_t* command) {
 				break;
 			case 'b':		// Log read
 				command->log_read = true;
-				command->in_log_not_telemetry = true;
 				break;
-			case 'b':		// Log reset
+			case 'n':		// Log reset
 				command->log_reset = true;
 				break;
 

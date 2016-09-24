@@ -62,8 +62,8 @@ void clear_sensor_int_flag(void);
 #define QUEUE_SIZE 128
 typedef struct {
 	uint8_t Data[QUEUE_SIZE];
-	uint8_t first,last;
-  	uint8_t count; 
+	uint32_t first,last;
+  	uint32_t count; 
 } queue;
 void init_queue(queue *q);
 void enqueue(queue *q, char x);

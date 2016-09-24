@@ -135,6 +135,12 @@ bool pc_command_get_message(pc_command_t* command, message_t* message_out) {
         command->log_read = false;
         return true;
     }
+    if (command->log_reset) {
+        message_out->ID = MESSAGE_LOG_CTL_ID;
+        MESSAGE_LOG_CTL_VALUE(message_out) = MESSAGE_LOG_CTL_VALUE_RESET;
+        command->log_reset = false;
+        return true;
+    }
     if (command->telemetry_mask_updated) {
         message_out->ID = MESSAGE_SET_TELEMSK_ID;
         MESSAGE_SET_TELEMSK_VALUE(message_out) = command->telemetry_mask;
