@@ -53,9 +53,10 @@ void qc_system_init(qc_system_t* system,
 
     // Init other members
     qc_state_init(system->state);
-    if (!log_init(system->serialcomm))
+    if (!log_init(system->serialcomm)) {
+        qc_system_set_mode(system, MODE_1_PANIC);
         printf("> Log init error\n");
-    // qc_telemetry_init(system->telemetry, ...);
+    }
 }
 
 /** =======================================================

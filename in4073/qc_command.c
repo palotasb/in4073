@@ -85,10 +85,9 @@ void qc_command_rx_message(qc_command_t* command, message_t* message) {
                     break;
                 case MESSAGE_LOG_CTL_VALUE_READ:
                     if (command->system->mode != MODE_0_SAFE) {
-                        printf("> Not in SAFE mode!");
+                        printf("> Not in SAFE mode!\n");
                         break;
                     }
-                    printf("> Read\n");
                     log_readback();
                     command->system->do_logging = false;
                     break;

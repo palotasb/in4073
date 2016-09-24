@@ -74,9 +74,9 @@ uint32_t log_item(uint32_t i) {
 }
 
 bool log_init(serialcomm_t* serialcomm) {	
+	logsize = 0;
 	bool result = spi_flash_init();
 	if (result) {
-		logsize = 0;
 		sc = serialcomm;
 	}
 	return result;

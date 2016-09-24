@@ -30,6 +30,11 @@ bool pc_log_init(pc_log_t* log, FILE* file) {
 
 void pc_log_receive(pc_log_t* log, message_t* message) {
     switch (message->ID) {
+        case MESSAGE_LOG_END_ID:
+            if (log->initialised) {
+                pc_log_flush(log);
+            }
+            break;
         case MESSAGE_TIME_MODE_VOLTAGE_ID:
             if (log->initialised) {
                 pc_log_flush(log);

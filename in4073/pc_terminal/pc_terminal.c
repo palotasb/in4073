@@ -247,7 +247,7 @@ void pc_rx_complete(message_t* message) {
 	// Pass everything to logging first
 	if (command.in_log_not_telemetry) {
 		pc_log_receive(&pc_log, message);
-		if (message->ID == MESSAGE_LOG_END_ID)
+		if (message->ID != MESSAGE_LOG_END_ID)
 			return; // Don't handle anything received in log mode
 	} else {
 		pc_log_receive(&pc_telemetry, message);
