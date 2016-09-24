@@ -99,6 +99,34 @@ void qc_command_rx_message(qc_command_t* command, message_t* message) {
                     break;
             }
             break;
+        case MESSAGE_SET_P12_ID:
+            command->system->state->trim.p1 = MESSAGE_SET_P1_VALUE(message);
+            command->system->state->trim.p2 = MESSAGE_SET_P2_VALUE(message);
+            command->system->state->trim.yaw_p = MESSAGE_SET_YAWP_VALUE(message);
+            break;
+        case MESSAGE_SET_OPTION_ID:
+            switch (MESSAGE_OPTNUM_VALUE(message)) {
+                case 1: // Motor enable
+                    if (MESSAGE_OPTMOD_VALUE(message) == 1) // Set option
+                        command->system->state->option.enable_motors = (bool) MESSAGE_OPTVAL_VALUE(message);
+                    break;
+                case 5: // Raw
+                    if (MESSAGE_OPTMOD_VALUE(message) == 2) // Toggle option
+                        command->system->state->option.raw_control = !command->system->state->option.raw_control;
+                    break;
+                case 6: // Height
+                    if (MESSAGE_OPTMOD_VALUE(message) == 2) // Toggle option
+                        command->system->state->option.height_control = !command->system->state->option.height_control;
+                    break;
+                case 7: // Wireless
+                    if (MESSAGE_OPTMOD_VALUE(message) == 2) // Toggle option
+                        command->system->state->option.wireless_control = !command->system->state->option.wireless_control;
+                    break;
+            }
+            break;
+        case MESSAGE_REBOOT_ID:
+            NVIC_SystemReset();
+            break;
         default:
             break;
     }
