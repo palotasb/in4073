@@ -187,6 +187,7 @@ void read_keyboard(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'f':		// Log set mask
+				fprintf(stderr, "Enter LOG MASK: ");
 				if (scanf("%u", &command->log_mask) != 1)
 					break;
 				command->log_mask_updated = true;
@@ -199,7 +200,9 @@ void read_keyboard(pc_command_t* command) {
 				break;
 			case 'b':		// Log read
 				command->log_read = true;
-				command->in_log_not_telemetry = true;
+				break;
+			case 'n':		// Log reset
+				command->log_reset = true;
 				break;
 
 			// ----------------------------------
@@ -207,6 +210,7 @@ void read_keyboard(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'g':		// Telemetry set mask
+				fprintf(stderr, "Enter TELEMETRY MASK: ");
 				if (scanf("%u", &command->telemetry_mask) != 1)
 					break;
 				command->telemetry_mask_updated = true;

@@ -21,6 +21,7 @@ typedef struct pc_command {
     bool                log_start;
     bool                log_stop;
     bool                log_read;
+    bool                log_reset;
     bool                in_log_not_telemetry;
     uint32_t            telemetry_mask;
     bool                telemetry_mask_updated;

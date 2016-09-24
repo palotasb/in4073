@@ -61,7 +61,7 @@ typedef struct pc_log {
     bool        set[PC_LOG_ITEM_COUNT];
 } pc_log_t;
 
-bool pc_log_init(pc_log_t* log, const char* filename);
+bool pc_log_init(pc_log_t* log, FILE* file);
 
 void pc_log_receive(pc_log_t* log, message_t*);
 

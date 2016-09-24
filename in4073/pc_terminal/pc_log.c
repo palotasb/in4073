@@ -18,10 +18,8 @@ static void pc_log_flush(pc_log_t* log);
 static void pc_log_clear(pc_log_t* log);
 static void pc_log_print(pc_log_t* log, const char * fmt, pc_log_item_t item, ...);
 
-bool pc_log_init(pc_log_t* log, const char* filename) {
-    log->file = fopen(filename, "a");
-    if (!log->file)
-        return false;
+bool pc_log_init(pc_log_t* log, FILE* file) {
+    log->file = file;
     qc_state_init(&log->state);
     log->time = 0;
     log->mode = MODE_UNKNOWN;
@@ -32,6 +30,11 @@ bool pc_log_init(pc_log_t* log, const char* filename) {
 
 void pc_log_receive(pc_log_t* log, message_t* message) {
     switch (message->ID) {
+        case MESSAGE_LOG_END_ID:
+            if (log->initialised) {
+                pc_log_flush(log);
+            }
+            break;
         case MESSAGE_TIME_MODE_VOLTAGE_ID:
             if (log->initialised) {
                 pc_log_flush(log);
@@ -180,6 +183,7 @@ void pc_log_flush(pc_log_t* log) {
     pc_log_print(log, "%d"  _SEP, PC_LOG_p1, log->state.trim.p1);
     pc_log_print(log, "%d"  _SEP, PC_LOG_p2, log->state.trim.p2);
     fprintf(log->file, _END);
+    fflush(log->file);
 }
 
 void pc_log_print(pc_log_t* log, const char * fmt, pc_log_item_t item, ...) {

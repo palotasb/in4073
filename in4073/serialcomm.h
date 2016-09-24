@@ -196,9 +196,18 @@ typedef struct message {
 #define MESSAGE_P2_ID                   MESSAGE_P12_ID
 #define MESSAGE_P2_VALUE(message)       ((message)->value.v16[1])
 
-// MESSAGE 16
+#define MESSAGE_YAWP_ID                 MESSAGE_P12_ID
+#define MESSAGE_YAWP_VALUE(message)     ((message)->value.v16[2])
 
+// MESSAGE 12
+#define MESSAGE_LOG_END_ID              12
+
+// MESSAGE 13
+#define MESSAGE_LOG_START_ID            13
+
+// MESSAGE 16
 #define MESSAGE_TEXT_ID                 16
+
 #define MESSAGE_TEXT_VALUE(message)     ((message)->value.v8[0])
 
 // Messages in PC -> Quadcopter direction
@@ -264,6 +273,7 @@ typedef struct message {
 #define MESSAGE_LOG_CTL_VALUE_STOP      0
 #define MESSAGE_LOG_CTL_VALUE_START     1
 #define MESSAGE_LOG_CTL_VALUE_READ      2
+#define MESSAGE_LOG_CTL_VALUE_RESET     3
 
 // MESSAGE 7
 #define MESSAGE_SET_TELEMSK_ID          7

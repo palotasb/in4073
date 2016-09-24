@@ -8,35 +8,36 @@
 //  3: send START frame
 
 void pc_command_init(pc_command_t* command) {
-    command->mode               = 0;
-    command->mode_updated       = false;
-    command->mode_panic_status  = 0;
-    command->orient_js.lift=0;
-    command->orient_js.roll=0;
-    command->orient_js.pitch=0;
-    command->orient_js.yaw=0;
-    command->orient_kb.lift=0;
-    command->orient_kb.roll=0;
-    command->orient_kb.pitch=0;
-    command->orient_kb.yaw=0;
-    command->orient_updated     = false;
-    command->trim.p1 = 0;
-    command->trim.p2 = 0;
-    command->trim.yaw_p = 0;
-    command->trim_updated       = false;
-    command->log_mask           = 0;
-    command->log_mask_updated   = false;
-    command->log_start          = false;
-    command->log_stop           = false;
-    command->log_read           = false;
-    command->in_log_not_telemetry = false;
-    command->telemetry_mask     = 0;
+    command->mode                   = 0;
+    command->mode_updated           = false;
+    command->mode_panic_status      = 0;
+    command->orient_js.lift         = 0;
+    command->orient_js.roll         = 0;
+    command->orient_js.pitch        = 0;
+    command->orient_js.yaw          = 0;
+    command->orient_kb.lift         = 0;
+    command->orient_kb.roll         = 0;
+    command->orient_kb.pitch        = 0;
+    command->orient_kb.yaw          = 0;
+    command->orient_updated         = false;
+    command->trim.p1                = 0;
+    command->trim.p2                = 0;
+    command->trim.yaw_p             = 0;
+    command->trim_updated           = false;
+    command->log_mask               = 0;
+    command->log_mask_updated       = false;
+    command->log_start              = false;
+    command->log_stop               = false;
+    command->log_read               = false;
+    command->log_reset              = false;
+    command->in_log_not_telemetry   = false;
+    command->telemetry_mask         = 0;
     command->telemetry_mask_updated = false;
-    command->reboot             = false;
-    command->option_number      = 0;
-    command->option_set         = false;
-    command->option_clear       = false;
-    command->option_toggle      = false;
+    command->reboot                 = false;
+    command->option_number          = 0;
+    command->option_set             = false;
+    command->option_clear           = false;
+    command->option_toggle          = false;
 }
 
 // Returns the highest-priority message that should be sent to the Quadcopter
@@ -132,6 +133,12 @@ bool pc_command_get_message(pc_command_t* command, message_t* message_out) {
         message_out->ID = MESSAGE_LOG_CTL_ID;
         MESSAGE_LOG_CTL_VALUE(message_out) = MESSAGE_LOG_CTL_VALUE_READ;
         command->log_read = false;
+        return true;
+    }
+    if (command->log_reset) {
+        message_out->ID = MESSAGE_LOG_CTL_ID;
+        MESSAGE_LOG_CTL_VALUE(message_out) = MESSAGE_LOG_CTL_VALUE_RESET;
+        command->log_reset = false;
         return true;
     }
     if (command->telemetry_mask_updated) {

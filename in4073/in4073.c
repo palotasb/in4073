@@ -71,7 +71,7 @@ void init_all(void) {
     twi_init();
     imu_init(true, 100);    
     baro_init();
-    spi_flash_init();
+    //spi_flash_init(); <-- initialized in log_init
     //ble_init(); 
     // HAL & software init
     qc_hal_init(&qc_hal);

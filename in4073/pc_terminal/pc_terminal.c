@@ -125,8 +125,9 @@ void run_terminal(char* serial, char* js) {
 
 	pc_command_init(&command);
 
-	pc_log_init(&pc_log, "pc_log.txt");
-	pc_log_init(&pc_telemetry, "pc_telemetry.txt");
+	FILE* pc_log_file = fopen("pc_log.txt", "a");
+	pc_log_init(&pc_log, pc_log_file);
+	pc_log_init(&pc_telemetry, stdout);
 
 	do_serial = (serial != NULL);
 	do_js = (js != NULL);
@@ -160,6 +161,15 @@ void run_terminal(char* serial, char* js) {
 	fprintf(stderr, "Press ESC or 1 (one) to enter PANIC mode.\n");
 	fprintf(stderr, "Press E to enable motors (after startup and each panic).\n");
 	fprintf(stderr, "Press R to disable motors manually.\n\n");
+	fprintf(stderr, "Logging data:\n");
+	fprintf(stderr, "Press C to start, V to stop, B to read back, N to reset.\n");
+	fprintf(stderr, "(Reading back only in safe mode.)\n\n");
+	fprintf(stderr, "How to select data for logging (telemetry):\n");
+	fprintf(stderr, "Press F (G) and enter the sum of the relevant value IDs:\n");
+	for (int i = 0; i <= 11; i++) {
+		fprintf(stderr, "\t%6u = %#8lx: %s\n", 1ul<<i, 1ul<<i, message_id_to_pc_name(i));
+	}
+	fprintf(stderr, "Press ENTER to set. Enter F 0 (G 0) to log nothing.\n\n");
 	fprintf(stderr, "Press X to exit terminal program.\n");
 	fprintf(stderr, "========================================================\n\n");
 	
@@ -246,6 +256,8 @@ void pc_rx_complete(message_t* message) {
 	// Pass everything to logging first
 	if (command.in_log_not_telemetry) {
 		pc_log_receive(&pc_log, message);
+		if (message->ID != MESSAGE_LOG_END_ID)
+			return; // Don't handle anything received in log mode
 	} else {
 		pc_log_receive(&pc_telemetry, message);
 	}
@@ -261,6 +273,14 @@ void pc_rx_complete(message_t* message) {
     	case MESSAGE_TEXT_ID:
     		memcpy(str_buf, message->value.v8, 8);
     		fprintf(stderr, "%s", str_buf);
+    		break;
+    	case MESSAGE_LOG_END_ID:
+    		fprintf(stderr, "End of log.\n");
+    		command.in_log_not_telemetry = false;
+    		break;
+    	case MESSAGE_LOG_START_ID:
+    		fprintf(stderr, "Start of log.\n");
+    		command.in_log_not_telemetry = true;
     		break;
         default:
         	break;
