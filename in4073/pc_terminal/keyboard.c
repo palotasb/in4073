@@ -92,6 +92,7 @@ void read_keyboard(pc_command_t* command) {
 
 			case '`':
 			case '0':
+			case -108: //ö
 				command->mode = MODE_0_SAFE;
 				command->mode_updated = true;
 				break;
@@ -169,13 +170,13 @@ void read_keyboard(pc_command_t* command) {
 				command->option_toggle = true;
 				break;
 			case '7':		// Option 7 height control mode toggle
-				command->option_number = 6;
+				command->option_number = 7;
 				command->option_set = false;
 				command->option_clear = false;
 				command->option_toggle = true;
 				break;
 			case '8':		// Option 8 wireless mode toggle
-				command->option_number = 6;
+				command->option_number = 8;
 				command->option_set = false;
 				command->option_clear = false;
 				command->option_toggle = true;

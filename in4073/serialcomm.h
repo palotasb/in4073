@@ -266,12 +266,15 @@ typedef struct message {
 #define MESSAGE_LOG_CTL_VALUE_READ      2
 
 // MESSAGE 7
-#define MESSAGE_SET_TELEMSK_ID          5
+#define MESSAGE_SET_TELEMSK_ID          7
 
 #define MESSAGE_SET_TELEMSK_VALUE(message)  ((message)->value.v32[0])
 
 // MESSAGE 8
 #define MESSAGE_KEEP_ALIVE_ID           8
+
+// MESSAGE 9
+#define MESSAGE_REBOOT_ID               9
 
 // Special frames
 
@@ -282,6 +285,11 @@ typedef struct message {
 #define FRAME_SPECIAL_ID                0xFE
 #define FRAME_SPECIAL_NOP_VALUE         0x00000000
 #define FRAME_SPECIAL_RESTART_VALUE     0xFEFEFEFE
+
+#ifdef PC_TERMINAL
+    const char * const message_id_to_qc_name(uint8_t);
+    const char * const message_id_to_pc_name(uint8_t);
+#endif // PC_TERMINAL
 
 /*------------------------------------------------------------------
  * frame_t -- Frame format for quadcopter to PC communication

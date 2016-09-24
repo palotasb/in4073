@@ -231,3 +231,51 @@ void serialcomm_send(serialcomm_t* sc) {
     sc->tx_frame->checksum = frame_checksum(sc->tx_frame);
     sc->tx_byte(sc->tx_frame->checksum);
 }
+
+#ifdef PC_TERMINAL
+    static const char * const unknown = "(Unknown)";
+
+    static const char * const message_id_names_to_qc[256] = {
+        "SET_MODE",
+        "SET_LIFT_ROLL_PITCH_YAW",
+        "SET_P12",
+        "SET_KEYCODE",
+        "SET_OPTION",
+        "SET_LOGMSK",
+        "LOG_CTL",
+        "SET_TELEMSK",
+        "KEEP_ALIVE",
+        0
+    };
+
+    const char * const message_id_to_qc_name(uint8_t id) {
+        if (message_id_names_to_qc[id])
+            return message_id_names_to_qc[id];
+        else
+            return unknown;
+    }
+
+    static const char * const message_id_names_to_pc[256] = {
+        "TIME_MODE_VOLTAGE",
+        "SPQR",
+        "SAXYZ",
+        "AE1234",
+        "TEMP_PRESSURE",
+        "XYZPOS",
+        "PHI_THETA_PSI",
+        "XYZFORCE",
+        "LMN",
+        "UVW",
+        "PQR",
+        "P12",
+        "TEXT",
+        0
+    };
+
+    const char * const message_id_to_pc_name(uint8_t id) {
+        if (message_id_names_to_pc[id])
+            return message_id_names_to_pc[id];
+        else
+            return unknown;
+    }
+#endif // PC_TERMINAL
