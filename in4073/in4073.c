@@ -72,8 +72,7 @@ void init_all(void) {
     imu_init(true, 100);    
     baro_init();
     spi_flash_init();
-    //ble_init();
-qc_mode_tables[0].test = 123; //DEBUG    
+    //ble_init(); 
     // HAL & software init
     qc_hal_init(&qc_hal);
     init_modes();

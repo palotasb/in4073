@@ -66,7 +66,6 @@ typedef enum qc_mode {
         qc_mode_trans_fn_t      trans_fn;
         qc_mode_enter_fn_t      enter_fn;
         qc_motor_on_fn_t        motor_on_fn;
-int test; //DEBUG
     } qc_mode_table_t;
 
 #endif // QUADCOPTER
