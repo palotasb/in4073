@@ -148,6 +148,11 @@ bool pc_command_get_message(pc_command_t* command, message_t* message_out) {
         command->telemetry_mask_updated = false;
         return true;
     }
+    if (command->reboot) {
+        message_out->ID = MESSAGE_REBOOT_ID;
+        command->reboot = false;
+        return true;
+    }
 
     return false;
 }

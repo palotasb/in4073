@@ -161,7 +161,7 @@ void run_terminal(char* serial, char* js) {
 	fprintf(stderr, "Press ESC or 1 (one) to enter PANIC mode.\n");
 	fprintf(stderr, "Press E to enable motors (after startup and each panic).\n");
 	fprintf(stderr, "Press R to disable motors manually.\n\n");
-	fprintf(stderr, "Press Ctrl+C to exit terminal program.\n");
+	fprintf(stderr, "Press X to exit terminal program.\n");
 	fprintf(stderr, "========================================================\n\n");
 	
 	/* send & receive
@@ -189,6 +189,10 @@ void run_terminal(char* serial, char* js) {
 					tx_frame.message.value.v16[0], tx_frame.message.value.v16[1], tx_frame.message.value.v16[2], tx_frame.message.value.v16[3],
 					tx_frame.message.value.v8[0], tx_frame.message.value.v8[1], tx_frame.message.value.v8[2], tx_frame.message.value.v8[3], tx_frame.message.value.v8[4], tx_frame.message.value.v8[5], tx_frame.message.value.v8[6], tx_frame.message.value.v8[7]);
 				serialcomm_send(&sc);
+				if (tx_frame.message.ID == MESSAGE_REBOOT_ID) {
+					fprintf(stderr, "Exiting terminal.\n");
+					exit(0);
+				}
 				last_msg = time_get_ms();
 				// Don't completely block communications...
 				if ((c = rs232_getchar_nb()) >= 0) 
@@ -252,7 +256,7 @@ void pc_rx_complete(message_t* message) {
     // Special handling
     switch (message->ID) {
     	case MESSAGE_TIME_MODE_VOLTAGE_ID:
-    		fprintf(stderr, "> Entered mode %d\n", MESSAGE_MODE_VALUE(message));
+    		fprintf(stderr, "Entered mode %d\n", MESSAGE_MODE_VALUE(message));
     		if (MESSAGE_MODE_VALUE(message) == MODE_1_PANIC) {
     			command.mode_panic_status = 0;
     		}

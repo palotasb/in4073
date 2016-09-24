@@ -283,6 +283,9 @@ typedef struct message {
 // MESSAGE 8
 #define MESSAGE_KEEP_ALIVE_ID           8
 
+// MESSAGE 9
+#define MESSAGE_REBOOT_ID               9
+
 // Special frames
 
 #define FRAME_START_ID                  0xFF

@@ -62,7 +62,7 @@ void qc_hal_tx_byte(uint8_t byte) {
 **/
 void qc_hal_get_inputs(qc_state_t* state) {
   
-	 adc_request_sample();
+	adc_request_sample();
     read_baro();
 
     state->sensor.temperature   = temperature;
