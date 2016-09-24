@@ -161,6 +161,15 @@ void run_terminal(char* serial, char* js) {
 	fprintf(stderr, "Press ESC or 1 (one) to enter PANIC mode.\n");
 	fprintf(stderr, "Press E to enable motors (after startup and each panic).\n");
 	fprintf(stderr, "Press R to disable motors manually.\n\n");
+	fprintf(stderr, "Logging data:\n");
+	fprintf(stderr, "Press C to start, V to stop, B to read back, N to reset.\n");
+	fprintf(stderr, "(Reading back only in safe mode.)\n\n");
+	fprintf(stderr, "How to select data for logging (telemetry):\n");
+	fprintf(stderr, "Press F (G) and enter the sum of the relevant value IDs:\n");
+	for (int i = 0; i <= 11; i++) {
+		fprintf(stderr, "\t%6u = %#8lx: %s\n", 1ul<<i, 1ul<<i, message_id_to_pc_name(i));
+	}
+	fprintf(stderr, "Press ENTER to set. Enter F 0 (G 0) to log nothing.\n\n");
 	fprintf(stderr, "Press X to exit terminal program.\n");
 	fprintf(stderr, "========================================================\n\n");
 	
