@@ -45,7 +45,7 @@ void get_dmp_data(void)
 		sq = gyro[1];
 		sr = gyro[2];
 	}
-	else printf("Error reading sensor fifo: %d\n", read_stat);
+	else printf("> DMP err %d\n", read_stat);
 }
 
 
@@ -64,7 +64,7 @@ void get_raw_sensor_data(void){
 		sq = gyro[1];
 		sr = gyro[2];
 	}
-	else printf("Error reading sensor fifo: %d\n", read_stat);
+	else printf("> MPU err %d\n", read_stat);
 }
 
 void imu_init(bool dmp, uint16_t freq)

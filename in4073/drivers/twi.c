@@ -18,6 +18,7 @@ static volatile bool read = false;
 
 bool i2c_read(uint8_t slave_addr, uint8_t reg_addr, uint8_t data_length, uint8_t *data)
 {
+	volatile uint32_t to;
 	if (!data_length) return -1;
 
 	sent = false;
@@ -27,7 +28,9 @@ bool i2c_read(uint8_t slave_addr, uint8_t reg_addr, uint8_t data_length, uint8_t
 	NRF_TWI0->SHORTS = 0;
 	NRF_TWI0->TASKS_STARTTX = 1;
 
-	while (!sent);
+	to = 10000;
+	while (!sent && --to);
+	if (!to) return -2;
 	sent = false;
 	
 	if (data_length-1 == 0) NRF_TWI0->SHORTS = TWI_SHORTS_BB_STOP_Msk;
@@ -37,7 +40,9 @@ bool i2c_read(uint8_t slave_addr, uint8_t reg_addr, uint8_t data_length, uint8_t
 
 	while (true)
 	{
-		while (!read);
+		to = 10000;
+		while (!read && --to);
+		if (!to) return -3;
 		read = false;
 	
 		*data++ = NRF_TWI0->RXD;

@@ -40,7 +40,10 @@ void read_baro(void)
     
 	if(loop_count == 1 && ((get_time_us() - initTime) >= 10000))
 	{
-		i2c_read(MS5611_ADDR, READ, 3, data);
+		if (i2c_read(MS5611_ADDR, READ, 3, data)) {
+			//printf("> I2C rd err @ baro 1\n");
+			return;
+		}
 		D1 = (uint32_t) ((data[0] << 16)|(data[1] << 8)|data[2]);
 
 		NRF_TWI0->ADDRESS = MS5611_ADDR;
@@ -54,7 +57,10 @@ void read_baro(void)
 	
 	if(loop_count == 2 && ((get_time_us() - initTime) >= 3000))
 	{
-		i2c_read(MS5611_ADDR, READ, 3, data);
+		if (i2c_read(MS5611_ADDR, READ, 3, data)) {
+			//printf("> I2C rd err @ baro 2\n");
+			return;
+		}
 		D2 = (uint32_t) ((data[0] << 16)|(data[1] << 8)|data[2]);
 
 		long long dT, OFFSET, SENS;
@@ -79,7 +85,9 @@ void baro_init(void)
 	
 	for (uint8_t c=0;c<8;c++)
 	{
-		i2c_read(MS5611_ADDR, PROM+2*c, 2, data);
+		if (i2c_read(MS5611_ADDR, PROM+2*c, 2, data)) {
+			printf("> Baro init err\n");
+		}
 		prom[c] = (uint16_t)((data[0] << 8) | data[1]); 
 	}
 

@@ -167,10 +167,10 @@ void run_terminal(char* serial, char* js) {
 	fprintf(stderr, "How to select data for logging (telemetry):\n");
 	fprintf(stderr, "Press F (G) and enter the sum of the relevant value IDs:\n");
 	for (int i = 0; i <= 11; i++) {
-		fprintf(stderr, "\t%6u = %#8lx: %s\n", 1ul<<i, 1ul<<i, message_id_to_pc_name(i));
+		fprintf(stderr, "\t%6u = %#8x: %s\n", 1u<<i, 1u<<i, message_id_to_pc_name(i));
 	}
 	fprintf(stderr, "Press ENTER to set. Enter F 0 (G 0) to log nothing.\n\n");
-	fprintf(stderr, "Press X to exit terminal program.\n");
+	fprintf(stderr, "Press X to REBOOT Quadcopter and EXIT terminal program.\n");
 	fprintf(stderr, "========================================================\n\n");
 	
 	/* send & receive

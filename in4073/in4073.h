@@ -46,7 +46,9 @@ int16_t ae[4];
 void run_filters_and_control();
 
 // Timers
-#define TIMER_PERIOD	50000 //50000us=50ms=20Hz (MAX 16bit, 65ms)
+// Originally -- 50000us=50ms=20Hz (MAX 16bit, 65ms)
+// Currently -- 10000us=10ms=100Hz
+#define TIMER_PERIOD	10000 
 void timers_init(void);
 uint32_t get_time_us(void);
 bool check_timer_flag(void);

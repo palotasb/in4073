@@ -112,30 +112,111 @@ void qc_rx_complete(message_t* message) {
 }
 
 void led_display(void) {
-    static uint32_t counter;
-    if (counter++ %20 == 0) {
-        nrf_gpio_pin_toggle(BLUE);
+    static uint32_t counter = 0;
+    static const uint32_t colors[] = {BLUE, GREEN, YELLOW, RED};
+    //static uint8_t intensities[] = {0, 0, 0, 0};
+    static uint32_t patterns[] = {0, 0, 0, 0};
+
+    patterns[3] = 0;
+    switch (qc_system.mode) {
+        case MODE_0_SAFE:
+            patterns[1] = 0xffffffff;
+            break;
+        case MODE_1_PANIC:
+            patterns[1] = 0;
+            patterns[3] = 0xffffffff;
+            break;
+        case MODE_2_MANUAL:
+            patterns[1] = 0xfafafafa;
+            break;
+        case MODE_3_CALIBRATE:
+            patterns[1] = 0xffeaffea;
+            break;
+        case MODE_4_YAW:
+            patterns[1] = 0xffaaffaa;
+            break;
+        case MODE_5_FULL_CONTROL:
+            patterns[1] = 0xfeaafeaa;
+            break;
+        default:
+            break;
     }
-    if ((counter & 0x3F) == 0)
-        printf("QC: I'm alive!\n");
-/*
-    switch (serialcomm.status) {
-        case SERIALCOMM_STATUS_OK:
-            nrf_gpio_pin_set(YELLOW);
-            nrf_gpio_pin_set(RED);
-            nrf_gpio_pin_clear(GREEN);
-            break;
-        case SERIALCOMM_STATUS_Prestart:
-            nrf_gpio_pin_clear(RED);
-            nrf_gpio_pin_set(GREEN);
-            nrf_gpio_pin_set(YELLOW);
-            break;
-        case SERIALCOMM_STATUS_Start:
-            nrf_gpio_pin_clear(YELLOW);
-            nrf_gpio_pin_set(GREEN);
-            nrf_gpio_pin_set(RED);
-            break;
-        default: break;
+    patterns[0] = 0xFF00FF00;
+
+    counter++;
+    for (int i = 0; i < 4; i++) {
+        if ((patterns[i] & (1ul << ((counter >> 3) & 0x1F))) == 0) {
+            nrf_gpio_pin_set(colors[i]);
+        } else {
+            nrf_gpio_pin_clear(colors[i]);
+        }
     }
-*/
+    if ((counter & 0xFF) == 0)
+        printf("> I'm alive!\n");
+}
+
+void Default_Handler(void) {
+    nrf_gpio_pin_set(BLUE);
+    nrf_gpio_pin_set(GREEN);
+    nrf_gpio_pin_set(YELLOW);
+    while (1) {
+        volatile uint32_t to = 1000;
+        while (to--) {}
+        nrf_gpio_pin_toggle(RED);
+    }
+}
+
+void NMI_Handler (void) {
+    nrf_gpio_pin_clear(BLUE);
+    nrf_gpio_pin_set(GREEN);
+    nrf_gpio_pin_set(YELLOW);
+    while (1) {
+        volatile uint32_t to = 1000;
+        while (to--) {}
+        nrf_gpio_pin_toggle(RED);
+    }
+}
+
+void HardFault_Handler (void) {
+    nrf_gpio_pin_set(BLUE);
+    nrf_gpio_pin_clear(GREEN);
+    nrf_gpio_pin_set(YELLOW);
+    while (1) {
+        volatile uint32_t to = 1000;
+        while (to--) {}
+        nrf_gpio_pin_toggle(RED);
+    }
+}
+
+void SVC_Handler (void) {
+    nrf_gpio_pin_clear(BLUE);
+    nrf_gpio_pin_clear(GREEN);
+    nrf_gpio_pin_set(YELLOW);
+    while (1) {
+        volatile uint32_t to = 1000;
+        while (to--) {}
+        nrf_gpio_pin_toggle(RED);
+    }
+}
+
+void PendSV_Handler (void) {
+    nrf_gpio_pin_set(BLUE);
+    nrf_gpio_pin_set(GREEN);
+    nrf_gpio_pin_clear(YELLOW);
+    while (1) {
+        volatile uint32_t to = 1000;
+        while (to--) {}
+        nrf_gpio_pin_toggle(RED);
+    }
+}
+
+void SysTick_Handler (void) {
+    nrf_gpio_pin_clear(BLUE);
+    nrf_gpio_pin_set(GREEN);
+    nrf_gpio_pin_clear(YELLOW);
+    while (1) {
+        volatile uint32_t to = 1000;
+        while (to--) {}
+        nrf_gpio_pin_toggle(RED);
+    }
 }

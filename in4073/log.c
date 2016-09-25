@@ -75,7 +75,11 @@ uint32_t log_item(uint32_t i) {
 
 bool log_init(serialcomm_t* serialcomm) {	
 	logsize = 0;
+	volatile uint32_t to = 10000;
+	nrf_gpio_pin_clear(YELLOW);
+	while (--to) {}
 	bool result = spi_flash_init();
+	nrf_gpio_pin_set(YELLOW);
 	if (result) {
 		sc = serialcomm;
 	}

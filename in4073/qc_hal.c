@@ -40,11 +40,8 @@ void qc_hal_init(qc_hal_t* hal) {
 void qc_hal_tx_byte(uint8_t byte) {
     if (!enable_uart_output)
         return;
-    uint32_t to = 1000;
-    while (tx_queue.count == QUEUE_SIZE && to--) {
-            nrf_gpio_pin_clear(YELLOW);
-    };
-    nrf_gpio_pin_set(YELLOW);
+    volatile uint32_t to = 1000;
+    while (tx_queue.count == QUEUE_SIZE && --to) { }
     uart_put(byte);
 }
 
