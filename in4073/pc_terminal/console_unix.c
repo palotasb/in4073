@@ -10,7 +10,12 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <assert.h>
-#include <time.h>
+
+#ifdef __MACH__
+    #include <sys/time.h>
+#else
+    #include <time.h>
+#endif
 
 
 /*------------------------------------------------------------
@@ -58,8 +63,19 @@ int term_getchar_nb()
         return -1;
 }
 
-unsigned long long time_get_ms(void) {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
-    return ts.tv_sec * 1000ull + ts.tv_nsec / 1000000ull;
-}
+#ifndef __MACH__
+    // Standard implementation on UNIX/Linux
+    unsigned long long time_get_ms(void) {
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+        return ts.tv_sec * 1000ull + ts.tv_nsec / 1000000ull;
+    }
+#else
+
+    unsigned long long time_get_ms(void) {
+        struct timeval now;
+        int rv = gettimeofday(&now, NULL);
+        if (rv) return 0;
+        return now.tv_sec * 1000ull + now.tv_usec / 1000000ull;
+    }
+#endif

@@ -1,16 +1,18 @@
 #include "pc_terminal.h"
 #include "joystick.h"
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
 
+#ifndef __MACH__
+	#include <unistd.h>
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <stdbool.h>
+	#include <fcntl.h>
+	#include <unistd.h>
+	#include <errno.h>
 
-#include <asm/types.h>
-#include <linux/input.h>
+	#include <asm/types.h>
+	#include <linux/input.h>
+
 
 /*
  * Version
@@ -151,3 +153,20 @@ int read_js_events(struct js_event* js) {
 		read(fd, &js, sizeof(struct js_event))
 		==	sizeof(struct js_event);
 }
+
+#else // __MACH__
+
+	int open_joystick(const char *path) {
+		return -1;
+	}
+
+	int close_joystick(void) {
+		return -1;
+	}
+
+	int read_js_events(struct js_event* js) {
+		return -1;
+	}
+
+#endif
+
