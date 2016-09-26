@@ -76,7 +76,7 @@ bool pc_command_get_message(pc_command_t* command, message_t* message_out) {
     }
     if (command->orient_updated) {
         message_out->ID = MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID;
-        MESSAGE_SET_LIFT_VALUE(message_out)     = max(min(command->orient_kb.lift   + command->orient_js.lift, 127), -128);
+        MESSAGE_SET_LIFT_VALUE(message_out)     = max(min(command->orient_kb.lift   + command->orient_js.lift, 255), 0);
         MESSAGE_SET_ROLL_VALUE(message_out)     = max(min(command->orient_kb.roll   + command->orient_js.roll, 127), -128);
         MESSAGE_SET_PITCH_VALUE(message_out)    = max(min(command->orient_kb.pitch  + command->orient_js.pitch, 127), -128);
         MESSAGE_SET_YAW_VALUE(message_out)      = max(min(command->orient_kb.yaw    + command->orient_js.yaw, 127), -128);
