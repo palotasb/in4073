@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS = -g -Wall -lm 
+CFLAGS = -std=gnu11 -g -Wall -lm 
 EXEC = ./pc_terminal
 
 ifeq ($(OS),Windows_NT)
