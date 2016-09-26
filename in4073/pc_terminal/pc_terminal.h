@@ -16,7 +16,11 @@
 
 #ifndef SERIAL_DEV
 	#ifndef __WINDOWS
-		#define SERIAL_DEV	"/dev/ttyUSB0"
+        #ifndef __MACH__
+		  #define SERIAL_DEV	"/dev/ttyUSB0"
+        #else
+            #define SERIAL_DEV  "/dev/cu.usbserial-DN00P2T1"
+        #endif
 	#else
 		#define SERIAL_DEV	"\\\\.\\COM3"
 	#endif
