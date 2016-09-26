@@ -35,6 +35,8 @@ typedef int8_t          q8_t;
 // with integer part a and fractional part (b / (2 ** frac))
 #define FP_INT_FRAC(a, b, frac)     (((a) << (frac)) | (b))
 
+#define FP_FRAC(num, den, frac)     (((num) * (1 << (frac))) / (den) )
+
 // INT_FP(fp, frac) -- Get integer part of f_.frac fixedpoint number
 #define INT_FP(fp, frac)     ((fp) >> (frac))
 
