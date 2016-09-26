@@ -52,27 +52,15 @@ typedef struct qc_state_motor {
  *  Author: Boldizsar Palotas
 **/
 typedef struct qc_state_sensor {
- /*   f16p16_t    sp;
+    f16p16_t    sp;
     f16p16_t    sq;
     f16p16_t    sr;
     f16p16_t    sax;
     f16p16_t    say;
     f16p16_t    saz;
     f8p8_t      temperature;
-    f16p16_t    pressure;
+    uint32_t    pressure;
     f16p16_t    voltage;
-*/
-	 int16_t    sp;
-    int16_t    sq;
-    int16_t    sr;
-    int16_t    sax;
-    int16_t    say;
-    int16_t    saz;
-    int32_t      temperature;
-    int32_t    pressure;
-    uint16_t    voltage;
-
-
 } qc_state_sensor_t;
 
 /** State: position

@@ -65,12 +65,12 @@ void qc_hal_get_inputs(qc_state_t* state) {
     state->sensor.temperature   = temperature;
     state->sensor.pressure      = pressure;
     state->sensor.voltage       = bat_volt;
-    state->sensor.sax   		  = sax;
-    state->sensor.say   = say;
-    state->sensor.saz   = saz;
-    state->sensor.sp    = sp;
-    state->sensor.sq    = sq;
-    state->sensor.sr    = sr; 
+    state->sensor.sax           = sax;
+    state->sensor.say           = say;
+    state->sensor.saz           = saz;
+    state->sensor.sp            = sp;
+    state->sensor.sq            = sq;
+    state->sensor.sr            = sr; 
 
 }
 
