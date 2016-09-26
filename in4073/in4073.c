@@ -151,8 +151,8 @@ void led_display(void) {
             nrf_gpio_pin_clear(colors[i]);
         }
     }
-    if ((counter & 0xFF) == 0)
-        printf("> I'm alive!\n");
+    //if ((counter & 0xFF) == 0)
+    //    printf("> I'm alive!\n");
 }
 
 void Default_Handler(void) {
