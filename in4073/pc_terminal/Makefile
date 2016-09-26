@@ -11,12 +11,16 @@ endif
 
 CFILES = pc_terminal.c pc_command.c pc_log.c keyboard.c serial.c joystick.c console.c ../serialcomm.c ../qc_state.c $(PLATFORM_CFILES)
 
+FEEDGNUPLOT = feedgnuplot
+FGPFLAGS =  --domain --nodataid --stream
+
+
 all: 
 	$(CC) $(CFLAGS) $(CFILES) -o $(EXEC)
 
 run: all
-	$(EXEC)
+	$(EXEC) | $(FEEDGNUPLOT) $(FGPFLAGS)
 
 run-nj: all
-	$(EXEC) -nj
+	$(EXEC) -nj | $(FEEDGNUPLOT) $(FGPFLAGS)
 

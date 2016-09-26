@@ -4,6 +4,9 @@
 #include "../qc_mode.h"
 #include <string.h>
 #include <stdarg.h>
+#ifdef WINDOWS
+    #include <windows.h>
+#endif
 
 // Value to print in placeof on unknown number
 #define _NAN    "NaN"
@@ -184,6 +187,9 @@ void pc_log_flush(pc_log_t* log) {
     pc_log_print(log, "%d"  _SEP, PC_LOG_p2, log->state.trim.p2);
     fprintf(log->file, _END);
     fflush(log->file);
+    #ifdef WINDOWS
+        FlushFileBuffers((HANDLE) _fileno(log->file));
+    #endif
 }
 
 void pc_log_print(pc_log_t* log, const char * fmt, pc_log_item_t item, ...) {
