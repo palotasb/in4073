@@ -66,23 +66,37 @@ void control_fn(qc_state_t* state) {
     // ae_3^2 = -1/4b Z +     0 L + -1/2b M + -1/4d N
     // ae_4^2 = -1/4b Z +  1/2b L +     0 M +  1/4d N
 
-    f24p8_t b = FP_INT(1, 8);
-    f24p8_t d = FP_INT(1, 8);
+    f24p8_t b = FP_INT(55, 8);
+    f24p8_t d = FP_INT(15, 8);
     f24p8_t m1_4b = - b / 4;
     f24p8_t p1_2b =   b / 2;
     f24p8_t p1_4d =   d / 4;
 
+    state->force.Z = -state->orient.lift;
+    state->torque.L = state->orient.roll;
+    state->torque.M = state->orient.pitch;
+    state->torque.N = state->orient.yaw;
+
     // f24.8 * f16.16 == f8.24, we have to shift >> 8 to get f16.16 again.
     // TODO we should normalise the results in a sane way here
-    uint32_t ae1_sq = (m1_4b * state->force.Z + p1_2b * state->torque.M - p1_4d * state->torque.N);
-    uint32_t ae2_sq = (m1_4b * state->force.Z - p1_2b * state->torque.L + p1_4d * state->torque.N);
-    uint32_t ae3_sq = (m1_4b * state->force.Z - p1_2b * state->torque.M - p1_4d * state->torque.N);
-    uint32_t ae4_sq = (m1_4b * state->force.Z + p1_2b * state->torque.L + p1_4d * state->torque.N);
+    int32_t ae1_sq = (m1_4b * state->force.Z + p1_2b * state->torque.M - p1_4d * state->torque.N);
+    int32_t ae2_sq = (m1_4b * state->force.Z - p1_2b * state->torque.L + p1_4d * state->torque.N);
+    int32_t ae3_sq = (m1_4b * state->force.Z - p1_2b * state->torque.M - p1_4d * state->torque.N);
+    int32_t ae4_sq = (m1_4b * state->force.Z + p1_2b * state->torque.L + p1_4d * state->torque.N);
 
-    state->motor.ae1 = fp_sqrt(ae1_sq);
-    state->motor.ae2 = fp_sqrt(ae2_sq);
-    state->motor.ae3 = fp_sqrt(ae3_sq);
-    state->motor.ae4 = fp_sqrt(ae4_sq);
+    state->motor.ae1 = ae1_sq < 0 ? 0 : fp_sqrt(ae1_sq);
+    state->motor.ae2 = ae2_sq < 0 ? 0 : fp_sqrt(ae2_sq);
+    state->motor.ae3 = ae3_sq < 0 ? 0 : fp_sqrt(ae3_sq);
+    state->motor.ae4 = ae4_sq < 0 ? 0 : fp_sqrt(ae4_sq);
+
+    static uint32_t counter = 0;
+    counter++;
+
+    if ((counter & 0x3F) == 0) {
+        printf("M2: ZLMN : %ld %ld %ld %ld\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
+        printf("M2: ae_sq: %ld %ld %ld %ld\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
+        printf("M2: ae   : %u %u %u %u\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
+    }
 }
 
 /** =======================================================
