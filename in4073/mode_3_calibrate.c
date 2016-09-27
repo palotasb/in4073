@@ -1,9 +1,19 @@
 #include "mode_3_calibrate.h"
+#include "in4073.h"
+
+// 256 samples taken at 100 HZ means around 2.56 sec calibration time
+// 256 means a shift amount of 8 bits
+#define CALIBRATE_SAMPLES 256
+#define CALIBRATE_SHIFT_AMOUNT 8		
+
 
 static void control_fn(qc_state_t* state);
 static bool trans_fn(qc_state_t* state, qc_mode_t new_mode);
 static void enter_fn(qc_state_t* state, qc_mode_t old_mode);
 static bool motor_on_fn(qc_state_t* state);
+
+
+static mode_3_calibrate_state_t cal_state;
 
 /** =======================================================
  *  mode_3_calibrate_init -- Initialise mode table for
@@ -23,16 +33,41 @@ void mode_3_calibrate_init(qc_mode_table_t* mode_table) {
 /** =======================================================
  *  control_fn -- The control function for this mode.
  *  =======================================================
- *  Sets internal state and output variables according to
- *  the control diagram described at the top of the file.
+ *  Takes the average value of the sensors in order to 
+ *  determine the offsets
  *
  *  Parameters:
  *  - state: The state containing everything needed for the
  *      control: inputs, internal state variables and
  *      output.
- *  Author: Boldizsar Palotas
+ *  Author: Koos Eerden
 **/
 void control_fn(qc_state_t* state) {
+
+	if(cal_state.busy){
+		 cal_state.sp 			+= FP_CHUNK(state->sensor.sp, 8, 16);
+		 cal_state.sq			+= FP_CHUNK(state->sensor.sq, 8, 16);
+		 cal_state.sr			+= FP_CHUNK(state->sensor.sr, 8, 16);
+		 cal_state.sax 		+= FP_CHUNK(state->sensor.sax, 8, 16);
+		 cal_state.say 		+= FP_CHUNK(state->sensor.say, 8, 16);
+		 cal_state.saz 		+= FP_CHUNK(state->sensor.saz, 8, 16);
+
+		 //update offset
+		 if(cal_state.counter++ == CALIBRATE_SAMPLES - 1){ 
+			 cal_state.busy = false;
+			 state->offset.sp  =	cal_state.sp >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.sq  =	cal_state.sq >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.sr  =	cal_state.sr >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.sax =	cal_state.sax >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.say =	cal_state.say >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.saz =	cal_state.saz >> CALIBRATE_SHIFT_AMOUNT;
+		}		
+
+	} else {
+		printf("Calibration done");
+	}
+	
+
     return;
 }
 
@@ -62,8 +97,16 @@ bool trans_fn(qc_state_t* state, qc_mode_t new_mode) {
  *  - old_mode: The previous mode.
  *  Author: Boldizsar Palotas
 **/
-void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
-    return;
+void enter_fn(qc_state_t* state, qc_mode_t old_mode) 
+{
+	 cal_state.sp 			= 0;
+    cal_state.sq			= 0;
+    cal_state.sr			= 0;
+    cal_state.sax 		= 0;
+    cal_state.say 		= 0;
+    cal_state.saz 		= 0;
+	 cal_state.counter	= 0;
+	 cal_state.busy		= true;
 }
 
 /** =======================================================
