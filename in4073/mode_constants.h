@@ -153,15 +153,15 @@
 
 // Inverse of the control loop time constant in seconds
 // 1 / 0.01 = 1000 / 10 [1/s] in Q24.8 format.
-#define T_INV       ((q32_t)(FP_INT_FRAC(1000, 10, 8)))
+#define T_INV       ((q32_t)(FP_FRAC(1000, 10, 8)))
 
 // Moment of inertia around the x, y, z axis (for L, M, N torque) [N m]
  // 1/2 [N m] in Q24.8 format.
-#define I_L         FP_INT_FRAC(1, 2, 8)
+#define I_L         FP_FRAC(1, 2, 8)
  // 1/2 [N m] in Q24.8 format.
-#define I_M         FP_INT_FRAC(1, 2, 8)
+#define I_M         FP_FRAC(1, 2, 8)
  // 1/2 [N m] in Q24.8 format.
-#define I_N         FP_INT_FRAC(1, 2, 8)
+#define I_N         FP_FRAC(1, 2, 8)
 
 // Inverse of the product of the control loop time constant and the
 // moment of inertia for the L, M, N torque
@@ -172,8 +172,8 @@
 // FP_MUL1 is the post-shifted fixp multiplication.
 
 // The b' and d' constants and some commonly-used multiples of them.
-#define B           FP_INT(55, 8)
-#define D           FP_INT(15, 8)
+#define B           FP_INT(26, 8)
+#define D           FP_INT(10, 8)
 #define M1_4B       (- B / 4)
 #define P1_2B       (B / 2)
 #define P1_4D       (D / 4)
@@ -189,6 +189,7 @@
 // This can be interpreted as byte value = degrees * 4.
 // Going further this can be interpreted that byte is a Q6.2 format
 // fixedpoint degree value. From there the conversion:
-#define RADIAN_FROM_BYTE(byte)  MUL_FP3((byte), PI_180_Q31, )
+#define RADIAN_FROM_BYTE(byte)  FP_MUL3((byte), PI_180_Q31, 0, 8, 17)
+// (Q6.2) * (8Q1.23) = 8Q7.25
 
 #endif // MODE_CONSTANTS_H
