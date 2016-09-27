@@ -92,7 +92,7 @@ void init_modes(void) {
     mode_0_safe_init(&qc_mode_tables[MODE_0_SAFE]);
     mode_1_panic_init(&qc_mode_tables[MODE_1_PANIC]);
     mode_2_manual_init(&qc_mode_tables[MODE_2_MANUAL]);
-    mode_0_safe_init(&qc_mode_tables[MODE_3_CALIBRATE]);
+    mode_3_calibrate_init(&qc_mode_tables[MODE_3_CALIBRATE]);
     mode_0_safe_init(&qc_mode_tables[MODE_4_YAW]);
     mode_0_safe_init(&qc_mode_tables[MODE_5_FULL_CONTROL]);
 }
