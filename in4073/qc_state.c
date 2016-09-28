@@ -13,6 +13,7 @@ void qc_state_init(qc_state_t* state) {
     qc_state_clear_orient(state);
     qc_state_clear_motor(state);
     qc_state_clear_sensor(state);
+    qc_state_clear_offset(state);
     qc_state_clear_pos(state);
     qc_state_clear_att(state);
     qc_state_clear_force(state);
@@ -71,6 +72,23 @@ void qc_state_clear_sensor(qc_state_t* state) {
     state->sensor.temperature   = 0;
     state->sensor.pressure      = 0;
     state->sensor.voltage       = 0;
+}
+
+/** =======================================================
+ *  qc_state_clear_offset -- Clear offset data
+ *  =======================================================
+ *  Clears all offset data in the state variable.
+ *  Parameters:
+ *  - state: The state variable in which to clear the data.
+ *  Author: Koos Eerden
+**/
+void qc_state_clear_offset(qc_state_t* state) {
+    state->offset.sp    = 0;
+    state->offset.sq    = 0;
+    state->offset.sr    = 0;
+    state->offset.sax   = 0;
+    state->offset.say   = 0;
+    state->offset.saz   = 0;
 }
 
 /** =======================================================
