@@ -5,8 +5,49 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+enum keyboard_state {HANDLE_PRESSES, LOG_MASK, TELE_MASK};
+
+static enum keyboard_state kb_state = HANDLE_PRESSES;
+
+static void handle_keypress(pc_command_t* command);
+static void read_log_mask(pc_command_t* command);
+static void read_tele_mask(pc_command_t* command);
+
+
 /******************************
 read_keyboard()
+*******************************
+Description:
+	handles keybard events and updates the pc_command structure
+
+Outputs:
+	-	pc_command_t *command:
+			pointer to the current state structure
+			this state is updated when a key press is detecten
+
+Author:
+	Koos Eerden
+*******************************/
+
+void read_keyboard(pc_command_t* command) {
+	switch(kb_state){
+		case HANDLE_PRESSES:
+			handle_keypress(command);
+			break;
+		case LOG_MASK:
+			read_log_mask(command);
+			break;
+		case TELE_MASK:
+			read_tele_mask(command);
+			break;
+	}
+
+}
+
+
+/******************************
+handle_keypress()
 *******************************
 Description:
 	Checks if keys were pressed, and updates the status.
@@ -21,8 +62,7 @@ Author:
 	Koos Eerden
 *******************************/
 
-void read_keyboard(pc_command_t* command) {
-
+static void handle_keypress(pc_command_t* command) {
 	char c, c2, c3;
 
 	if ((c = term_getchar_nb()) != -1) {
@@ -188,9 +228,8 @@ void read_keyboard(pc_command_t* command) {
 
 			case 'f':		// Log set mask
 				fprintf(stderr, "Enter LOG MASK: ");
-				if (scanf("%u", &command->log_mask) != 1)
-					break;
-				command->log_mask_updated = true;
+				term_enable_canonical();
+				kb_state = TELE_MASK;
 				break;
 			case 'c':		// Log start
 				command->log_start = true;
@@ -211,9 +250,8 @@ void read_keyboard(pc_command_t* command) {
 
 			case 'g':		// Telemetry set mask
 				fprintf(stderr, "Enter TELEMETRY MASK: ");
-				if (scanf("%u", &command->telemetry_mask) != 1)
-					break;
-				command->telemetry_mask_updated = true;
+				term_enable_canonical();
+				kb_state = TELE_MASK;
 				break;
 			case 'x':		// Reboot
 				command->reboot = true;
@@ -224,3 +262,24 @@ void read_keyboard(pc_command_t* command) {
 		}
 	}
 }
+
+
+static void read_log_mask(pc_command_t* command) {
+	if (scanf("%u", &command->log_mask) == 1) {
+		command->log_mask_updated = true;
+		kb_state = HANDLE_PRESSES;
+		term_disable_canonical();
+	}
+		
+}
+
+static void read_tele_mask(pc_command_t* command) {
+	if (scanf("%u", &command->telemetry_mask) == 1) {
+		command->telemetry_mask_updated = true;
+		kb_state = HANDLE_PRESSES;
+		term_disable_canonical();
+	}
+		
+}
+
+

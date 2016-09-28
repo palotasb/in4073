@@ -53,6 +53,37 @@ void    term_exitio()
     tcsetattr(0, TCSANOW, &savetty);
 }
 
+void term_enable_canonical() {
+	struct termios tty;
+	int opts;
+
+	tcgetattr(0, &tty);
+
+	tty.c_lflag |= (ECHO|ECHONL|ICANON|IEXTEN);
+	tty.c_cc[VTIME] = 0;
+	tty.c_cc[VMIN] = 0;
+	tcsetattr(0, TCSADRAIN, &tty);
+	opts = fcntl(0,F_GETFL);
+	opts = (opts | O_NONBLOCK);
+	fcntl(0,F_SETFL,opts); 
+
+}
+
+void term_disable_canonical() {
+	struct termios tty;
+	int opts;
+	tcgetattr(0, &tty);
+
+	tty.c_lflag &= ~(ECHO|ECHONL|ICANON|IEXTEN);
+	tty.c_cc[VTIME] = 0;
+	tty.c_cc[VMIN] = 0;
+	tcsetattr(0, TCSADRAIN, &tty);
+	opts = fcntl(0,F_GETFL);
+	opts = opts & (~O_NONBLOCK);
+	fcntl(0,F_SETFL,opts) ;
+
+}
+
 int term_getchar_nb() 
 { 
         static unsigned char    line [2];

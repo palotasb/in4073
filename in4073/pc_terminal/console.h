@@ -9,6 +9,9 @@ int	term_getchar_nb() ;
 int	term_getchar();
 void    term_puts(char *s) ;
 
+void term_disable_canonical();
+void term_enable_canonical();
+
 unsigned long long time_get_ms(void);
 
 #endif
