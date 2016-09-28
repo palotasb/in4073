@@ -4,6 +4,7 @@
 #include "pc_command.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 
 enum keyboard_state {HANDLE_PRESSES, LOG_MASK, TELE_MASK};
@@ -228,8 +229,8 @@ static void handle_keypress(pc_command_t* command) {
 
 			case 'f':		// Log set mask
 				fprintf(stderr, "Enter LOG MASK: ");
-				term_enable_canonical();
 				kb_state = LOG_MASK;
+				command->log_mask = 0;
 				break;
 			case 'c':		// Log start
 				command->log_start = true;
@@ -250,8 +251,8 @@ static void handle_keypress(pc_command_t* command) {
 
 			case 'g':		// Telemetry set mask
 				fprintf(stderr, "Enter TELEMETRY MASK: ");
-				term_enable_canonical();
 				kb_state = TELE_MASK;
+				command->telemetry_mask = 0;
 				break;
 			case 'x':		// Reboot
 				command->reboot = true;
@@ -263,23 +264,84 @@ static void handle_keypress(pc_command_t* command) {
 	}
 }
 
-
 static void read_log_mask(pc_command_t* command) {
-	if (scanf("%u", &command->log_mask) == 1) {
-		command->log_mask_updated = true;
-		kb_state = HANDLE_PRESSES;
-		term_disable_canonical();
+	char c = term_getchar_nb();
+	int digit = c - '0';
+	if ('0' <= c && c <= '9') {
+		if (digit == 0 && command->log_mask == 0) {
+			return;
+		}
+		if ((UINT_MAX - digit) / 10 < command->log_mask) {
+			return;
+		}
+		command->log_mask *= 10;
+		command->log_mask += digit;
+		fprintf(stderr, "%c", c);
+	} else {
+		switch (c) {
+			case '\n':
+			case '\r':
+				command->log_mask_updated = true;
+				kb_state = HANDLE_PRESSES;
+				fprintf(stderr, "\n");
+				break;
+			case '\b':
+				if (command->log_mask == 0)
+					break;
+				command->log_mask /= 10;
+				fprintf(stderr, "\b \b");
+				break;
+			case 27: // Escape
+				kb_state = HANDLE_PRESSES;
+				while (command->log_mask != 0) {
+					fprintf(stderr, "\b \b");
+					command->log_mask /= 10;
+				}
+				fprintf(stderr, "cancelled.\n");
+			default:
+				break;
+		}
 	}
-		
 }
 
 static void read_tele_mask(pc_command_t* command) {
-	if (scanf("%u", &command->telemetry_mask) == 1) {
-		command->telemetry_mask_updated = true;
-		kb_state = HANDLE_PRESSES;
-		term_disable_canonical();
+	char c = term_getchar_nb();
+	int digit = c - '0';
+	if ('0' <= c && c <= '9') {
+		if (digit == 0 && command->telemetry_mask == 0) {
+			return;
+		}
+		if ((UINT_MAX - digit) / 10 < command->telemetry_mask) {
+			return;
+		}
+		command->telemetry_mask *= 10;
+		command->telemetry_mask += digit;
+		fprintf(stderr, "%c", c);
+	} else {
+		switch (c) {
+			case '\n':
+			case '\r':
+				command->telemetry_mask_updated = true;
+				kb_state = HANDLE_PRESSES;
+				fprintf(stderr, "\n");
+				break;
+			case '\b':
+				if (command->telemetry_mask == 0)
+					break;
+				command->telemetry_mask /= 10;
+				fprintf(stderr, "\b \b");
+				break;
+			case 27: // Escape
+				kb_state = HANDLE_PRESSES;
+				while (command->telemetry_mask != 0) {
+					fprintf(stderr, "\b \b");
+					command->telemetry_mask /= 10;
+				}
+				fprintf(stderr, "cancelled.\n");
+			default:
+				break;
+		}
 	}
-		
 }
 
 

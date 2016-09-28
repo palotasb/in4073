@@ -30,9 +30,6 @@ void term_initio(void) { }
  */
 void term_exitio(void) { }
 
-void term_enable_canonical() { }
-void term_disable_canonical() { }
-
 /*------------------------------------------------------------------
  * term_getchar_nb -- reads a character from the terminal if
  * available.
