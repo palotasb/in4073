@@ -229,7 +229,7 @@ static void handle_keypress(pc_command_t* command) {
 			case 'f':		// Log set mask
 				fprintf(stderr, "Enter LOG MASK: ");
 				term_enable_canonical();
-				kb_state = TELE_MASK;
+				kb_state = LOG_MASK;
 				break;
 			case 'c':		// Log start
 				command->log_start = true;
