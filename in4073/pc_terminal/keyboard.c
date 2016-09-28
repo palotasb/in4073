@@ -43,7 +43,6 @@ void read_keyboard(pc_command_t* command) {
 			read_tele_mask(command);
 			break;
 	}
-
 }
 
 
@@ -64,7 +63,10 @@ Author:
 *******************************/
 
 static void handle_keypress(pc_command_t* command) {
-	char c, c2, c3;
+	char c, c2;
+#ifndef WINDOWS
+	char c3;
+#endif
 
 	if ((c = term_getchar_nb()) != -1) {
 		switch (c) {
@@ -100,11 +102,13 @@ static void handle_keypress(pc_command_t* command) {
 							Unknown control sequenced are ignored
 							*/
 				c2 = term_getchar_nb();
-				if (c2 == -1) {
+				if (c2 == -1 || c2 == 27) {
 					command->mode = MODE_1_PANIC;
 					command->mode_panic_status = 1;
 					command->mode_updated = true;
-				} else if(c2 == '['){
+				}
+#ifndef WINDOWS
+				else if(c2 == '['){
 					c3 = term_getchar_nb();	
 					switch(c3) {
 						case 'A':	//up arrow: pitch down
@@ -124,8 +128,35 @@ static void handle_keypress(pc_command_t* command) {
 							command->orient_updated = true;
 							break;
 					}
+				} else {
+					fprintf(stderr, "Can't recognize character %d.\n", c);
 				}
+#endif
 				break;
+#ifdef WINDOWS
+				case -32:	// EBCDIC escape code on Windows command line
+					c2 = term_getchar_nb();
+					// This one uses IBM scan codes: http://www.lookuptables.com/ebcdic_scancodes.php
+					switch (c2) {						
+						case 72:	//up arrow: pitch down
+							command->orient_kb.pitch = max(command->orient_kb.pitch - 1, -128);
+							command->orient_updated = true;
+							break;
+						case 80:  //down arrow: pitch up
+							command->orient_kb.pitch = min(command->orient_kb.pitch + 1, 127);
+							command->orient_updated = true;
+							break;
+						case 77:	//right arrow: roll down
+							command->orient_kb.roll = max(command->orient_kb.roll - 1, -128);
+							command->orient_updated = true;
+							break;
+						case 75:	//left arrow: roll up
+							command->orient_kb.roll = min(command->orient_kb.roll + 1, 127);
+							command->orient_updated = true;
+							break;
+					}
+					break;
+#endif
 
 			// ----------------------------------
 			// Mode switching
