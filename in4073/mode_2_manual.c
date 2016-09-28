@@ -108,36 +108,38 @@ void control_fn(qc_state_t* state) {
     // Positions are zero.
     // Hence velocities are zero.
     // Hence forces are zero except for Z to which -lift is added.
-    state->force.Z      = -state->orient.lift;
+    // Q16.16 <-- Q8.8
+    state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
 
     // Roll and pitch set phi and theta but yaw is handled separately.
-    state->att.phi      = state->orient.roll;
-    state->att.theta    = state->orient.pitch;
+    // Q16.16 <-- Q2.14
+    state->att.phi      = FP_EXTEND(state->orient.roll, 16, 14);
+    state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14);
 
-    // p, q, r: 16.16
-    // phi, theta, psi: 16.16
-    // T_INV: 24.8
-
+    // Q16.16 = Q24.8 * Q16.16 >> 8
     state->spin.p   = (T_INV * (state->att.phi - prev_att.phi)) >> 8;
     state->spin.q   = (T_INV * (state->att.theta - prev_att.theta)) >> 8;
-    state->spin.r   = state->orient.yaw;
+    // Q16.16 <-- Q6.10
+    state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10);
 
+    // Q16.16 = Q24.8 * Q16.16 >> 8
     state->torque.L = (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
     state->torque.M = (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
     state->torque.N = (T_INV_I_N * (state->spin.r - prev_spin.r)) >> 8;
 
     // See project_dir/control_ae.m MATLAB file for calculations.
-    // ae_1^2 = -1/4b Z +     0 L +  1/2b M + -1/4d N
-    // ae_2^2 = -1/4b Z + -1/2b L +     0 M +  1/4d N
-    // ae_3^2 = -1/4b Z +     0 L + -1/2b M + -1/4d N
-    // ae_4^2 = -1/4b Z +  1/2b L +     0 M +  1/4d N
+    // ae_1^2 = -1/(4b') Z +        0 L +  1/(2b') M + -1/(4d') N
+    // ae_2^2 = -1/(4b') Z + -1/(2b') L +        0 M +  1/(4d') N
+    // ae_3^2 = -1/(4b') Z +        0 L + -1/(2b') M + -1/(4d') N
+    // ae_4^2 = -1/(4b') Z +  1/(2b') L +        0 M +  1/(4d') N
+    // b' and d' are system-specific constants
 
     // f24.8 * f16.16 == f8.24, we have to shift >> 8 to get f16.16 again.
-    // TODO we should normalise the results in a sane way here
-    int32_t ae1_sq = (M1_4B * state->force.Z + P1_2B * state->torque.M - P1_4D * state->torque.N);
-    int32_t ae2_sq = (M1_4B * state->force.Z - P1_2B * state->torque.L + P1_4D * state->torque.N);
-    int32_t ae3_sq = (M1_4B * state->force.Z - P1_2B * state->torque.M - P1_4D * state->torque.N);
-    int32_t ae4_sq = (M1_4B * state->force.Z + P1_2B * state->torque.L + P1_4D * state->torque.N);
+    // Note that aex_sq can be interpreted as regular integers too.
+    int32_t ae1_sq = (M1_4B * state->force.Z + P1_2B * state->torque.M - P1_4D * state->torque.N) >> 8;
+    int32_t ae2_sq = (M1_4B * state->force.Z - P1_2B * state->torque.L + P1_4D * state->torque.N) >> 8;
+    int32_t ae3_sq = (M1_4B * state->force.Z - P1_2B * state->torque.M - P1_4D * state->torque.N) >> 8;
+    int32_t ae4_sq = (M1_4B * state->force.Z + P1_2B * state->torque.L + P1_4D * state->torque.N) >> 8;
 
     state->motor.ae1 = 1000 * 1000 < ae1_sq ? 1000 : ae1_sq < 0 ? 0 : fp_sqrt(ae1_sq);
     state->motor.ae2 = 1000 * 1000 < ae2_sq ? 1000 : ae2_sq < 0 ? 0 : fp_sqrt(ae2_sq);
