@@ -136,10 +136,10 @@ void control_fn(qc_state_t* state) {
 
     // f24.8 * f16.16 == f8.24, we have to shift >> 8 to get f16.16 again.
     // Note that aex_sq can be interpreted as regular integers too.
-    int32_t ae1_sq = (M1_4B * state->force.Z + P1_2B * state->torque.M - P1_4D * state->torque.N) >> 8;
-    int32_t ae2_sq = (M1_4B * state->force.Z - P1_2B * state->torque.L + P1_4D * state->torque.N) >> 8;
-    int32_t ae3_sq = (M1_4B * state->force.Z - P1_2B * state->torque.M - P1_4D * state->torque.N) >> 8;
-    int32_t ae4_sq = (M1_4B * state->force.Z + P1_2B * state->torque.L + P1_4D * state->torque.N) >> 8;
+    int32_t ae1_sq = (M1_4B * state->force.Z + _1_2B * state->torque.M - _1_4D * state->torque.N) >> 8;
+    int32_t ae2_sq = (M1_4B * state->force.Z - _1_2B * state->torque.L + _1_4D * state->torque.N) >> 8;
+    int32_t ae3_sq = (M1_4B * state->force.Z - _1_2B * state->torque.M - _1_4D * state->torque.N) >> 8;
+    int32_t ae4_sq = (M1_4B * state->force.Z + _1_2B * state->torque.L + _1_4D * state->torque.N) >> 8;
 
     state->motor.ae1 = 1000 * 1000 < ae1_sq ? 1000 : ae1_sq < 0 ? 0 : fp_sqrt(ae1_sq);
     state->motor.ae2 = 1000 * 1000 < ae2_sq ? 1000 : ae2_sq < 0 ? 0 : fp_sqrt(ae2_sq);

@@ -181,9 +181,9 @@
 // - 1/(4b')
 #define M1_4B       (- _1_B / 4)
 // 1/(2b')
-#define P1_2B       (_1_B / 2)
+#define _1_2B       (_1_B / 2)
 // 1/(4d')
-#define P1_4D       (_1_D / 4)
+#define _1_4D       (_1_D / 4)
 
 // Value of pi in a Qx.29 format (highest precision, if 3 <= x).
 #define PI_Q29      1686629713
