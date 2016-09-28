@@ -1,101 +1,69 @@
 #include "mode_2_manual.h"
+#include "mode_constants.h"
 #include "in4073.h"
 
-/** MODE 2 (MANUAL) description
- *  ===========================
- *  
- *          lift          Z*          ae1
- *          roll          L*          ae2
- *          pitch         M*          ae3
- *  +----+  yaw    +---+  N*   +---+  ae4  +----+
- *  | PC |-------->| 1 |------>| C |------>| QC |----+
- *  +----+         +---+    -  +---+       +----+    |
- *                   ^                               | force     (X Y Z)
- *                   |                    X ---------+----->
- *               change to                           V torque    (L M N)
- *               Body frame                     +--------+
- *                                              |1/m*I.dt|
- *             no feedback:                     +--------+
- *             assume same frames                    | velocity  (u v w)
- *             and zero movement          X ---------+----->
- *                                                   V spin      (p q r)
- *             * setpoints                      +--------+
- *                                              |  I.dt  |<-- Change to Earth frame
- *                                              +--------+
- *                                                   | position  (x y z)
- *                                                   +----->
- *                                        X ---------+ attitude  (phi theta psi)
+/** MANUAL MODE OPERATION (MODE 2)
+ *  ==============================
  *
+ *  Quadcopter system diagram
+ *  -------------------------
  *
- *  System equations
- *  ================
+ *  +-----+
+ *  | PC  |
+ *  +-----+
+ *   | | |
+ *   | | +-------------------------------------------------+               : Plant, or
+ *   | +------------------------+                          |               : Quadcopter
+ *   | x_p=[roll,pitch,0]       | v_p=0    f_p=[0,0,-lift] |               :        /
+ *   | φ_p=0                    | ω_p=[0,0,yaw]      t_p=0 |             u = ae^2  /
+ *   V           +--+  +----+   V         +--+  +------+   V         +---+ :  +---+
+ *   +---------->|C1|->|d/dt|-> O ------->|C2|->|k d/dt|-> O ------->| T |--->| P |
+ *        x_s    +--+  +----+     v_s     +--+  +------+     f_s     +---+ :  +---+
+ *        φ_s                     ω_s                        t_s           :    | f
+ *                                                                         :    | t
+ *                                                                  .......:    V
+ *                                                                 :         +------+
+ *                                                                 :   ω_n | | c∫dt |
+ *                                                                 :       | +------+
+ *                                                              +------+   V    | v
+ *                                                            +-| Gyro |<- O <--+ ω
+ *                                                          sp| +------+  ω     V
+ *                                                       X <--+    :         +------+
+ *                                                                 :   φ_n | | ∫dt  |
+ *                                                       X <--+    :   Z_n | +------+
+ *                                                          sa| +------+   V    | x
+ *                                                            +-| Acc. |<- O <--+ φ
+ *                                                              +------+ [φ;θ;Z]
+ *                                                                 :
+ *                                              Computed values <- : -> Physical values
  *
- *  Basic equations describing quadcopter dynamics
- *  ----------------------------------------------
+ *  In manual mode, the sensor data is not read, there is no feedback,
+ *  the control loop is open. The exact configuration is as follows:
  *
- *  +-  -+         +-     -+ +- -+     +-  -+
- *  | x' |         | t 0 0 | | u |     | x' |
- *  | y' |     =   | 0 t 0 | | v |   + | y' |
- *  | z' |         | 0 0 t | | w |     | z' |
- *  +-  -+[k+1]    +-     -+ +- -+[k]  +-  -+[k]
- *  Here x', y' and z' are in the body frame so they'd have
- *  to be transformed to yield meaningful x, y, z values.
- *  
- *  +- -+         +-     -+ +- -+     +- -+
- *  | φ |         | t 0 0 | | p |     | φ |
- *  | θ |     =   | 0 t 0 | | q |   + | θ |
- *  | ψ |         | 0 0 t | | r |     | ψ |
- *  +- -+[k+1]    +-     -+ +- -+[k]  +- -+[k]
- *  Here I think that the reference frame is the same for
- *  both Earth and Body and the equation is usable as is.
+ *  There are no estimated values (^a) because we have no feedback.
  *
- *  +- -+         +-     -+ +- -+     +- -+
- *  | u |       1 | t 0 0 | | X |     | u |
- *  | v |     = - | 0 t 0 | | Y |   + | v |
- *  | w |       m | 0 0 t | | Z |     | w |
- *  +- -+[k+1]    +-     -+ +- -+[k]  +- -+[k]
- *  (m is the weight of the quadcopter)
- *  
- *  +- -+         +-     -+ +- -+     +- -+
- *  | p |       1 | t 0 0 | | L |     | p |
- *  | q |     = - | 0 t 0 | | M |   + | q |
- *  | r |       I | 0 0 t | | N |     | r |
- *  +- -+[k+1]    +-     -+ +- -+[k]  +- -+[k]
- *  (I is the moment of inertia of the qc)
+ *  x_p = [0, 0, 0]
+ *  φ_p = [roll, pitch, 0]
  *
- *                            +-      -+
- *  +- -+         +-       -+ | ae_1^2 |
- *  | X |         | 0 0 0 0 | | ae_2^2 |
- *  | Y |    = -b'| 0 0 0 0 | | ae_3^2 |
- *  | Z |         | 1 1 1 1 | | ae_4^2 |
- *  +- -+[k+1]    +-       -+ +-      -+[k]
- *  (b' is a conversion constant)
+ *  v_p = [0, 0, 0]
+ *  ω_p = [0, 0, yaw]
  *
- *                                   +-      -+
- *  +- -+         +-              -+ | ae_1^2 |
- *  | L |         |  0  -b'  0   b'| | ae_2^2 |
- *  | M |     =   |  b'  0  -b'  0 | | ae_3^2 |
- *  | N |         | -d'  d' -d'  d'| | ae_4^2 |
- *  +- -+[k+1]    +-              -+ +-      -+[k]
- *  (b' and d' are conversion constants)
+ *  f_p = [0, 0, -lift]
+ *  t_p = [0, 0, 0]
  *
+ *  Roll and pitch set the horizontal angles of the quadcopter. This
+ *  gives us safety in that a maximum output from the PC will still
+ *  only result in a fixed bank of the quadcopter.
  *
- *  Relation to sensor readings (to be used in Kalman filter)
- *  ---------------------------------------------------------
- *  
- *  +- -+       +-     -+ +-  -+
- *  | p |       | 1 0 0 | | sp |
- *  | q |   =   | 0 1 0 | | sq |
- *  | r |       | 0 0 1 | | sr |
- *  +- -+[k]    +-     -+ +-  -+[k]
- *  
- *  +- -+       +-     -+ +-   -+
- *  | φ |       | 0 n 0 | | sax |
- *  | θ |   =   | n 0 0 | | say |
- *  | Z |       | 0 0 n | | saz |
- *  +- -+[k]    +-     -+ +-   -+[k]
- *  n = 1/m' where m' is a weight constant
- *  true at small angles where a ~ sin(a)
+ *  Yaw is different because we want to be able to completely turn
+ *  the quadcopter around with the twist of the joystick. This means
+ *  that the joystick must control the rate of the turn and not the
+ *  absolute angle.
+ *
+ *  The upwards (negative Z) force is controlled by the lift. As the
+ *  joystick commands a constant rate of lift, we expect the
+ *  quadcopter to maintain a steady altitude, with a steady force
+ *  counteracting gravity.
  *
 **/
 
@@ -103,6 +71,11 @@ static void control_fn(qc_state_t* state);
 static bool trans_fn(qc_state_t* state, qc_mode_t new_mode);
 static void enter_fn(qc_state_t* state, qc_mode_t old_mode);
 static bool motor_on_fn(qc_state_t* state);
+
+// Structs containing the relevant previous-iteration values.
+static qc_state_att_t   prev_att;
+static qc_state_spin_t  prev_spin;
+
 
 /** =======================================================
  *  mode_2_manual_init -- Initialise mode table for MANUAL.
@@ -131,43 +104,72 @@ void mode_2_manual_init(qc_mode_table_t* mode_table) {
  *  Author: Boldizsar Palotas
 **/
 void control_fn(qc_state_t* state) {
+
+    // Positions are zero.
+    // Hence velocities are zero.
+    // Hence forces are zero except for Z to which -lift is added.
+    // Q16.16 <-- Q8.8
+    state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+
+    // Roll and pitch set phi and theta but yaw is handled separately.
+    // Q16.16 <-- Q2.14
+    state->att.phi      = FP_EXTEND(state->orient.roll, 16, 14);
+    state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14);
+
+    // Q16.16 = Q24.8 * Q16.16 >> 8
+    state->spin.p   = (T_INV * (state->att.phi - prev_att.phi)) >> 8;
+    state->spin.q   = (T_INV * (state->att.theta - prev_att.theta)) >> 8;
+    // Q16.16 <-- Q6.10
+    state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10);
+
+    // Q16.16 = Q24.8 * Q16.16 >> 8
+    state->torque.L = (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
+    state->torque.M = (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
+    state->torque.N = (T_INV_I_N * (state->spin.r - prev_spin.r)) >> 8;
+
     // See project_dir/control_ae.m MATLAB file for calculations.
-    // ae_1^2 = -1/4b Z +     0 L +  1/2b M + -1/4d N
-    // ae_2^2 = -1/4b Z + -1/2b L +     0 M +  1/4d N
-    // ae_3^2 = -1/4b Z +     0 L + -1/2b M + -1/4d N
-    // ae_4^2 = -1/4b Z +  1/2b L +     0 M +  1/4d N
-
-    f24p8_t b = FP_INT(55, 8);
-    f24p8_t d = FP_INT(15, 8);
-    f24p8_t m1_4b = - b / 4;
-    f24p8_t p1_2b =   b / 2;
-    f24p8_t p1_4d =   d / 4;
-
-    state->force.Z = -state->orient.lift;
-    state->torque.L = state->orient.roll;
-    state->torque.M = state->orient.pitch;
-    state->torque.N = state->orient.yaw;
+    // ae_1^2 = -1/(4b') Z +        0 L +  1/(2b') M + -1/(4d') N
+    // ae_2^2 = -1/(4b') Z + -1/(2b') L +        0 M +  1/(4d') N
+    // ae_3^2 = -1/(4b') Z +        0 L + -1/(2b') M + -1/(4d') N
+    // ae_4^2 = -1/(4b') Z +  1/(2b') L +        0 M +  1/(4d') N
+    // b' and d' are system-specific constants
 
     // f24.8 * f16.16 == f8.24, we have to shift >> 8 to get f16.16 again.
-    // TODO we should normalise the results in a sane way here
-    int32_t ae1_sq = (m1_4b * state->force.Z + p1_2b * state->torque.M - p1_4d * state->torque.N);
-    int32_t ae2_sq = (m1_4b * state->force.Z - p1_2b * state->torque.L + p1_4d * state->torque.N);
-    int32_t ae3_sq = (m1_4b * state->force.Z - p1_2b * state->torque.M - p1_4d * state->torque.N);
-    int32_t ae4_sq = (m1_4b * state->force.Z + p1_2b * state->torque.L + p1_4d * state->torque.N);
+    // Note that aex_sq can be interpreted as regular integers too.
+    int32_t ae1_sq = (M1_4B * state->force.Z + _1_2B * state->torque.M - _1_4D * state->torque.N) >> 8;
+    int32_t ae2_sq = (M1_4B * state->force.Z - _1_2B * state->torque.L + _1_4D * state->torque.N) >> 8;
+    int32_t ae3_sq = (M1_4B * state->force.Z - _1_2B * state->torque.M - _1_4D * state->torque.N) >> 8;
+    int32_t ae4_sq = (M1_4B * state->force.Z + _1_2B * state->torque.L + _1_4D * state->torque.N) >> 8;
 
-    state->motor.ae1 = ae1_sq < 0 ? 0 : fp_sqrt(ae1_sq);
-    state->motor.ae2 = ae2_sq < 0 ? 0 : fp_sqrt(ae2_sq);
-    state->motor.ae3 = ae3_sq < 0 ? 0 : fp_sqrt(ae3_sq);
-    state->motor.ae4 = ae4_sq < 0 ? 0 : fp_sqrt(ae4_sq);
+    state->motor.ae1 = 1000 * 1000 < ae1_sq ? 1000 : ae1_sq < 0 ? 0 : fp_sqrt(ae1_sq);
+    state->motor.ae2 = 1000 * 1000 < ae2_sq ? 1000 : ae2_sq < 0 ? 0 : fp_sqrt(ae2_sq);
+    state->motor.ae3 = 1000 * 1000 < ae3_sq ? 1000 : ae3_sq < 0 ? 0 : fp_sqrt(ae3_sq);
+    state->motor.ae4 = 1000 * 1000 < ae4_sq ? 1000 : ae4_sq < 0 ? 0 : fp_sqrt(ae4_sq);
 
+    // Debug output, can be removed later
+    // ----------------------------------
     static uint32_t counter = 0;
     counter++;
 
-    if ((counter & 0x3F) == 0) {
-        printf("M2: ZLMN : %ld %ld %ld %ld\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
-        printf("M2: ae_sq: %ld %ld %ld %ld\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
-        printf("M2: ae   : %u %u %u %u\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
+    if ((counter & 0x3F) == 0 || state->spin.p || state->spin.q || state->torque.L || state->torque.M || state->torque.N) {
+        printf("T_INV %ld, dphi %ld dtheta %ld\n", T_INV, (state->att.phi - prev_att.phi), (state->att.theta - prev_att.theta));
+        printf("LRPY: %hd %hd %hd %hd\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
+        printf("phi theta: %ld %ld\n", state->att.phi, state->att.theta);
+        printf("pqr: %ld %ld %ld\n", state->spin.p, state->spin.q, state->spin.r);
+        printf("ZLMN: %ld %ld %ld %ld\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
+        printf("ae_sq: %ld %ld %ld %ld\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
+        printf("ae   : %u %u %u %u\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
     }
+
+    // Save values as prev_state for next iteration.
+    // ---------------------------------------------
+    prev_att.phi = state->att.phi;
+    prev_att.theta = state->att.theta;
+    // Saving psi is unneded
+
+    prev_spin.p = state->spin.p;
+    prev_spin.q = state->spin.q;
+    prev_spin.r = state->spin.r;
 }
 
 /** =======================================================
@@ -197,12 +199,17 @@ bool trans_fn(qc_state_t* state, qc_mode_t new_mode) {
  *  Author: Boldizsar Palotas
 **/
 void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
+    qc_state_clear_pos(state);
+    qc_state_clear_velo(state);
     state->force.X  = 0;
     state->force.Y  = 0;
-    qc_state_clear_velo(state);
-    qc_state_clear_spin(state);
-    qc_state_clear_pos(state);
-    qc_state_clear_att(state);
+    state->att.psi = 0;
+
+    prev_att.phi = state->att.phi;
+    prev_att.theta = state->att.theta;
+    prev_spin.p = state->spin.p;
+    prev_spin.q = state->spin.q;
+    prev_spin.r = state->spin.r;
 }
 
 /** =======================================================

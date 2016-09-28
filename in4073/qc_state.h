@@ -16,10 +16,14 @@
  *  Author: Boldizsar Palotas
 **/
 typedef struct qc_state_orient {
-    f16p16_t    lift;
-    f16p16_t    roll;
-    f16p16_t    pitch;
-    f16p16_t    yaw;
+    // Q8.8
+    q16_t       lift;
+    // Q2.14
+    q16_t       roll;
+    // Q2.14
+    q16_t       pitch;
+    // Q6.10
+    q16_t       yaw;
 } qc_state_orient_t;
 
 /** State: motor

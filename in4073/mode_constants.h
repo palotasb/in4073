@@ -153,15 +153,15 @@
 
 // Inverse of the control loop time constant in seconds
 // 1 / 0.01 = 1000 / 10 [1/s] in Q24.8 format.
-#define T_INV       ((q32_t)(FP_INT_FRAC(1000, 10, 8)))
+#define T_INV       ((q32_t)(FP_FRAC(1000, 10, 8)))
 
 // Moment of inertia around the x, y, z axis (for L, M, N torque) [N m]
- // 1/2 [N m] in Q24.8 format.
-#define I_L         FP_INT_FRAC(1, 2, 8)
- // 1/2 [N m] in Q24.8 format.
-#define I_M         FP_INT_FRAC(1, 2, 8)
- // 1/2 [N m] in Q24.8 format.
-#define I_N         FP_INT_FRAC(1, 2, 8)
+ // 1/64 [N m] in Q24.8 format.
+#define I_L         FP_FRAC(1, 64, 8)
+ // 1/64 [N m] in Q24.8 format.
+#define I_M         FP_FRAC(1, 64, 8)
+ // 1/64 [N m] in Q24.8 format.
+#define I_N         FP_FRAC(1, 64, 8)
 
 // Inverse of the product of the control loop time constant and the
 // moment of inertia for the L, M, N torque
@@ -172,24 +172,44 @@
 // FP_MUL1 is the post-shifted fixp multiplication.
 
 // The b' and d' constants and some commonly-used multiples of them.
-#define B           FP_INT(55, 8)
-#define D           FP_INT(15, 8)
-#define M1_4B       (- B / 4)
-#define P1_2B       (B / 2)
-#define P1_4D       (D / 4)
+// Dimensions don't really matter we just add two bit fractions to
+// make the subsequent divisions integers.
+// 1/b'
+#define _1_B        FP_INT(50, 2)
+// 1/d'
+#define _1_D        FP_INT(400, 2)
+// - 1/(4b')
+#define M1_4B       (- _1_B / 4)
+// 1/(2b')
+#define _1_2B       (_1_B / 2)
+// 1/(4d')
+#define _1_4D       (_1_D / 4)
 
-// pi in a Q3.29 (highest precision) format
+// Value of pi in a Qx.29 format (highest precision, if 3 <= x).
 #define PI_Q29      1686629713
+//                   \  \  \  \.
 
-// pi/180 in a Q1.31 format
-#define PI_180_Q31  37480660
+// Value of pi/180 in a Qx.36 format (highest precision, x can be -4).
+// The values of the integer and missing fractional part are zero.
+// This is valid int32_t (not just uint32_t)
+#define PI_180_Q36  1199381129
+//                   \  \  \  \.
 
-// Convert byte from range [-128; 127] to [-0.56 rad; 0.56 rad]
-// That is from -32º to 31.75º
-// This can be interpreted as byte value = degrees * 4.
-// Going further this can be interpreted that byte is a Q6.2 format
-// fixedpoint degree value. From there the conversion:
-#define RADIAN_FROM_BYTE(byte)  MUL_FP3((byte), PI_180_Q31, )
+// Value of 180/pi in a Qx.25 format (highest precision, if 7 <= x).
+#define _180_PI_Q25 1922527338
+//                   \  \  \  \.
+
+// Convert  degrees         to radians.
+// Format   [Qx.2]          to [Qy.14]
+// x can be up to 9 bits to support -180 to +180 range
+// 
+// In Q6.2 input format, the range is -32 deg to 31.75 deg
+// 16 bit range to give some leeway for a few operations.
+#define RADIAN_FROM_DEGREE(deg)  FP_MUL3((deg), PI_180_Q36, 0, 11, 13)
+// Qz.14    = (Qx.2 * (Qy.36 >> 11)) >> 13
+//          = (Qx.2 * (Qy.25)) >> 13
+//          = (Qx+y.27)) >> 13
+//          = Qz.14
 
 //accelerometer scale factor: 1 over the amount of bits per G
 //Its in F16P16 format, meaning 1 over 16384 (= 0.000061035)

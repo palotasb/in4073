@@ -7,6 +7,8 @@
 //  2: send START frame
 //  3: send START frame
 
+#include "../mode_constants.h"
+
 void pc_command_init(pc_command_t* command) {
     command->mode                   = 0;
     command->mode_updated           = false;
@@ -76,10 +78,15 @@ bool pc_command_get_message(pc_command_t* command, message_t* message_out) {
     }
     if (command->orient_updated) {
         message_out->ID = MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID;
-        MESSAGE_SET_LIFT_VALUE(message_out)     = max(min(command->orient_kb.lift   + command->orient_js.lift, 255), 0);
-        MESSAGE_SET_ROLL_VALUE(message_out)     = max(min(command->orient_kb.roll   + command->orient_js.roll, 127), -128);
-        MESSAGE_SET_PITCH_VALUE(message_out)    = max(min(command->orient_kb.pitch  + command->orient_js.pitch, 127), -128);
-        MESSAGE_SET_YAW_VALUE(message_out)      = max(min(command->orient_kb.yaw    + command->orient_js.yaw, 127), -128);
+        // Get range of 0 to 1.99 which is about 0G to 2G force upwards (about 1G in the middle counteracting gravity)
+        // Q8.8
+        MESSAGE_SET_LIFT_VALUE(message_out)     = max(min(command->orient_kb.lift   + command->orient_js.lift, 255), 0) * 64;
+        // Range    [-32º; 31.75º]  to [-0.56 rad; 0.56 rad]
+        // Q2.14
+        MESSAGE_SET_ROLL_VALUE(message_out)     = RADIAN_FROM_DEGREE(max(min(command->orient_kb.roll   + command->orient_js.roll, 127), -128));
+        MESSAGE_SET_PITCH_VALUE(message_out)    = RADIAN_FROM_DEGREE(max(min(command->orient_kb.pitch  + command->orient_js.pitch, 127), -128));
+        // Q6.10
+        MESSAGE_SET_YAW_VALUE(message_out)      = FP_CHUNK(RADIAN_FROM_DEGREE(max(min(command->orient_kb.yaw    + command->orient_js.yaw, 127), -128)) * 10, 10, 14);
         command->orient_updated = false;
         return true;
     }
