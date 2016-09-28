@@ -200,7 +200,8 @@ void run_terminal(char* serial, char* js) {
 				serialcomm_send(&sc);
 				if (tx_frame.message.ID == MESSAGE_REBOOT_ID) {
 					fprintf(stderr, "Exiting terminal.\n");
-					exit(0);
+					abort = true;
+					break;
 				}
 				last_msg = time_get_ms();
 				// Don't completely block communications...
@@ -232,7 +233,6 @@ void run_terminal(char* serial, char* js) {
 		fprintf(stderr, "Error: %s\n", errormsg);
 	}
 
-	//this part is never executed but is still here for estetic reasons.
 	if(do_serial)
 		rs232_close();
 	if(do_js)
