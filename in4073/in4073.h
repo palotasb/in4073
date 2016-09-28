@@ -61,7 +61,7 @@ bool check_sensor_int_flag(void);
 void clear_sensor_int_flag(void);
 
 // Queue
-#define QUEUE_SIZE 128
+#define QUEUE_SIZE 256
 typedef struct {
 	uint8_t Data[QUEUE_SIZE];
 	uint32_t first,last;
