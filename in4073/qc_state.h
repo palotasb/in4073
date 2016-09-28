@@ -63,6 +63,27 @@ typedef struct qc_state_sensor {
     f16p16_t    voltage;
 } qc_state_sensor_t;
 
+/** State: offset
+ *  Sensor offsets of the quadcopter
+ *  ------------------
+ *  Fields:
+ *  - sp [rad s^-1]: angular speed offset around Body frame x axis
+ *  - sq [rad s^-1]: angular speed offset around Body frame y axis
+ *  - sr [rad s^-1]: angular speed offset around Body frame z axis
+ *  - sax [m s^-2]: acceleration offset in the Body frame x axis direction
+ *  - say [m s^-2]: acceleration offset in the Body frame y axis direction
+ *  - saz [m s^-2]: acceleration offset in the Body frame z axis direction
+ *  Author: Koos Eerden
+**/
+typedef struct qc_state_offset {
+    f16p16_t    sp;
+    f16p16_t    sq;
+    f16p16_t    sr;
+    f16p16_t    sax;
+    f16p16_t    say;
+    f16p16_t    saz;
+} qc_state_offset_t;
+
 /** State: position
  *  Position of quadcopter in Earth frame
  *  ------------------
@@ -206,6 +227,7 @@ typedef struct qc_state {
     qc_state_orient_t   orient;
     qc_state_motor_t    motor;
     qc_state_sensor_t   sensor;
+    qc_state_offset_t   offset;
     qc_state_pos_t      pos;
     qc_state_att_t      att;
     qc_state_force_t    force;
@@ -223,6 +245,8 @@ void qc_state_clear_orient(qc_state_t* state);
 void qc_state_clear_motor(qc_state_t* state);
 
 void qc_state_clear_sensor(qc_state_t* state);
+
+void qc_state_clear_offset(qc_state_t* state);
 
 void qc_state_clear_pos(qc_state_t* state);
 

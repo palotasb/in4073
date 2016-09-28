@@ -1,6 +1,7 @@
 #include "qc_hal.h"
 #include "in4073.h"
 #include "nrf51.h"
+#include "mode_constants.h"
 
 static void qc_hal_tx_byte(uint8_t byte);
 static void qc_hal_get_inputs(qc_state_t* state);
@@ -65,12 +66,13 @@ void qc_hal_get_inputs(qc_state_t* state) {
     state->sensor.temperature   = temperature;
     state->sensor.pressure      = pressure;
     state->sensor.voltage       = bat_volt;
-    state->sensor.sax           = sax;
-    state->sensor.say           = say;
-    state->sensor.saz           = saz;
-    state->sensor.sp            = sp;
-    state->sensor.sq            = sq;
-    state->sensor.sr            = sr; 
+	//convert from int16_t to F16P16
+    state->sensor.sax           = sax * ACC_G_SCALE_INV;
+    state->sensor.say           = say * ACC_G_SCALE_INV;
+    state->sensor.saz           = saz * ACC_G_SCALE_INV;
+    state->sensor.sp            = sp  * GYRO_G_SCALE_INV;
+    state->sensor.sq            = sq  * GYRO_G_SCALE_INV;
+    state->sensor.sr            = sr  * GYRO_G_SCALE_INV; 
 
 }
 
