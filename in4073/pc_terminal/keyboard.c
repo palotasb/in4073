@@ -228,7 +228,7 @@ static void handle_keypress(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'f':		// Log set mask
-				fprintf(stderr, "Enter LOG MASK: ");
+				fprintf(stderr, "Enter LOG MASK: 0\b");
 				kb_state = LOG_MASK;
 				command->log_mask = 0;
 				break;
@@ -250,7 +250,7 @@ static void handle_keypress(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'g':		// Telemetry set mask
-				fprintf(stderr, "Enter TELEMETRY MASK: ");
+				fprintf(stderr, "Enter TELEMETRY MASK: 0\b");
 				kb_state = TELE_MASK;
 				command->telemetry_mask = 0;
 				break;
@@ -266,7 +266,7 @@ static void handle_keypress(pc_command_t* command) {
 
 static void read_log_mask(pc_command_t* command) {
 	char c = term_getchar_nb();
-	int digit = c - '0';
+	uint32_t digit = c - '0', copy;
 	if ('0' <= c && c <= '9') {
 		if (digit == 0 && command->log_mask == 0) {
 			return;
@@ -274,9 +274,14 @@ static void read_log_mask(pc_command_t* command) {
 		if ((UINT_MAX - digit) / 10 < command->log_mask) {
 			return;
 		}
+		copy = command->log_mask;
 		command->log_mask *= 10;
 		command->log_mask += digit;
-		fprintf(stderr, "%c", c);
+		while (copy != 0) {
+			fprintf(stderr, "\b \b");
+			copy /= 10;
+		}
+		fprintf(stderr, "%u", command->log_mask);
 	} else {
 		switch (c) {
 			case '\n':
@@ -306,7 +311,7 @@ static void read_log_mask(pc_command_t* command) {
 
 static void read_tele_mask(pc_command_t* command) {
 	char c = term_getchar_nb();
-	int digit = c - '0';
+	uint32_t digit = c - '0', copy;
 	if ('0' <= c && c <= '9') {
 		if (digit == 0 && command->telemetry_mask == 0) {
 			return;
@@ -314,9 +319,14 @@ static void read_tele_mask(pc_command_t* command) {
 		if ((UINT_MAX - digit) / 10 < command->telemetry_mask) {
 			return;
 		}
+		copy = command->telemetry_mask;
 		command->telemetry_mask *= 10;
 		command->telemetry_mask += digit;
-		fprintf(stderr, "%c", c);
+		while (copy != 0) {
+			fprintf(stderr, "\b \b");
+			copy /= 10;
+		}
+		fprintf(stderr, "%u", command->telemetry_mask);
 	} else {
 		switch (c) {
 			case '\n':
