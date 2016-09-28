@@ -191,4 +191,12 @@
 // fixedpoint degree value. From there the conversion:
 #define RADIAN_FROM_BYTE(byte)  MUL_FP3((byte), PI_180_Q31, )
 
+//accelerometer scale factor: 1 over the amount of bits per G
+//Its in F16P16 format, meaning 1 over 16384 (= 0.000061035)
+#define ACC_G_SCALE_INV 4
+
+//gyroscope scale factor: 1 over the amount of bits per G
+//Its in F16P16 format, meaning 1 over 131 (= 0,007633588)
+#define GYRO_G_SCALE_INV 500
+
 #endif // MODE_CONSTANTS_H

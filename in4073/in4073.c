@@ -47,11 +47,11 @@ int main(void) {
             led_display();
             clear_timer_flag();
         }
- 
-        if (check_sensor_int_flag()) {
-            get_dmp_data();
-            clear_sensor_int_flag();
-        }
+	
+		 if (check_sensor_int_flag()) {
+		     get_dmp_data();
+			  clear_sensor_int_flag();
+		 }
 
         if (text_queue.count) {
             transmit_text();

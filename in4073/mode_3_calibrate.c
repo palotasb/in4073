@@ -55,17 +55,15 @@ void control_fn(qc_state_t* state) {
 		 //update offset
 		 if(cal_state.counter++ == CALIBRATE_SAMPLES - 1){ 
 			 cal_state.busy = false;
-			 state->offset.sp  =	cal_state.sp >> CALIBRATE_SHIFT_AMOUNT;
-			 state->offset.sq  =	cal_state.sq >> CALIBRATE_SHIFT_AMOUNT;
-			 state->offset.sr  =	cal_state.sr >> CALIBRATE_SHIFT_AMOUNT;
-			 state->offset.sax =	cal_state.sax >> CALIBRATE_SHIFT_AMOUNT;
-			 state->offset.say =	cal_state.say >> CALIBRATE_SHIFT_AMOUNT;
-			 state->offset.saz =	cal_state.saz >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.sp  =	FP_EXTEND(cal_state.sp, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.sq  =	FP_EXTEND(cal_state.sq, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.sr  =	FP_EXTEND(cal_state.sr, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.sax =	FP_EXTEND(cal_state.sax, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.say =	FP_EXTEND(cal_state.say, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.saz =	FP_EXTEND(cal_state.saz, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
 			 printf("Calibration done\n");
 		}		
-	} 
-	
-
+	}
     return;
 }
 
