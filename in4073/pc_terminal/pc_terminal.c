@@ -169,7 +169,7 @@ void run_terminal(char* serial, char* js) {
 	for (int i = 0; i <= 11; i++) {
 		fprintf(stderr, "\t%6u = %#8x: %s\n", 1u<<i, 1u<<i, message_id_to_pc_name(i));
 	}
-	fprintf(stderr, "Press ENTER to set. Enter F 0 (G 0) to log nothing.\n\n");
+	fprintf(stderr, "Press F, ENTER (G, ENTER) to log nothing by default.\n\n");
 	fprintf(stderr, "Press X to REBOOT Quadcopter and EXIT terminal program.\n");
 	fprintf(stderr, "========================================================\n\n");
 	
