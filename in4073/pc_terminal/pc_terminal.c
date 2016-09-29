@@ -207,11 +207,11 @@ void run_terminal(char* serial, char* js) {
 				while (time_get_ms() - last_msg < 1) { }
 				fprintf(stderr, "Start sending: ");
 				serialcomm_send(&sc);
-				fprintf(stderr, "< Sending %s v32:[%d %d] v16:[%hd %hd %hd %hd] v8:[%hd %hd %hd %hd  %hd %hd %hd %hd]\n",
-					message_id_to_qc_name(tx_frame.message.ID),
-					tx_frame.message.value.v32[0], tx_frame.message.value.v32[1],
-					tx_frame.message.value.v16[0], tx_frame.message.value.v16[1], tx_frame.message.value.v16[2], tx_frame.message.value.v16[3],
-					tx_frame.message.value.v8[0], tx_frame.message.value.v8[1], tx_frame.message.value.v8[2], tx_frame.message.value.v8[3], tx_frame.message.value.v8[4], tx_frame.message.value.v8[5], tx_frame.message.value.v8[6], tx_frame.message.value.v8[7]);
+				//fprintf(stderr, "< Sending %s v32:[%d %d] v16:[%hd %hd %hd %hd] v8:[%hd %hd %hd %hd  %hd %hd %hd %hd]\n",
+				//	message_id_to_qc_name(tx_frame.message.ID),
+				//	tx_frame.message.value.v32[0], tx_frame.message.value.v32[1],
+				//	tx_frame.message.value.v16[0], tx_frame.message.value.v16[1], tx_frame.message.value.v16[2], tx_frame.message.value.v16[3],
+				//	tx_frame.message.value.v8[0], tx_frame.message.value.v8[1], tx_frame.message.value.v8[2], tx_frame.message.value.v8[3], tx_frame.message.value.v8[4], tx_frame.message.value.v8[5], tx_frame.message.value.v8[6], tx_frame.message.value.v8[7]);
 				if (tx_frame.message.ID == MESSAGE_REBOOT_ID) {
 					fprintf(stderr, "Exiting terminal.\n");
 					abort = true;

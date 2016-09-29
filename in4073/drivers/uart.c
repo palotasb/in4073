@@ -26,7 +26,7 @@ void uart_put(uint8_t byte)
 // Reroute printf
 int _write(int file, const char * p_char, int len)
 {
-#ifdef ENABLE_PRINTF
+#ifndef ENABLE_PRINTF
 	int i;
 
 	for (i = 0; i < len; i++)
