@@ -137,7 +137,8 @@ void control_fn(qc_state_t* state) {
     // Q16.16 = Q24.8 * Q16.16 >> 8
     state->torque.L = (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
     state->torque.M = (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
-    state->torque.N = (T_INV_I_N * (state->spin.r - prev_spin.r)) >> 8;
+    // YAW P-value can be zero but we don't want 0 control over here.
+    state->torque.N = (state->trim.yaw_p + 1) * ((T_INV_I_N * (state->spin.r - prev_spin.r)) >> 8);
 
     // See project_dir/control_ae.m MATLAB file for calculations.
     // ae_1^2 = -1/(4b') Z +        0 L +  1/(2b') M + -1/(4d') N
@@ -163,14 +164,13 @@ void control_fn(qc_state_t* state) {
     static uint32_t counter = 0;
     counter++;
 
-    if ((counter & 0x3F) == 0 || state->spin.p || state->spin.q || state->torque.L || state->torque.M || state->torque.N) {
-        printf("T_INV %ld, dphi %ld dtheta %ld\n", T_INV, (state->att.phi - prev_att.phi), (state->att.theta - prev_att.theta));
+    if ((counter & 0x038) == 0x038) {
         printf("LRPY: %hd %hd %hd %hd\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
         printf("phi theta: %ld %ld\n", state->att.phi, state->att.theta);
-        printf("sr: %ld\n", state->sensor.sr);
         printf("pqr: %ld %ld %ld\n", state->spin.p, state->spin.q, state->spin.r);
+        printf("sr ofsr dr yaw_p: %ld %ld %ld %ld\n", state->sensor.sr, state->offset.sr, (state->spin.r - prev_spin.r), state->trim.yaw_p);
         printf("ZLMN: %ld %ld %ld %ld\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
-        printf("ae_sq: %ld %ld %ld %ld\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
+        //printf("ae_sq: %ld %ld %ld %ld\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
         printf("ae   : %u %u %u %u\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
     }
 
