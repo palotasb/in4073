@@ -121,9 +121,8 @@ void run_terminal(char* serial, char* js) {
 	serialcomm_t sc;
 	frame_t rx_frame;
 	frame_t tx_frame;
-	int c;
-
 	pc_command_init(&command);
+   int c;
 
 	FILE* pc_log_file = fopen("pc_log.txt", "a");
 	pc_log_init(&pc_log, pc_log_file);
@@ -197,21 +196,20 @@ void run_terminal(char* serial, char* js) {
 		//handle input
 		if(do_serial){
 			if ((c = rs232_getchar_nb()) >= 0) {
-				serialcomm_receive_char(&sc, (uint8_t) c);
-			} /*else if (c == -1) {
+			    serialcomm_receive_char(&sc, (uint8_t) c);
+			}/*else if (c == -1) {
 				error = true;
 				errormsg = "couldn't read serial device";
 			}*/
 
 			while (pc_command_get_message(&command, &tx_frame.message)) {
 				while (time_get_ms() - last_msg < 1) { }
-				fprintf(stderr, "Start sending: ");
-				serialcomm_send(&sc);
-				fprintf(stderr, "< Sending %s v32:[%d %d] v16:[%hd %hd %hd %hd] v8:[%hd %hd %hd %hd  %hd %hd %hd %hd]\n",
+					serialcomm_send(&sc);
+/*				fprintf(stderr, "< Sending %s v32:[%d %d] v16:[%hd %hd %hd %hd] v8:[%hd %hd %hd %hd  %hd %hd %hd %hd]\n",
 					message_id_to_qc_name(tx_frame.message.ID),
 					tx_frame.message.value.v32[0], tx_frame.message.value.v32[1],
 					tx_frame.message.value.v16[0], tx_frame.message.value.v16[1], tx_frame.message.value.v16[2], tx_frame.message.value.v16[3],
-					tx_frame.message.value.v8[0], tx_frame.message.value.v8[1], tx_frame.message.value.v8[2], tx_frame.message.value.v8[3], tx_frame.message.value.v8[4], tx_frame.message.value.v8[5], tx_frame.message.value.v8[6], tx_frame.message.value.v8[7]);
+					tx_frame.message.value.v8[0], tx_frame.message.value.v8[1], tx_frame.message.value.v8[2], tx_frame.message.value.v8[3], tx_frame.message.value.v8[4], tx_frame.message.value.v8[5], tx_frame.message.value.v8[6], tx_frame.message.value.v8[7]); */
 				if (tx_frame.message.ID == MESSAGE_REBOOT_ID) {
 					fprintf(stderr, "Exiting terminal.\n");
 					abort = true;
@@ -222,7 +220,7 @@ void run_terminal(char* serial, char* js) {
 				if ((c = rs232_getchar_nb()) >= 0) 
 					serialcomm_receive_char(&sc, (uint8_t) c);
 				read_keyboard(&command);
-			}
+			} 
 
 			if (250 < time_get_ms() - last_msg) {
 				serialcomm_quick_send(&sc, MESSAGE_KEEP_ALIVE_ID, 0, 0);

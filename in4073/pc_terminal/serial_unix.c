@@ -4,6 +4,9 @@
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/select.h>
+
 
 /*------------------------------------------------------------
  * Serial I/O 
@@ -14,6 +17,7 @@
 
 int serial_device = 0;
 int fd_RS232;
+fd_set read_fds, write_fds, except_fds;
 
 int rs232_open(char *dev)
 {
@@ -51,6 +55,14 @@ int rs232_open(char *dev)
     result = tcsetattr (fd_RS232, TCSANOW, &tty); /* non-canonical */
 
     tcflush(fd_RS232, TCIOFLUSH); /* flush I/O buffer */
+
+	// Initialize file descriptor sets
+
+	FD_ZERO(&read_fds);
+	FD_ZERO(&write_fds);
+	FD_ZERO(&except_fds);
+	FD_SET(fd_RS232, &read_fds);
+
     return 0;
 }
 
@@ -63,8 +75,20 @@ int rs232_getchar_nb()
 {
     int         result;
     unsigned char   c;
+    struct timeval timeout;
 
-    result = read(fd_RS232, &c, 1);
+    timeout.tv_sec = 0; 
+    timeout.tv_usec = 1000;
+
+    // Wait for input to become ready or until the time out; the first parameter is
+    // 1 more than the largest file descriptor in any of the sets
+    if (select(fd_RS232 + 1, &read_fds, &write_fds, &except_fds, &timeout) == 1)
+    {
+        result = read(fd_RS232, &c, 1);
+	 } else {
+        return -2;
+	 }
+
     result = (result == 0)? -2 : result;
     
     return (result >= 0) ? (int) c : result;
