@@ -117,15 +117,20 @@ void control_fn(qc_state_t* state) {
     state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
-    state->spin.p   = (T_INV * (state->att.phi - prev_att.phi)) >> 8;
-    state->spin.q   = (T_INV * (state->att.theta - prev_att.theta)) >> 8;
+    //state->spin.p   = (T_INV * (state->att.phi - prev_att.phi)) >> 8;
+    //state->spin.q   = (T_INV * (state->att.theta - prev_att.theta)) >> 8;
     // Q16.16 <-- Q6.10
     state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
-    state->torque.L = (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
-    state->torque.M = (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
-    state->torque.N = (T_INV_I_N * (state->spin.r - prev_spin.r)) >> 8;
+    //state->torque.L = (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
+    //state->torque.M = (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
+    //state->torque.N = (T_INV_I_N * (state->spin.r - prev_spin.r)) >> 8;
+
+    // Override
+    state->torque.L = state->att.phi;
+    state->torque.M = state->att.theta;
+    state->torque.N = state->spin.r;
 
     // See project_dir/control_ae.m MATLAB file for calculations.
     // ae_1^2 = -1/(4b') Z +        0 L +  1/(2b') M + -1/(4d') N
