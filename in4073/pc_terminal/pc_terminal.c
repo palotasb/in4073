@@ -205,7 +205,6 @@ void run_terminal(char* serial, char* js) {
 
 			while (pc_command_get_message(&command, &tx_frame.message)) {
 				while (time_get_ms() - last_msg < 1) { }
-				fprintf(stderr, "Start sending: ");
 				serialcomm_send(&sc);
 				//fprintf(stderr, "< Sending %s v32:[%d %d] v16:[%hd %hd %hd %hd] v8:[%hd %hd %hd %hd  %hd %hd %hd %hd]\n",
 				//	message_id_to_qc_name(tx_frame.message.ID),
