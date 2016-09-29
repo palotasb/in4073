@@ -177,7 +177,7 @@
 // 1/b'
 #define _1_B        FP_INT(50, 2)
 // 1/d'
-#define _1_D        FP_INT(400, 2)
+#define _1_D        FP_INT(100, 2)
 // - 1/(4b')
 #define M1_4B       (- _1_B / 4)
 // 1/(2b')

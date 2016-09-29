@@ -156,10 +156,10 @@ void control_fn(qc_state_t* state) {
     static uint32_t counter = 0;
     counter++;
 
-    if ((counter & 0x3F) == 0 || state->spin.p || state->spin.q || state->torque.L || state->torque.M || state->torque.N) {
-        printf("T_INV %ld, dphi %ld dtheta %ld\n", T_INV, (state->att.phi - prev_att.phi), (state->att.theta - prev_att.theta));
+    if ((counter & 0x38) == 0x38) {
+        //printf("T_INV %ld, dphi %ld dtheta %ld\n", T_INV, (state->att.phi - prev_att.phi), (state->att.theta - prev_att.theta));
         printf("LRPY: %hd %hd %hd %hd\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
-        printf("phi theta: %ld %ld\n", state->att.phi, state->att.theta);
+        //printf("phi theta: %ld %ld\n", state->att.phi, state->att.theta);
         printf("pqr: %ld %ld %ld\n", state->spin.p, state->spin.q, state->spin.r);
         printf("ZLMN: %ld %ld %ld %ld\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
         printf("ae_sq: %ld %ld %ld %ld\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
