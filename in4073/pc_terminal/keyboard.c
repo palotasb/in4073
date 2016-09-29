@@ -195,11 +195,11 @@ static void handle_keypress(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'u':		//yaw control P up
-				command->trim.yaw_p = min(command->trim.yaw_p + 1, 127);
+				command->trim.yaw_p = min(command->trim.yaw_p + 1, 255);
 				command->trim_updated = true;
 				break;
 			case 'j':		//yaw control P down
-				command->trim.yaw_p = max(command->trim.yaw_p - 1, -128);
+				command->trim.yaw_p = max(command->trim.yaw_p - 1, 0);
 				command->trim_updated = true;
 				break;
 			case 'i':		//roll/pitch P1 control up
