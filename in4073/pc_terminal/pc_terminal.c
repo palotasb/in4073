@@ -182,6 +182,18 @@ void run_terminal(char* serial, char* js) {
 
 	while (!error && !abort) 
 	{
+		//check for keyboard presses
+		read_keyboard(&command);
+
+		//check joystick
+		if (do_js){
+			if (read_joystick(&command)) {
+				errormsg = "Error reading joystick\n";
+				error = true;
+				break;
+			}
+		}
+		
 		//handle input
 		if(do_serial){
 			if ((c = rs232_getchar_nb()) >= 0) {
@@ -218,17 +230,7 @@ void run_terminal(char* serial, char* js) {
 			}
 		}
 
-		//check for keyboard presses
-		read_keyboard(&command);
 
-		//check joystick
-		if (do_js){
-			if (read_joystick(&command)) {
-				errormsg = "Error reading joystick\n";
-				error = true;
-				break;
-			}
-		}
 	}
 
 	if(error){
