@@ -2,8 +2,8 @@
 #include "mode_constants.h"
 #include "in4073.h"
 
-/** MANUAL MODE OPERATION (MODE 2)
- *  ==============================
+/** YAW CONTROLLED MODE OPERATION (MODE 4)
+ *  ======================================
  *
  *  Quadcopter system diagram
  *  -------------------------
@@ -24,7 +24,7 @@
  *                       offsets ---> O ^ω=[0,0,sr]                 .......:    V
  *                                    ^                            :         +------+
  *                                    |                            :   ω_n | | c∫dt |
- *                                +---+                                :       | +------+
+ *                                +---+                            :       | +------+
  *                                |                             +------+   V    | v
  *                                |             sp=[sp,sq,sr] +-| Gyro |<- O <--+ ω
  *                                |  +--------------------+   | +------+  ω     V
@@ -37,10 +37,13 @@
  *                                                                 :
  *                                              Computed values <- : -> Physical values
  *
- *  In manual mode, the sensor data is not read, there is no feedback,
- *  the control loop is open. The exact configuration is as follows:
- *
- *  There are no estimated values (^a) because we have no feedback.
+ *  In yaw controlled mode only torque N is controlled. The setpoint
+ *  is effectively the yaw signal from the PC and the fed-back value
+ *  is the filtered sr value. In the C2 controller we add yaw_p gain
+ *  to the loop which can be set by the user between 1 and 256 ints.
+ *  Other sensor signals are not used, and there are no estimates in
+ *  the system apart from ^r = sr. An offset measured in calibration
+ *  mode is added to sr to approximate 0 rad/s stationary turn rate.
  *
  *  x_p = [0, 0, 0]
  *  φ_p = [roll, pitch, 0]
