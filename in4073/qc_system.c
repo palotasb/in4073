@@ -72,7 +72,10 @@ void qc_system_init(qc_system_t* system,
 void qc_system_step(qc_system_t* system) {
     system->hal->get_inputs_fn(system->state);
     if (system->state->sensor.voltage < SAFE_VOLTAGE) {
-//       qc_system_set_mode(system, MODE_1_PANIC);
+       if(system->mode != MODE_1_PANIC)
+           printf("low voltage\n");
+
+       qc_system_set_mode(system, MODE_1_PANIC);
     }
     qc_command_tick(system->command);  
 	system->current_mode_table->control_fn(system->state);
