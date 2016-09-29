@@ -192,6 +192,7 @@ void run_terminal(char* serial, char* js) {
 			}*/
 
 			while (pc_command_get_message(&command, &tx_frame.message)) {
+				while (get_time_ms() - last_msg < 5) { }
 				//fprintf(stderr, "< Sending %s v32:[%d %d] v16:[%hd %hd %hd %hd] v8:[%hd %hd %hd %hd  %hd %hd %hd %hd]\n",
 				//	message_id_to_qc_name(tx_frame.message.ID),
 				//	tx_frame.message.value.v32[0], tx_frame.message.value.v32[1],
