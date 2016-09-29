@@ -100,6 +100,10 @@ void qc_system_step(qc_system_t* system) {
 void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
     if (!system->current_mode_table->trans_fn(system->state, mode))
         return;
+    if (!IS_SAFE_OR_PANIC_MODE(mode) && 50 < system->state->orient.lift) {
+        printf("Turn motor speed down first!\n");
+        return;
+    }
 
     qc_mode_t old_mode = system->mode;
     system->mode = mode;

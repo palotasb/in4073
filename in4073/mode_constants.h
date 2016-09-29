@@ -175,7 +175,7 @@
 // Dimensions don't really matter we just add two bit fractions to
 // make the subsequent divisions integers.
 // 1/b'
-#define _1_B        FP_INT(25, 2)
+#define _1_B        FP_INT(50, 2)
 // 1/d'
 #define _1_D        FP_INT(100, 2)
 // - 1/(4b')
