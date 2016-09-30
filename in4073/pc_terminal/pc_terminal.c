@@ -112,6 +112,29 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+void print_run_help(void) {
+	fprintf(stderr, "========================================================\n");
+	fprintf(stderr, "Terminal program - Embedded Real-Time Systems\n");
+	fprintf(stderr, "--------------------------------------------------------\n\n");
+	fprintf(stderr, "Press ESC to PANIC or the number keys to enter modes.\n");
+	fprintf(stderr, "Motors - E: enable R: disable\n\n");
+	fprintf(stderr, "Logging (telemetry) - F (G) to select what to log (enter sum)\n");
+	for (int i = 0; i <= 11; i++) {
+		fprintf(stderr, "%10u = %#10x: %s\n", 1u<<i, 1u<<i, message_id_to_pc_name(i));
+	}
+	for (int i = 0; i < QC_STATE_PROF_CNT; i++) {
+		fprintf(stderr, "%10u = %#10x: %s\n",
+		1u<<(i + MESSAGE_PROFILE_0_CURR_ID), 1u<<(i + MESSAGE_PROFILE_0_CURR_ID), message_id_to_pc_name(i + MESSAGE_PROFILE_0_CURR_ID));
+	}
+	for (int i = 0; i < QC_STATE_PROF_CNT; i++) {
+		fprintf(stderr, "%10u = %#10x: %s\n",
+		1u<<(i + MESSAGE_PROFILE_0_MAX_ID), 1u<<(i + MESSAGE_PROFILE_0_MAX_ID), message_id_to_pc_name(i + MESSAGE_PROFILE_0_MAX_ID));
+	}
+	fprintf(stderr, "C: start V: pause B: readback (safe mode only) N: reset\n\n");
+	fprintf(stderr, "Press X to REBOOT Quadcopter and EXIT terminal program.\n");
+	fprintf(stderr, "========================================================\n\n");
+}
+
 void run_terminal(char* serial, char* js) {
 
 	bool do_serial, do_js;
@@ -154,24 +177,7 @@ void run_terminal(char* serial, char* js) {
 		}
 	}
 
-	fprintf(stderr, "========================================================\n");
-	fprintf(stderr, "Terminal program - Embedded Real-Time Systems\n");
-	fprintf(stderr, "--------------------------------------------------------\n\n");
-	fprintf(stderr, "Press the number keys to enter modes.\n");
-	fprintf(stderr, "Press ESC or 1 (one) to enter PANIC mode.\n");
-	fprintf(stderr, "Press E to enable motors (after startup and each panic).\n");
-	fprintf(stderr, "Press R to disable motors manually.\n\n");
-	fprintf(stderr, "Logging data:\n");
-	fprintf(stderr, "Press C to start, V to stop, B to read back, N to reset.\n");
-	fprintf(stderr, "(Reading back only in safe mode.)\n\n");
-	fprintf(stderr, "How to select data for logging (telemetry):\n");
-	fprintf(stderr, "Press F (G) and enter the sum of the relevant value IDs:\n");
-	for (int i = 0; i <= 11; i++) {
-		fprintf(stderr, "\t%6u = %#8x: %s\n", 1u<<i, 1u<<i, message_id_to_pc_name(i));
-	}
-	fprintf(stderr, "Press F, ENTER (G, ENTER) to log nothing by default.\n\n");
-	fprintf(stderr, "Press X to REBOOT Quadcopter and EXIT terminal program.\n");
-	fprintf(stderr, "========================================================\n\n");
+	print_run_help();
 	
 	/* send & receive
 	 */

@@ -32,5 +32,6 @@ int max(int a, int b);
 void print_help(void);
 void run_terminal(char* serial, char* js);
 void read_keyboard(pc_command_t* command);
+void print_run_help(void);
 
 #endif
