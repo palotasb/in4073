@@ -28,11 +28,37 @@
 #include "mode_4_yaw.h"
 #include "mode_5_full.h"
 
+// Start critical section code
+// Original code by Boldizsar Palotas for previous university project.
+static inline void CRITICALSECTION_FastEnter(void);
+static inline void CRITICALSECTION_FastExit(void);
+extern unsigned int CRITICALSECTION_NestingLevel;
+
+inline static void CRITICALSECTION_FastEnter(void)
+{
+    __disable_irq();
+    CRITICALSECTION_NestingLevel++;
+}
+
+inline static void CRITICALSECTION_FastExit(void)
+{
+    if(CRITICALSECTION_NestingLevel)
+    {
+        CRITICALSECTION_NestingLevel--;
+        if(!CRITICALSECTION_NestingLevel)
+        {
+            __enable_irq();
+        }
+    }
+}
+// End critical section code
+
 #define RED				22
 #define YELLOW				24
 #define GREEN				28
 #define BLUE				30
 #define INT_PIN				5
+extern uint32_t led_patterns[4];
 
 #define MOTOR_0_PIN			21
 #define MOTOR_1_PIN			23
@@ -61,6 +87,7 @@ bool check_sensor_int_flag(void);
 void clear_sensor_int_flag(void);
 
 // Queue
+// Must be power of 2
 #define QUEUE_SIZE 256
 typedef struct {
 	uint8_t Data[QUEUE_SIZE];

@@ -76,12 +76,12 @@ static void handle_keypress(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'a':		//lift up
-				command->orient_kb.lift = min(command->orient_kb.lift + 1, 255);
+				command->orient_kb.lift = min(command->orient_kb.lift + 1, 127);
 				command->orient_updated = true;
 				break;
 			case 'y':		//to be used with Hungarian keyboard layout
 			case 'z':		//lift down
-				command->orient_kb.lift = max(command->orient_kb.lift - 1, 0);
+				command->orient_kb.lift = max(command->orient_kb.lift - 1, -128);
 				command->orient_updated = true;
 				break;
 			case 'q':		//yaw down

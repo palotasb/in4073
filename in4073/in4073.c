@@ -28,6 +28,8 @@ qc_command_t        qc_command;
 serialcomm_t        serialcomm;
 qc_hal_t            qc_hal;
 
+uint32_t led_patterns[] = {0, 0, 0, 0};
+
 // Custom functions
 // ----------------
 extern void qc_hal_tx_byte(uint8_t);
@@ -47,11 +49,11 @@ int main(void) {
             led_display();
             clear_timer_flag();
         }
-	
-		 if (check_sensor_int_flag()) {
-		     get_dmp_data();
-			  clear_sensor_int_flag();
-		 }
+
+        if (check_sensor_int_flag()) {
+            get_dmp_data();
+            clear_sensor_int_flag();
+        }
 
         if (text_queue.count) {
             transmit_text();
@@ -115,37 +117,36 @@ void led_display(void) {
     static uint32_t counter = 0;
     static const uint32_t colors[] = {BLUE, GREEN, YELLOW, RED};
     //static uint8_t intensities[] = {0, 0, 0, 0};
-    static uint32_t patterns[] = {0, 0, 0, 0};
 
-    patterns[3] = 0;
+    led_patterns[3] = 0;
     switch (qc_system.mode) {
         case MODE_0_SAFE:
-            patterns[1] = 0xffffffff;
+            led_patterns[1] = 0xffffffff;
             break;
         case MODE_1_PANIC:
-            patterns[1] = 0;
-            patterns[3] = 0xffffffff;
+            led_patterns[1] = 0;
+            led_patterns[3] = 0xffffffff;
             break;
         case MODE_2_MANUAL:
-            patterns[1] = 0xfafafafa;
+            led_patterns[1] = 0xfafafafa;
             break;
         case MODE_3_CALIBRATE:
-            patterns[1] = 0xffeaffea;
+            led_patterns[1] = 0xffeaffea;
             break;
         case MODE_4_YAW:
-            patterns[1] = 0xffaaffaa;
+            led_patterns[1] = 0xffaaffaa;
             break;
         case MODE_5_FULL_CONTROL:
-            patterns[1] = 0xfeaafeaa;
+            led_patterns[1] = 0xfeaafeaa;
             break;
         default:
             break;
     }
-    patterns[0] = 0xFF00FF00;
+    led_patterns[0] = 0xFF00FF00;
 
     counter++;
     for (int i = 0; i < 4; i++) {
-        if ((patterns[i] & (1ul << ((counter >> 3) & 0x1F))) == 0) {
+        if ((led_patterns[i] & (1ul << ((counter >> 3) & 0x1F))) == 0) {
             nrf_gpio_pin_set(colors[i]);
         } else {
             nrf_gpio_pin_clear(colors[i]);
@@ -220,3 +221,9 @@ void SysTick_Handler (void) {
         nrf_gpio_pin_toggle(RED);
     }
 }
+
+// Start critical section code
+// Original code by Boldizsar Palotas for previous university project.
+unsigned int CRITICALSECTION_NestingLevel = 0;
+
+// End critical section code

@@ -48,7 +48,7 @@ int rs232_open(char *dev)
     cfsetispeed(&tty, B115200); 
 
     tty.c_cc[VMIN]= 0;
-    tty.c_cc[VTIME] = 1; // added timeout
+    tty.c_cc[VTIME] = 0; // added timeout
 
     tty.c_iflag &= ~(IXON|IXOFF|IXANY);
 
@@ -75,19 +75,8 @@ int rs232_getchar_nb()
 {
     int         result;
     unsigned char   c;
-    struct timeval timeout;
 
-    timeout.tv_sec = 0; 
-    timeout.tv_usec = 1000;
-
-    // Wait for input to become ready or until the time out; the first parameter is
-    // 1 more than the largest file descriptor in any of the sets
-    if (select(fd_RS232 + 1, &read_fds, &write_fds, &except_fds, &timeout) == 1)
-    {
-        result = read(fd_RS232, &c, 1);
-	 } else {
-        return -2;
-	 }
+    result = read(fd_RS232, &c, 1);
 
     result = (result == 0)? -2 : result;
     

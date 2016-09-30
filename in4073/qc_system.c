@@ -55,7 +55,7 @@ void qc_system_init(qc_system_t* system,
     qc_state_init(system->state);
     if (!log_init(system->serialcomm)) {
         qc_system_set_mode(system, MODE_1_PANIC);
-        printf("> Log init error\n");
+        printf("> Log init error, starting in PANIC mode.\n");
     }
 }
 
@@ -71,9 +71,9 @@ void qc_system_init(qc_system_t* system,
 **/
 void qc_system_step(qc_system_t* system) {
     system->hal->get_inputs_fn(system->state);
-    if (system->state->sensor.voltage < SAFE_VOLTAGE) {
+    if (0 && system->state->sensor.voltage < SAFE_VOLTAGE) {
        if(system->mode != MODE_1_PANIC)
-           printf("low voltage\n");
+           printf("Low voltage (V = %ld centivolts)\n", system->state->sensor.voltage);
 
        qc_system_set_mode(system, MODE_1_PANIC);
     }
@@ -100,7 +100,7 @@ void qc_system_step(qc_system_t* system) {
 void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
     if (!system->current_mode_table->trans_fn(system->state, mode))
         return;
-    if (!IS_SAFE_OR_PANIC_MODE(mode) && 50 < system->state->orient.lift) {
+    if (!IS_SAFE_OR_PANIC_MODE(mode) && 128 < system->state->orient.lift) {
         printf("Turn motor speed down first!\n");
         return;
     }

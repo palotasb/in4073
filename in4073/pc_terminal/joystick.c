@@ -1,7 +1,7 @@
 #include <errno.h>
 #include "joystick.h"
 #include "../qc_mode.h"
-
+#include "pc_terminal.h"
 
 /******************************
 read_joystick()
@@ -44,7 +44,7 @@ int read_joystick(pc_command_t *command)
 			case JS_EVENT_AXIS:
 				switch (js.number){ 
 					case 0:	//x axis inverted
-						command->orient_js.roll = - (js.value / 256 );
+						command->orient_js.roll = max((js.value / 256 ) + 127, 0);
 						break;
 					case 1: //y axis, pitch inverted
 						command->orient_js.pitch = (js.value / 256);
