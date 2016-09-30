@@ -210,6 +210,22 @@ typedef struct message {
 
 #define MESSAGE_TEXT_VALUE(message)     ((message)->value.v8[0])
 
+//MESSAGE 20-29
+#define MESSAGE_PROFILE_0_CURR_ID       20
+#define MESSAGE_PROFILE_1_CURR_ID       21
+#define MESSAGE_PROFILE_2_CURR_ID       22
+#define MESSAGE_PROFILE_3_CURR_ID       23
+#define MESSAGE_PROFILE_4_CURR_ID       24
+
+#define MESSAGE_PROFILE_0_MAX_ID        25
+#define MESSAGE_PROFILE_1_MAX_ID        26
+#define MESSAGE_PROFILE_2_MAX_ID        27
+#define MESSAGE_PROFILE_3_MAX_ID        28
+#define MESSAGE_PROFILE_4_MAX_ID        29
+
+#define MESSAGE_PROFILE_TIME_VALUE(message) ((message)->value.v32[0])
+#define MESSAGE_PROFILE_TAG_VALUE(message)  ((message)->value.v32[1])
+
 // Messages in PC -> Quadcopter direction
 
 // MESSAGE 0

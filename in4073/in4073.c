@@ -40,12 +40,16 @@ static void led_display(void);
 static void init_all(void);
 static void transmit_text(void);
 
+uint32_t iteration = 0;
+
 int main(void) {
     init_all();
 
     while (1) {
         if (check_timer_flag()) {
+            profile_start_tag(&qc_state.prof.pr[0], get_time_us(), iteration);
             qc_system_step(&qc_system);
+            profile_end(&qc_state.prof.pr[0], get_time_us());
             led_display();
             clear_timer_flag();
         }
@@ -61,6 +65,7 @@ int main(void) {
 
         while (rx_queue.count)
             serialcomm_receive_char(&serialcomm, dequeue(&rx_queue));
+        iteration++;
     }
 }
 

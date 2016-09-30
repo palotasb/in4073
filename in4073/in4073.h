@@ -27,6 +27,7 @@
 #include "mode_3_calibrate.h"
 #include "mode_4_yaw.h"
 #include "mode_5_full.h"
+#include "profile.h"
 
 // Start critical section code
 // Original code by Boldizsar Palotas for previous university project.
@@ -66,6 +67,7 @@ extern uint32_t led_patterns[4];
 #define MOTOR_3_PIN			29
 
 bool demo_done;
+extern uint32_t iteration;
 
 // Control
 int16_t ae[4];

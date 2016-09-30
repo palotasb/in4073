@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include "fixedpoint.h"
+#include "profile.h"
 
 /** State: orientation
  *  Controller setpoint signals
@@ -210,6 +211,18 @@ typedef struct qc_state_option {
     bool        enable_motors;
 } qc_state_option_t;
 
+#define QC_STATE_PROF_CNT   5
+/** State: prof
+ *  Placeholders for profiling different parts of the system.
+ *  ------------------
+ *  Fields:
+ *  - prN: Profiling information slot N.
+ *  Author: Boldizsar Palotas
+**/
+typedef struct qc_state_prof {
+    profile_t   pr[QC_STATE_PROF_CNT];
+} qc_state_prof_t;
+
 /** State
  *  
  *  ------------------
@@ -217,6 +230,7 @@ typedef struct qc_state_option {
  *  - orient: Orientation (controller setpoint) information
  *  - motor: Motor speed information
  *  - sensor: Sensor readings
+ *  - offset: Sensor offsets after calibration
  *  - pos: Position information (Earth frame)
  *  - att: Attitude information (Earth frame, Euler angles)
  *  - force: Forces (Body frame)
@@ -225,6 +239,7 @@ typedef struct qc_state_option {
  *  - spin: Angular velocity (Body frame)
  *  - trim: Controller trimming parameters
  *  - option: Other quadcopter options
+ *  - prof: Profiling information
  *  Author: Boldizsar Palotas
 **/
 typedef struct qc_state {
@@ -240,6 +255,7 @@ typedef struct qc_state {
     qc_state_spin_t     spin;
     qc_state_trim_t     trim;
     qc_state_option_t   option;
+    qc_state_prof_t     prof;
 } qc_state_t;
 
 void qc_state_init(qc_state_t* state);
@@ -267,5 +283,7 @@ void qc_state_clear_spin(qc_state_t* state);
 void qc_state_clear_trim(qc_state_t* state);
 
 void qc_state_clear_option(qc_state_t* state);
+
+void qc_state_clear_prof(qc_state_t* state);
 
 #endif // QC_STATE_H

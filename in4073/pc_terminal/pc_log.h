@@ -47,6 +47,16 @@ typedef enum pc_log_item {
     PC_LOG_yaw_p,
     PC_LOG_p1,
     PC_LOG_p2,
+    PC_LOG_PR0_CURR,
+    PC_LOG_PR1_CURR,
+    PC_LOG_PR2_CURR,
+    PC_LOG_PR3_CURR,
+    PC_LOG_PR4_CURR,
+    PC_LOG_PR0_MAX,
+    PC_LOG_PR1_MAX,
+    PC_LOG_PR2_MAX,
+    PC_LOG_PR3_MAX,
+    PC_LOG_PR4_MAX,
     _PC_LOG_LAST_ITEM_GUARD
 } pc_log_item_t;
 
