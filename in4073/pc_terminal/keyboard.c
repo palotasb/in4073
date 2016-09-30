@@ -316,7 +316,8 @@ static bool read_hex(uint32_t* hex_number) {
 			fprintf(stderr, "\b \b");
 			copy /= 16;
 		}
-		fprintf(stderr, "%x", *hex_number);
+		fprintf(stderr, "\b\b");
+		fprintf(stderr, "%#x", *hex_number);
 	} else {
 		switch (c) {
 			case '\n':
@@ -325,7 +326,8 @@ static bool read_hex(uint32_t* hex_number) {
 				fprintf(stderr, "\n");
 				return true;
 				break;
-			case '\b':
+			case 127:  // Ascii delete works on linux
+			case '\b': // ^H delete or Backspace on Windows
 				if (*hex_number == 0)
 					break;
 				*hex_number /= 16;
@@ -337,7 +339,7 @@ static bool read_hex(uint32_t* hex_number) {
 					fprintf(stderr, "\b \b");
 					*hex_number /= 16;
 				}
-				fprintf(stderr, "[Cancelled.]\n");
+				fprintf(stderr, "\b\b[Cancelled.]\n");
 			default:
 				break;
 		}
