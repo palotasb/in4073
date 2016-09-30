@@ -1,4 +1,3 @@
-components/
 gcc-arm-none-eabi/
 arm-gcc/
 *.pyc
