@@ -1,4 +1,3 @@
-components/
 gcc-arm-none-eabi/
 arm-gcc/
 *.pyc
@@ -9,3 +8,4 @@ arm-gcc/
 *.log
 *telemetry.txt
 local.makefile
+pc_terminal
