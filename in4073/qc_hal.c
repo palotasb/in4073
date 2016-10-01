@@ -112,11 +112,11 @@ void qc_hal_set_outputs(qc_state_t* state) {
 **/
 void qc_hal_enable_motors(bool enable) {
     if (enable && motors_enabled == false) {
-        NVIC_EnableIRQ(TIMER1_IRQn);
+      //  NVIC_EnableIRQ(TIMER1_IRQn);
         motors_enabled = true;
     }
     if (!enable && motors_enabled == true) {
-        NVIC_DisableIRQ(TIMER1_IRQn);
+       // NVIC_DisableIRQ(TIMER1_IRQn);
         motors_enabled = false;
     }
 }

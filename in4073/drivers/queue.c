@@ -22,15 +22,19 @@ void enqueue(queue *q,char x){
 	if (q->count == QUEUE_SIZE)
 		return;
 
-	q->last = (q->last + 1) % QUEUE_SIZE;
+	CRITICALSECTION_FastEnter();
+	q->last = (q->last + 1) & (QUEUE_SIZE - 1);
 	q->Data[ q->last ] = x;
 	q->count += 1;
+	CRITICALSECTION_FastExit();
 }
 
 char dequeue(queue *q){
 
 	char x = q->Data[ q->first ];
-	q->first = (q->first + 1) % QUEUE_SIZE;
+	CRITICALSECTION_FastEnter();
+	q->first = (q->first + 1) & (QUEUE_SIZE - 1);
 	q->count -= 1;
+	CRITICALSECTION_FastExit();
 	return x;
 }
