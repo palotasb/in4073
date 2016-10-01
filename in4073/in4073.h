@@ -66,6 +66,12 @@ extern uint32_t led_patterns[4];
 #define MOTOR_3_PIN			29
 
 bool demo_done;
+extern uint32_t iteration;
+extern uint32_t control_iteration;
+extern bool is_test_device;
+
+#define TESTDEVICE_ID0 0x9d249f83
+#define TESTDEVICE_ID1 0xa4af3109
 
 // Control
 int16_t ae[4];

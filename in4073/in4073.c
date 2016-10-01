@@ -40,6 +40,10 @@ static void led_display(void);
 static void init_all(void);
 static void transmit_text(void);
 
+uint32_t iteration = 0;
+uint32_t control_iteration = 0;
+bool is_test_device = false;
+
 int main(void) {
     init_all();
 
@@ -48,6 +52,7 @@ int main(void) {
             qc_system_step(&qc_system);
             led_display();
             clear_timer_flag();
+            control_iteration++;
         }
 
         if (check_sensor_int_flag()) {
@@ -61,10 +66,12 @@ int main(void) {
 
         while (rx_queue.count)
             serialcomm_receive_char(&serialcomm, dequeue(&rx_queue));
+        iteration++;
     }
 }
 
 void init_all(void) {
+    is_test_device = NRF_FICR->DEVICEID[0] == TESTDEVICE_ID0 && NRF_FICR->DEVICEID[1] == TESTDEVICE_ID1;
     // Hardware init
     uart_init();
     gpio_init();
