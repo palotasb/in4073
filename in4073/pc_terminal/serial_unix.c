@@ -4,6 +4,9 @@
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <sys/select.h>
+
 
 /*------------------------------------------------------------
  * Serial I/O 
@@ -14,6 +17,7 @@
 
 int serial_device = 0;
 int fd_RS232;
+fd_set read_fds, write_fds, except_fds;
 
 int rs232_open(char *dev)
 {
@@ -44,13 +48,21 @@ int rs232_open(char *dev)
     cfsetispeed(&tty, B115200); 
 
     tty.c_cc[VMIN]= 0;
-    tty.c_cc[VTIME] = 1; // added timeout
+    tty.c_cc[VTIME] = 0; // added timeout
 
     tty.c_iflag &= ~(IXON|IXOFF|IXANY);
 
     result = tcsetattr (fd_RS232, TCSANOW, &tty); /* non-canonical */
 
     tcflush(fd_RS232, TCIOFLUSH); /* flush I/O buffer */
+
+	// Initialize file descriptor sets
+
+	FD_ZERO(&read_fds);
+	FD_ZERO(&write_fds);
+	FD_ZERO(&except_fds);
+	FD_SET(fd_RS232, &read_fds);
+
     return 0;
 }
 
@@ -65,6 +77,7 @@ int rs232_getchar_nb()
     unsigned char   c;
 
     result = read(fd_RS232, &c, 1);
+
     result = (result == 0)? -2 : result;
     
     return (result >= 0) ? (int) c : result;
