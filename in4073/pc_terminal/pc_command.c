@@ -80,7 +80,7 @@ bool pc_command_get_message(pc_command_t* command, message_t* message_out) {
         message_out->ID = MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID;
         // Get range of 0 to 1.99 which is about 0G to 2G force upwards (about 1G in the middle counteracting gravity)
         // Q8.8
-        MESSAGE_SET_LIFT_VALUE(message_out)     = max(min(command->orient_kb.lift + command->orient_js.lift, 255), 0) * 64;
+        MESSAGE_SET_LIFT_VALUE(message_out)     = max(min(command->orient_kb.lift + command->orient_js.lift, 255), 0) * 16;
         // Range    [-32º; 31.75º]  to [-0.56 rad; 0.56 rad]
         // Q2.14
         MESSAGE_SET_ROLL_VALUE(message_out)     = RADIAN_FROM_DEGREE(max(min(command->orient_kb.roll   + command->orient_js.roll, 127), -128));
