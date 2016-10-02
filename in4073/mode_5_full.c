@@ -14,24 +14,24 @@
  *   | | |
  *   | | +-------------------------------------------------+               : Plant, or
  *   | +------------------------+                          |               : Quadcopter
- *   | x_p                  v_p |                      f_p |               :        /
- *   | φ_p   x_e            ω_p |     v_e              t_p |     f_e     u = ae^2  /
+ *   | x_p=0              v_p=0 |          f_p=[0,0,-lift] |               :        /
+ *   | φ_p   x_e            ω_p |     v_e            t_p=0 |     f_e     u = ae^2  /
  *   V       φ_e +--+  +----+   V     ω_e +--+  +------+   V     t_e +---+ :  +---+
  *   +--> O ---->|C1|->|d/dt|-> O -> O -->|C2|->|k d/dt|-> O -> O -->| T |--->| P |
  *   x_s  ^ -    +--+  +----+    v_s ^ -  +--+  +------+    f_s ^ -  +---+ :  +---+
- *   φ_s  | ^x                   ω_s | ^v                   t_s | ^f       :    | f
- *        | ^φ                       | ^ω                       | ^t       :    | t
- *        |                          |        +-----------------+   .......:    V
- *        |                          |        |                    :         +------+
+ *   φ_s  | ^x=0                 ω_s | ^v                   t_s | ^f       :    | f
+ *        | ^φ=0                     | ^ω                       | ^t       :    | t
+ *        |              offsets --> O        +-----------------+   .......:    V
+ *        |                        - ^ +      |                    :         +------+
  *        |                          |        |                    :   ω_n | | c∫dt |
  *        |                          |        |                    :       | +------+
  *        |                          |        |                 +------+   V    | v
  *        |                          |        |               +-| Gyro |<- O <--+ ω
- *        |                          |        |  +--------+ sp| +------+  ω     V
- *        |                          |        +--| Kalman |<--+    :         +------+
- *        |                          +-----------| filter |        :   φ_n | | ∫dt  |
- *        +--------------------------------------|        |<--+    :   Z_n | +------+
- *                                               +--------+ sa| +------+   V    | x
+ *        |                          |        |  +--------+sp | +------+  ω     V
+ *        |                          +--------+--|--------|<--+    :         +------+
+ *        |                                      | filter |        :   φ_n | | ∫dt  |
+ *        +--------------------------------------|--------|<--+    :   Z_n | +------+
+ *                                               +--------+sa | +------+   V    | x
  *                                                            +-| Acc. |<- O <--+ φ
  *                                                              +------+ [φ;θ;Z]
  *                                                                 :
@@ -43,18 +43,25 @@
  *
  *  x_p = [0, 0, 0]
  *  φ_p = [roll, pitch, 0]
+ *  ^x  = [0, 0, 0]     // Could use Kalman-filter
+ *  ^φ  = [0, 0, 0]     // Could use sax and say or Kalman-filter
  *
  *  v_p = [0, 0, 0]
  *  ω_p = [0, 0, yaw]
- *  ^v  = [0, 0, 0] 
- *  ^ω  = [0, 0, sr]
+ *  ^v  = [0, 0, 0]     // Could use Kalman-filter
+ *  ^ω  = [sp, sq, sr]  // Could use Kalman-filter
  *
  *  f_p = [0, 0, -lift]
  *  t_p = [0, 0, 0]
+ *  ^f  = [0, 0, 0]     // Could use Kalman-filter
+ *  ^t  = [0, 0, 0]     // Could use Kalman-filter
  *
  *  Roll and pitch set the horizontal angles of the quadcopter. This
  *  gives us safety in that a maximum output from the PC will still
- *  only result in a fixed bank of the quadcopter.
+ *  only result in a fixed bank of the quadcopter. The roll and pitch
+ *  _rate_ (p and q within ω) are have the estimated p and q values
+ *  subtracted from them to give an error which can be used for
+ *  P-control.
  *
  *  Yaw is different because we want to be able to completely turn
  *  the quadcopter around with the twist of the joystick. This means
@@ -115,9 +122,9 @@ void mode_5_full_init(qc_mode_table_t* mode_table) {
  *  Author: Boldizsar Palotas
 **/
 void control_fn(qc_state_t* state) {
-    // #################################################
-    // TODO: replace yaw controller with full controller
-    // #################################################
+
+    // Linear quantities
+    // -----------------
 
     // Positions are zero.
     // Hence velocities are zero.
@@ -125,21 +132,25 @@ void control_fn(qc_state_t* state) {
     // Q16.16 <-- Q8.8
     state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
 
+    // Attitude-related quantitites
+    // ----------------------------
+
     // Roll and pitch set phi and theta but yaw is handled separately.
     // Q16.16 <-- Q2.14
     state->att.phi      = FP_EXTEND(state->orient.roll, 16, 14);
     state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
-    state->spin.p   = (T_INV * (state->att.phi - prev_att.phi)) >> 8;
-    state->spin.q   = (T_INV * (state->att.theta - prev_att.theta)) >> 8;
+    state->spin.p   = (state->trim.p2 + 1) * ((T_INV * (state->att.phi - prev_att.phi)) >> 8) - (state->sensor.sp - state->offset.sp);
+    state->spin.q   = (state->trim.p1 + 1) * ((T_INV * (state->att.theta - prev_att.theta)) >> 8) - (state->sensor.sp - state->offset.sp);
     // Q16.16 <-- Q6.10
     state->sensor.sr = filter(state->sensor.sr);
     state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10) - (state->sensor.sr - state->offset.sr);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
-    state->torque.L = (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
-    state->torque.M = (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
+    // Roll/Pitch 2nd P-value (P2) can be zero but we don't want 0 control over here.
+    state->torque.L = (state->trim.p2 + 1) * (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
+    state->torque.M = (state->trim.p2 + 1) * (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
     // YAW P-value can be zero but we don't want 0 control over here.
     state->torque.N = (state->trim.yaw_p + 1) * ((T_INV_I_N * (state->spin.r - prev_spin.r)) >> 8);
 
@@ -169,7 +180,7 @@ void control_fn(qc_state_t* state) {
 
     if ((counter & 0x038) == 0x038) {
         printf("LRPY: %hd %hd %hd %hd\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
-        printf("phi theta: %ld %ld\n", state->att.phi, state->att.theta);
+        //printf("phi theta: %ld %ld\n", state->att.phi, state->att.theta);
         printf("pqr: %ld %ld %ld\n", state->spin.p, state->spin.q, state->spin.r);
         printf("sr ofsr dr yaw_p: %ld %ld %ld %ld\n", state->sensor.sr, state->offset.sr, (state->spin.r - prev_spin.r), state->trim.yaw_p);
         printf("ZLMN: %ld %ld %ld %ld\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);

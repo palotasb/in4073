@@ -103,7 +103,7 @@ void init_modes(void) {
     mode_2_manual_init(&qc_mode_tables[MODE_2_MANUAL]);
     mode_3_calibrate_init(&qc_mode_tables[MODE_3_CALIBRATE]);
     mode_4_yaw_init(&qc_mode_tables[MODE_4_YAW]);
-    mode_0_safe_init(&qc_mode_tables[MODE_5_FULL_CONTROL]);
+    mode_5_full_init(&qc_mode_tables[MODE_5_FULL_CONTROL]);
 }
 
 void transmit_text(void) {
