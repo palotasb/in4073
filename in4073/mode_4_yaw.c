@@ -119,11 +119,18 @@ void mode_4_yaw_init(qc_mode_table_t* mode_table) {
  *  Author: Boldizsar Palotas
 **/
 void control_fn(qc_state_t* state) {
+
+    // Linear quantities
+    // -----------------
+
     // Positions are zero.
     // Hence velocities are zero.
     // Hence forces are zero except for Z to which -lift is added.
     // Q16.16 <-- Q8.8
     state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+
+    // Attitude-related quantitites
+    // ----------------------------
 
     // Roll and pitch set phi and theta but yaw is handled separately.
     // Q16.16 <-- Q2.14
@@ -169,7 +176,7 @@ void control_fn(qc_state_t* state) {
 
     if ((counter & 0x038) == 0x038) {
         printf("LRPY: %hd %hd %hd %hd\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
-        printf("phi theta: %ld %ld\n", state->att.phi, state->att.theta);
+        //printf("phi theta: %ld %ld\n", state->att.phi, state->att.theta);
         printf("pqr: %ld %ld %ld\n", state->spin.p, state->spin.q, state->spin.r);
         printf("sr ofsr dr yaw_p: %ld %ld %ld %ld\n", state->sensor.sr, state->offset.sr, (state->spin.r - prev_spin.r), state->trim.yaw_p);
         printf("ZLMN: %ld %ld %ld %ld\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
