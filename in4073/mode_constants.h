@@ -151,16 +151,23 @@
 
 #include "fixedpoint.h"
 
+#define LIFT_MULTIPLIER     16
+#define ROLL_MULTIPLIER     1
+#define PITCH_MULTIPLIER    1
+// This could be 10 based on the LAB-4 tests but it seemed too large
+// in offline no-joystick tests.
+#define YAW_MULTIPLIER      5
+
 // Inverse of the control loop time constant in seconds
-// 1 / 0.01s = 1000 / 10 [1/s] in Q24.8 format.
+// 1 / (0.01 [s]) = 1000 / 10 [1/s] in Q24.8 format.
 #define T_INV       ((q32_t)(FP_FRAC(1000, 10, 8)))
 
 // Moment of inertia around the x, y, z axis (for L, M, N torque) [N m]
- // 1/64 [N m] in Q24.8 format.
+ // [N m] in Q24.8 format.
 #define I_L         FP_FRAC(1, 32, 8)
- // 1/64 [N m] in Q24.8 format.
+ // [N m] in Q24.8 format.
 #define I_M         FP_FRAC(1, 32, 8)
- // 1/64 [N m] in Q24.8 format.
+ // [N m] in Q24.8 format.
 #define I_N         FP_FRAC(1, 8, 8)
 
 // Inverse of the product of the control loop time constant and the
