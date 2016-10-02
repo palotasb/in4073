@@ -288,6 +288,9 @@ static void handle_keypress(pc_command_t* command) {
 			case 'x':		// Reboot
 				command->reboot = true;
 				break;
+			case 'h':
+				print_run_help();
+				break;
 			default:
 				fprintf(stderr, "Unknown key (%d)\n", c);
 				break;

@@ -576,22 +576,33 @@ bool spi_flash_init(void)
 
 	if(!flash_enable_WSR())
 	{
+        printf("Flash: error in enable_WSR\n");
 		return false;
 	}
 	if(!flash_set_WRSR())
 	{
+        printf("Flash: error in set_WRSR\n");
 		return false;
 	}
-	if(!flash_read_status(&data) || data!=0x00)
+	if(!flash_read_status(&data) || (data & 0x8C) != 0x00)
 	{
+        // See http://ww1.microchip.com/downloads/en/DeviceDoc/25081A.pdf
+        // SPI flash part number: SST25VF010A
+        if ((data & 0x8C) == 0x00)
+            // We are only testing the BP0, BP1 and BPL bits
+            printf("Flash: error in read_status (return value)\n");
+        else
+            printf("Flash: error in read_status (data = %u)\n", data);
 		return false;
 	}
 	if(!flash_chip_erase())
 	{
+        printf("Flash: error in chip_erase\n");
 		return false;
 	}
 	if(!flash_write_enable())
 	{
+        printf("Flash: error in write_enable\n");
 		return false;
 	}
     return true;
