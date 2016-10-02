@@ -68,11 +68,11 @@ void qc_hal_get_inputs(qc_state_t* state) {
     state->sensor.voltage       = bat_volt;
 	//convert from int16_t to F16P16
     state->sensor.sax           = sax * ACC_G_SCALE_INV;
-    state->sensor.say           = say * ACC_G_SCALE_INV;
-    state->sensor.saz           = saz * ACC_G_SCALE_INV;
+    state->sensor.say           = -say * ACC_G_SCALE_INV;
+    state->sensor.saz           = -saz * ACC_G_SCALE_INV;
     state->sensor.sp            = sp  * GYRO_G_SCALE_INV;
-    state->sensor.sq            = sq  * GYRO_G_SCALE_INV;
-    state->sensor.sr            = sr  * GYRO_G_SCALE_INV; 
+    state->sensor.sq            = -sq  * GYRO_G_SCALE_INV;
+    state->sensor.sr            = -sr  * GYRO_G_SCALE_INV; 
 
 }
 
