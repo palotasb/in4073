@@ -142,7 +142,7 @@ void control_fn(qc_state_t* state) {
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
     state->spin.p   = (state->trim.p2 + 1) * ((T_INV * (state->att.phi - prev_att.phi)) >> 8) - (state->sensor.sp - state->offset.sp);
-    state->spin.q   = (state->trim.p1 + 1) * ((T_INV * (state->att.theta - prev_att.theta)) >> 8) - (state->sensor.sp - state->offset.sp);
+    state->spin.q   = (state->trim.p1 + 1) * ((T_INV * (state->att.theta - prev_att.theta)) >> 8) - (state->sensor.sq - state->offset.sq);
     // Q16.16 <-- Q6.10
     state->sensor.sr = filter(state->sensor.sr);
     state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10) - (state->sensor.sr - state->offset.sr);
