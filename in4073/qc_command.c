@@ -1,7 +1,7 @@
 #include "qc_command.h"
 #include <stdio.h>
 #include "log.h"
-#include "in4073.h"
+#include "printf.h"
 
 static void qc_command_set_mode(qc_command_t* command, qc_mode_t mode);
 static void qc_command_set_lift_roll_pitch_yaw(qc_command_t* command,
@@ -124,7 +124,7 @@ void qc_command_rx_message(qc_command_t* command, message_t* message) {
             }
             break;
         case MESSAGE_REBOOT_ID:
-            NVIC_SystemReset();
+            command->system->hal->reset_fn();
             break;
         default:
             break;

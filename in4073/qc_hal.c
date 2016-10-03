@@ -26,6 +26,12 @@ void qc_hal_init(qc_hal_t* hal) {
     hal->get_inputs_fn  = &qc_hal_get_inputs;
     hal->set_outputs_fn = &qc_hal_set_outputs;
     hal->enable_motors_fn = &qc_hal_enable_motors;
+    hal->flash_init_fn  = &spi_flash_init;
+    hal->flash_read_fn  = &flash_read_bytes;
+    hal->flash_write_fn = &flash_write_bytes;
+    hal->flash_erase_fn = &flash_chip_erase;
+    hal->reset_fn       = &NVIC_SystemReset;
+    hal->get_time_us_fn = &get_time_us;
 }
 
 /** =======================================================
