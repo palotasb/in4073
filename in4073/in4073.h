@@ -27,6 +27,7 @@
 #include "mode_3_calibrate.h"
 #include "mode_4_yaw.h"
 #include "mode_5_full.h"
+#include "profile.h"
 
 // Start critical section code
 // Original code by Boldizsar Palotas for previous university project.

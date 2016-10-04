@@ -22,6 +22,7 @@ void qc_state_init(qc_state_t* state) {
     qc_state_clear_spin(state);
     qc_state_clear_trim(state);
     qc_state_clear_option(state);
+    qc_state_clear_prof(state);
 }
 
 /** =======================================================
@@ -202,4 +203,17 @@ void qc_state_clear_option(qc_state_t* state) {
     state->option.raw_control       = false;
     state->option.wireless_control  = false;
     state->option.enable_motors     = false;
+}
+
+/** =======================================================
+ *  qc_state_clear_prof -- Clear operating profiles
+ *  =======================================================
+ *  Clears all operating profiles in the state variable.
+ *  Parameters:
+ *  - state: The state variable in which to clear the data.
+ *  Author: Boldizsar Palotas
+**/
+void qc_state_clear_prof(qc_state_t* state) {
+    for (int i = 0; i < QC_STATE_PROF_CNT; i++)
+        profile_init(&state->prof.pr[i]);
 }

@@ -24,6 +24,7 @@ qc_hal_t            sim_hal;
 bool                is_test_device;
 uint32_t            led_patterns[] = {0, 0, 0, 0};
 bool                enable_motors;
+uint32_t            iteration;
 
 int fifo_to_term;
 int fifo_to_sim;
