@@ -34,6 +34,7 @@ int read_joystick(pc_command_t *command)
 					case 0:
 						if (js.value == 1) {
 							command->mode = MODE_1_PANIC;
+							command->mode_panic_status = 1;
 							command->mode_updated = true;
 						}
 						break;

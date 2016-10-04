@@ -4,9 +4,50 @@
 #include "pc_command.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
+
+
+enum keyboard_state {HANDLE_PRESSES, LOG_MASK, TELE_MASK};
+
+static enum keyboard_state kb_state = HANDLE_PRESSES;
+
+static void handle_keypress(pc_command_t* command);
+static void read_log_mask(pc_command_t* command);
+static void read_tele_mask(pc_command_t* command);
+
 
 /******************************
 read_keyboard()
+*******************************
+Description:
+	handles keybard events and updates the pc_command structure
+
+Outputs:
+	-	pc_command_t *command:
+			pointer to the current state structure
+			this state is updated when a key press is detecten
+
+Author:
+	Koos Eerden
+*******************************/
+
+void read_keyboard(pc_command_t* command) {
+	switch(kb_state){
+		case HANDLE_PRESSES:
+			handle_keypress(command);
+			break;
+		case LOG_MASK:
+			read_log_mask(command);
+			break;
+		case TELE_MASK:
+			read_tele_mask(command);
+			break;
+	}
+}
+
+
+/******************************
+handle_keypress()
 *******************************
 Description:
 	Checks if keys were pressed, and updates the status.
@@ -21,9 +62,11 @@ Author:
 	Koos Eerden
 *******************************/
 
-void read_keyboard(pc_command_t* command) {
-
-	char c, c2, c3;
+static void handle_keypress(pc_command_t* command) {
+	char c, c2;
+#ifndef WINDOWS
+	char c3;
+#endif
 
 	if ((c = term_getchar_nb()) != -1) {
 		switch (c) {
@@ -33,12 +76,12 @@ void read_keyboard(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'a':		//lift up
-				command->orient_kb.lift = min(command->orient_kb.lift + 1, 127);
+				command->orient_kb.lift = min(command->orient_kb.lift + 1, 255);
 				command->orient_updated = true;
 				break;
 			case 'y':		//to be used with Hungarian keyboard layout
 			case 'z':		//lift down
-				command->orient_kb.lift = max(command->orient_kb.lift - 1, -128);
+				command->orient_kb.lift = max(command->orient_kb.lift - 1, 0);
 				command->orient_updated = true;
 				break;
 			case 'q':		//yaw down
@@ -59,11 +102,13 @@ void read_keyboard(pc_command_t* command) {
 							Unknown control sequenced are ignored
 							*/
 				c2 = term_getchar_nb();
-				if (c2 == -1) {
+				if (c2 == -1 || c2 == 27) {
 					command->mode = MODE_1_PANIC;
 					command->mode_panic_status = 1;
 					command->mode_updated = true;
-				} else if(c2 == '['){
+				}
+#ifndef WINDOWS
+				else if(c2 == '['){
 					c3 = term_getchar_nb();	
 					switch(c3) {
 						case 'A':	//up arrow: pitch down
@@ -83,8 +128,35 @@ void read_keyboard(pc_command_t* command) {
 							command->orient_updated = true;
 							break;
 					}
+				} else {
+					fprintf(stderr, "Can't recognize character %d.\n", c);
 				}
+#endif
 				break;
+#ifdef WINDOWS
+				case -32:	// EBCDIC escape code on Windows command line
+					c2 = term_getchar_nb();
+					// This one uses IBM scan codes: http://www.lookuptables.com/ebcdic_scancodes.php
+					switch (c2) {						
+						case 72:	//up arrow: pitch down
+							command->orient_kb.pitch = max(command->orient_kb.pitch - 1, -128);
+							command->orient_updated = true;
+							break;
+						case 80:  //down arrow: pitch up
+							command->orient_kb.pitch = min(command->orient_kb.pitch + 1, 127);
+							command->orient_updated = true;
+							break;
+						case 77:	//right arrow: roll down
+							command->orient_kb.roll = max(command->orient_kb.roll - 1, -128);
+							command->orient_updated = true;
+							break;
+						case 75:	//left arrow: roll up
+							command->orient_kb.roll = min(command->orient_kb.roll + 1, 127);
+							command->orient_updated = true;
+							break;
+					}
+					break;
+#endif
 
 			// ----------------------------------
 			// Mode switching
@@ -123,11 +195,11 @@ void read_keyboard(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'u':		//yaw control P up
-				command->trim.yaw_p = min(command->trim.yaw_p + 1, 127);
+				command->trim.yaw_p = min(command->trim.yaw_p + 1, 255);
 				command->trim_updated = true;
 				break;
 			case 'j':		//yaw control P down
-				command->trim.yaw_p = max(command->trim.yaw_p - 1, -128);
+				command->trim.yaw_p = max(command->trim.yaw_p - 1, 0);
 				command->trim_updated = true;
 				break;
 			case 'i':		//roll/pitch P1 control up
@@ -187,10 +259,9 @@ void read_keyboard(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'f':		// Log set mask
-				fprintf(stderr, "Enter LOG MASK: ");
-				if (scanf("%u", &command->log_mask) != 1)
-					break;
-				command->log_mask_updated = true;
+				fprintf(stderr, "Enter LOG MASK: 0\b");
+				kb_state = LOG_MASK;
+				command->log_mask = 0;
 				break;
 			case 'c':		// Log start
 				command->log_start = true;
@@ -210,10 +281,9 @@ void read_keyboard(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'g':		// Telemetry set mask
-				fprintf(stderr, "Enter TELEMETRY MASK: ");
-				if (scanf("%u", &command->telemetry_mask) != 1)
-					break;
-				command->telemetry_mask_updated = true;
+				fprintf(stderr, "Enter TELEMETRY MASK: 0\b");
+				kb_state = TELE_MASK;
+				command->telemetry_mask = 0;
 				break;
 			case 'x':		// Reboot
 				command->reboot = true;
@@ -224,3 +294,95 @@ void read_keyboard(pc_command_t* command) {
 		}
 	}
 }
+
+static void read_log_mask(pc_command_t* command) {
+	char c = term_getchar_nb();
+	uint32_t digit = c - '0', copy;
+	if ('0' <= c && c <= '9') {
+		if (digit == 0 && command->log_mask == 0) {
+			return;
+		}
+		if ((UINT_MAX - digit) / 10 < command->log_mask) {
+			return;
+		}
+		copy = command->log_mask;
+		command->log_mask *= 10;
+		command->log_mask += digit;
+		while (copy != 0) {
+			fprintf(stderr, "\b \b");
+			copy /= 10;
+		}
+		fprintf(stderr, "%u", command->log_mask);
+	} else {
+		switch (c) {
+			case '\n':
+			case '\r':
+				command->log_mask_updated = true;
+				kb_state = HANDLE_PRESSES;
+				fprintf(stderr, "\n");
+				break;
+			case '\b':
+				if (command->log_mask == 0)
+					break;
+				command->log_mask /= 10;
+				fprintf(stderr, "\b \b");
+				break;
+			case 27: // Escape
+				kb_state = HANDLE_PRESSES;
+				while (command->log_mask != 0) {
+					fprintf(stderr, "\b \b");
+					command->log_mask /= 10;
+				}
+				fprintf(stderr, "cancelled.\n");
+			default:
+				break;
+		}
+	}
+}
+
+static void read_tele_mask(pc_command_t* command) {
+	char c = term_getchar_nb();
+	uint32_t digit = c - '0', copy;
+	if ('0' <= c && c <= '9') {
+		if (digit == 0 && command->telemetry_mask == 0) {
+			return;
+		}
+		if ((UINT_MAX - digit) / 10 < command->telemetry_mask) {
+			return;
+		}
+		copy = command->telemetry_mask;
+		command->telemetry_mask *= 10;
+		command->telemetry_mask += digit;
+		while (copy != 0) {
+			fprintf(stderr, "\b \b");
+			copy /= 10;
+		}
+		fprintf(stderr, "%u", command->telemetry_mask);
+	} else {
+		switch (c) {
+			case '\n':
+			case '\r':
+				command->telemetry_mask_updated = true;
+				kb_state = HANDLE_PRESSES;
+				fprintf(stderr, "\n");
+				break;
+			case '\b':
+				if (command->telemetry_mask == 0)
+					break;
+				command->telemetry_mask /= 10;
+				fprintf(stderr, "\b \b");
+				break;
+			case 27: // Escape
+				kb_state = HANDLE_PRESSES;
+				while (command->telemetry_mask != 0) {
+					fprintf(stderr, "\b \b");
+					command->telemetry_mask /= 10;
+				}
+				fprintf(stderr, "cancelled.\n");
+			default:
+				break;
+		}
+	}
+}
+
+

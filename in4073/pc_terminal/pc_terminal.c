@@ -169,7 +169,7 @@ void run_terminal(char* serial, char* js) {
 	for (int i = 0; i <= 11; i++) {
 		fprintf(stderr, "\t%6u = %#8x: %s\n", 1u<<i, 1u<<i, message_id_to_pc_name(i));
 	}
-	fprintf(stderr, "Press ENTER to set. Enter F 0 (G 0) to log nothing.\n\n");
+	fprintf(stderr, "Press F, ENTER (G, ENTER) to log nothing by default.\n\n");
 	fprintf(stderr, "Press X to REBOOT Quadcopter and EXIT terminal program.\n");
 	fprintf(stderr, "========================================================\n\n");
 	
@@ -182,6 +182,18 @@ void run_terminal(char* serial, char* js) {
 
 	while (!error && !abort) 
 	{
+		//check for keyboard presses
+		read_keyboard(&command);
+
+		//check joystick
+		if (do_js){
+			if (read_joystick(&command)) {
+				errormsg = "Error reading joystick\n";
+				error = true;
+				break;
+			}
+		}
+		
 		//handle input
 		if(do_serial){
 			if ((c = rs232_getchar_nb()) >= 0) {
@@ -192,15 +204,17 @@ void run_terminal(char* serial, char* js) {
 			}*/
 
 			while (pc_command_get_message(&command, &tx_frame.message)) {
-				fprintf(stderr, "< Sending %s v32:[%d %d] v16:[%d %d %d %d] v8:[%d %d %d %d  %d %d %d %d]\n",
-					message_id_to_qc_name(tx_frame.message.ID),
-					tx_frame.message.value.v32[0], tx_frame.message.value.v32[1],
-					tx_frame.message.value.v16[0], tx_frame.message.value.v16[1], tx_frame.message.value.v16[2], tx_frame.message.value.v16[3],
-					tx_frame.message.value.v8[0], tx_frame.message.value.v8[1], tx_frame.message.value.v8[2], tx_frame.message.value.v8[3], tx_frame.message.value.v8[4], tx_frame.message.value.v8[5], tx_frame.message.value.v8[6], tx_frame.message.value.v8[7]);
+				while (time_get_ms() - last_msg < 1) { }
 				serialcomm_send(&sc);
+				//fprintf(stderr, "< Sending %s v32:[%d %d] v16:[%hd %hd %hd %hd] v8:[%hd %hd %hd %hd  %hd %hd %hd %hd]\n",
+				//	message_id_to_qc_name(tx_frame.message.ID),
+				//	tx_frame.message.value.v32[0], tx_frame.message.value.v32[1],
+				//	tx_frame.message.value.v16[0], tx_frame.message.value.v16[1], tx_frame.message.value.v16[2], tx_frame.message.value.v16[3],
+				//	tx_frame.message.value.v8[0], tx_frame.message.value.v8[1], tx_frame.message.value.v8[2], tx_frame.message.value.v8[3], tx_frame.message.value.v8[4], tx_frame.message.value.v8[5], tx_frame.message.value.v8[6], tx_frame.message.value.v8[7]);
 				if (tx_frame.message.ID == MESSAGE_REBOOT_ID) {
 					fprintf(stderr, "Exiting terminal.\n");
-					exit(0);
+					abort = true;
+					break;
 				}
 				last_msg = time_get_ms();
 				// Don't completely block communications...
@@ -215,24 +229,13 @@ void run_terminal(char* serial, char* js) {
 			}
 		}
 
-		//check for keyboard presses
-		read_keyboard(&command);
 
-		//check joystick
-		if (do_js){
-			if (read_joystick(&command)) {
-				errormsg = "Error reading joystick\n";
-				error = true;
-				break;
-			}
-		}
 	}
 
 	if(error){
 		fprintf(stderr, "Error: %s\n", errormsg);
 	}
 
-	//this part is never executed but is still here for estetic reasons.
 	if(do_serial)
 		rs232_close();
 	if(do_js)

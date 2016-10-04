@@ -150,7 +150,7 @@ int close_joystick(void) {
 
 int read_js_events(struct js_event* js) {
 	return
-		read(fd, &js, sizeof(struct js_event))
+		read(fd, js, sizeof(struct js_event))
 		==	sizeof(struct js_event);
 }
 

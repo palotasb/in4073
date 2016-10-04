@@ -47,11 +47,11 @@ int main(void) {
             led_display();
             clear_timer_flag();
         }
- 
-        if (check_sensor_int_flag()) {
-            get_dmp_data();
-            clear_sensor_int_flag();
-        }
+	
+		 if (check_sensor_int_flag()) {
+		     get_dmp_data();
+			  clear_sensor_int_flag();
+		 }
 
         if (text_queue.count) {
             transmit_text();
@@ -92,8 +92,8 @@ void init_modes(void) {
     mode_0_safe_init(&qc_mode_tables[MODE_0_SAFE]);
     mode_1_panic_init(&qc_mode_tables[MODE_1_PANIC]);
     mode_2_manual_init(&qc_mode_tables[MODE_2_MANUAL]);
-    mode_0_safe_init(&qc_mode_tables[MODE_3_CALIBRATE]);
-    mode_0_safe_init(&qc_mode_tables[MODE_4_YAW]);
+    mode_3_calibrate_init(&qc_mode_tables[MODE_3_CALIBRATE]);
+    mode_4_yaw_init(&qc_mode_tables[MODE_4_YAW]);
     mode_0_safe_init(&qc_mode_tables[MODE_5_FULL_CONTROL]);
 }
 
@@ -151,8 +151,8 @@ void led_display(void) {
             nrf_gpio_pin_clear(colors[i]);
         }
     }
-    if ((counter & 0xFF) == 0)
-        printf("> I'm alive!\n");
+    //if ((counter & 0xFF) == 0)
+    //    printf("> I'm alive!\n");
 }
 
 void Default_Handler(void) {

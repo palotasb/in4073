@@ -51,11 +51,11 @@ typedef int8_t          q8_t;
 // FP_FLOAT(f, frac) -- Convert float f to f_.frac format fixedpoint
 #define FP_FLOAT(f, frac)     ((f) * (1ul << (frac)))
 
-#define MUL_FP3(fpa, fpb, shra, shrb, shrr)      ((((fpa) >> (shra)) * ((fpb) >> (shrb))) >> (shrr))
+#define FP_MUL3(fpa, fpb, shra, shrb, shrr)      ((((fpa) >> (shra)) * ((fpb) >> (shrb))) >> (shrr))
 
-#define MUL_FP_PRESH(fpa, fpb, shra, shrb)       MUL_FP3((fpa), (fpb), (shra), (shrb), 0)
+#define FP_MUL2(fpa, fpb, shra, shrb)       FP_MUL3((fpa), (fpb), (shra), (shrb), 0)
 
-#define MUL_FP_POSTSH(fpa, fpb, shrr)     MUL_FP3((fpa), (fpb), 0, 0, (shrr))
+#define FP_MUL1(fpa, fpb, shrr)     FP_MUL3((fpa), (fpb), 0, 0, (shrr))
 
 #define FP_EXTEND(fp, fraca, fracb)     ((fp) << ((fraca) - (fracb)))
 
