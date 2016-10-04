@@ -162,9 +162,14 @@ static void handle_keypress(pc_command_t* command) {
 			// Mode switching
 			// ----------------------------------
 
+			case -61: // first of ö sequence on Linux:
+				c2 = term_getchar_nb();
+				if (c2 != -74)
+					break;
+				// Otherwise fallthrough.
 			case '`':
 			case '0':
-			case -108: //ö
+			case -108: //ö on Windows
 				command->mode = MODE_0_SAFE;
 				command->mode_updated = true;
 				break;
