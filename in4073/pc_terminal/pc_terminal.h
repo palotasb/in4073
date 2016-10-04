@@ -13,6 +13,8 @@
 #include "pc_log.h"
 
 #define JS_DEV	"/dev/input/js0"
+#define VIRTUAL_IN_DEV	"/tmp/fifo_to_term"
+#define VIRTUAL_OUT_DEV	"/tmp/fifo_to_sim"
 
 #ifndef SERIAL_DEV
 	#ifndef __WINDOWS
@@ -30,7 +32,7 @@ int min(int a, int b);
 int max(int a, int b);
 
 void print_help(void);
-void run_terminal(char* serial, char* js);
+void run_terminal(char* serial, char* js, char*, char*);
 void read_keyboard(pc_command_t* command);
 void print_run_help(void);
 

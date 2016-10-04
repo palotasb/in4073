@@ -1,5 +1,5 @@
 #include "mode_0_safe.h"
-#include "in4073.h"
+#include "printf.h"
 
 static void control_fn(qc_state_t* state);
 static bool trans_fn(qc_state_t* state, qc_mode_t new_mode);
@@ -64,10 +64,7 @@ bool trans_fn(qc_state_t* state, qc_mode_t new_mode) {
  *  Author: Boldizsar Palotas
 **/
 void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
-	nrf_gpio_pin_set(YELLOW);
-	nrf_gpio_pin_set(RED);
-	nrf_gpio_pin_set(GREEN);
-
+	return;
 }
 
 /** =======================================================

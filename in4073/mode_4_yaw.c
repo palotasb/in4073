@@ -1,6 +1,6 @@
 #include "mode_4_yaw.h"
 #include "mode_constants.h"
-#include "in4073.h"
+#include "printf.h"
 
 /** YAW CONTROLLED MODE OPERATION (MODE 4)
  *  ======================================

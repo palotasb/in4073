@@ -1,5 +1,5 @@
 #include "mode_1_panic.h"
-#include "in4073.h"
+#include "printf.h"
 
 static void control_fn(qc_state_t* state);
 static bool trans_fn(qc_state_t* state, qc_mode_t new_mode);
@@ -100,10 +100,6 @@ void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
     } else {
         timer = 0;
     }
-	nrf_gpio_pin_set(YELLOW);
-	nrf_gpio_pin_clear(RED);
-	nrf_gpio_pin_set(GREEN);
-
 }
 
 /** =======================================================

@@ -1,6 +1,6 @@
 #include "mode_5_full.h"
 #include "mode_constants.h"
-#include "in4073.h"
+#include "printf.h"
 
 /** FULL CONTROL MODE OPERATION (MODE 5)
  *  ====================================
