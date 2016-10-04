@@ -136,3 +136,10 @@ int rs232_putchar(char c)
 	return result;		
 }
 
+int virt_open(char* dev_in, char* dev_out) {
+    fprintf(stderr, "Virtual quadcopter in not supported on Windows.\n");
+    return -1;
+}
+int virt_close(void) {return-1;}
+int virt_getchar_nb(void) {return-1;}
+int virt_putchar(char c) {return-1;}

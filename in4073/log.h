@@ -2,9 +2,10 @@
 #define __LOG_H
 
 #include "serialcomm.h"
+#include "qc_hal.h"
 #include <inttypes.h>
 
-bool log_init(serialcomm_t* sc);
+bool log_init(qc_hal_t* hal, serialcomm_t* sc);
 uint32_t log_getsize(void);
 bool log_read(uint32_t index, message_t* item);
 bool log_write(message_t* item);

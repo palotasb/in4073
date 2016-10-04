@@ -1,5 +1,5 @@
 #include "mode_3_calibrate.h"
-#include "in4073.h"
+#include "printf.h"
 
 // 256 samples taken at 100 HZ means around 2.56 sec calibration time
 // 256 means a shift amount of 8 bits

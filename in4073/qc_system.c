@@ -1,8 +1,11 @@
 #include "qc_system.h"
-#include "in4073.h"
+#include "qc_mode.h"
+#include "printf.h"
 #include "log.h"
 
 #define SAFE_VOLTAGE 1050
+extern bool is_test_device;
+extern uint32_t iteration;
 
 static void qc_system_log_data(qc_system_t* system);
 
@@ -53,7 +56,7 @@ void qc_system_init(qc_system_t* system,
 
     // Init other members
     qc_state_init(system->state);
-    if (!log_init(system->serialcomm)) {
+    if (!log_init(system->hal, system->serialcomm)) {
         qc_system_set_mode(system, MODE_1_PANIC);
         printf("> Log init error, starting in PANIC mode.\n");
     }
@@ -71,7 +74,7 @@ void qc_system_init(qc_system_t* system,
 **/
 void qc_system_step(qc_system_t* system) {
     system->hal->get_inputs_fn(system->state);
-    if (0 && system->state->sensor.voltage < SAFE_VOLTAGE) {
+    if (!is_test_device && system->state->sensor.voltage < SAFE_VOLTAGE) {
        if(system->mode != MODE_1_PANIC)
            printf("Low voltage (V = %ld centivolts)\n", system->state->sensor.voltage);
 
@@ -80,9 +83,9 @@ void qc_system_step(qc_system_t* system) {
 
     qc_command_tick(system->command);
 
-    profile_start_tag(&system->state->prof.pr[1], get_time_us(), iteration);
+    profile_start_tag(&system->state->prof.pr[1], system->hal->get_time_us_fn(), iteration);
     system->current_mode_table->control_fn(system->state);
-    profile_end(&system->state->prof.pr[1], get_time_us());
+    profile_end(&system->state->prof.pr[1], system->hal->get_time_us_fn());
 
     system->hal->enable_motors_fn(
         system->current_mode_table->motor_on_fn(system->state)
@@ -117,7 +120,7 @@ void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
     system->current_mode_table->enter_fn(system->state, old_mode);
 
     serialcomm_quick_send(system->serialcomm, MESSAGE_TIME_MODE_VOLTAGE_ID,
-        get_time_us(),
+        system->hal->get_time_us_fn(),
         system->mode | (system->state->sensor.voltage << 16) );
 }
 
@@ -129,7 +132,7 @@ static void qc_system_log_data(qc_system_t* system) {
         msg.ID = index;
         switch (index) {
             case MESSAGE_TIME_MODE_VOLTAGE_ID:
-                MESSAGE_TIME_VALUE(&msg) = get_time_us();
+                MESSAGE_TIME_VALUE(&msg) = system->hal->get_time_us_fn();
                 MESSAGE_MODE_VALUE(&msg) = system->mode;
                 MESSAGE_VOLTAGE_VALUE(&msg) = system->state->sensor.voltage;
                 break;

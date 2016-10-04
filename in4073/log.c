@@ -1,6 +1,5 @@
 #include <stdio.h>
 
-#include "in4073.h"
 #include "log.h"
 
 // Flash is 1024 * 1024 bits.
@@ -61,7 +60,8 @@ static uint32_t log_item(uint32_t index);
 uint32_t logsize;
 
 // Serial communication ling
-serialcomm_t* sc = 0;
+static serialcomm_t* sc = 0;
+static qc_hal_t*     hal = 0;
 
 // Return address of ID of item No. i
 uint32_t log_id(uint32_t i) {
@@ -73,13 +73,12 @@ uint32_t log_item(uint32_t i) {
 	return (i & ~0x03ul) * 36 + (i & 0x03ul) * 8 + 4;
 }
 
-bool log_init(serialcomm_t* serialcomm) {	
+bool log_init(qc_hal_t* h, serialcomm_t* serialcomm) {	
 	logsize = 0;
+	hal = h;
 	volatile uint32_t to = 10000;
-	nrf_gpio_pin_clear(YELLOW);
 	while (--to) {}
-	bool result = spi_flash_init();
-	nrf_gpio_pin_set(YELLOW);
+	bool result = hal->flash_init_fn();
 	if (result) {
 		sc = serialcomm;
 	}
@@ -92,8 +91,8 @@ bool log_write(message_t* item) {
 		return false;
 	}
 
-	bool result1 = flash_write_bytes(log_id(logsize), &item->ID, 1);
-	bool result2 = flash_write_bytes(log_item(logsize), item->value.v8, 8);
+	bool result1 = hal->flash_write_fn(log_id(logsize), &item->ID, 1);
+	bool result2 = hal->flash_write_fn(log_item(logsize), item->value.v8, 8);
 	if (result1 && result2) {
 		logsize++;
 		return true;
@@ -107,8 +106,8 @@ bool log_read(uint32_t index, message_t* item) {
 	if (LOG_MAX_ITEMS < index)
 		return false;
 
-	bool result1 = flash_read_bytes(log_id(index), &item->ID, 1);
-	bool result2 = flash_read_bytes(log_item(index), item->value.v8, 8);
+	bool result1 = hal->flash_read_fn(log_id(index), &item->ID, 1);
+	bool result2 = hal->flash_read_fn(log_item(index), item->value.v8, 8);
 	if (result1 && result2) {
 		return true;
 	} else {
@@ -138,6 +137,6 @@ void log_readback(void) {
 void log_reset(void) {
 	printf("> Log reset\n");
 	logsize = 0;
-	if (!flash_chip_erase())
+	if (!hal->flash_erase_fn())
 		printf("> Chip erase failed!\n");;
 }

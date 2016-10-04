@@ -1,6 +1,6 @@
 #include "mode_2_manual.h"
 #include "mode_constants.h"
-#include "in4073.h"
+#include "printf.h"
 
 /** MANUAL MODE OPERATION (MODE 2)
  *  ==============================
@@ -105,11 +105,17 @@ void mode_2_manual_init(qc_mode_table_t* mode_table) {
 **/
 void control_fn(qc_state_t* state) {
 
+    // Linear quantities
+    // -----------------
+
     // Positions are zero.
     // Hence velocities are zero.
     // Hence forces are zero except for Z to which -lift is added.
     // Q16.16 <-- Q8.8
-    state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8) / 4;
+    state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+
+    // Attitude-related quantitites
+    // ----------------------------
 
     // Roll and pitch set phi and theta but yaw is handled separately.
     // Q16.16 <-- Q2.14
@@ -117,20 +123,20 @@ void control_fn(qc_state_t* state) {
     state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
-    //state->spin.p   = (T_INV * (state->att.phi - prev_att.phi)) >> 8;
-    //state->spin.q   = (T_INV * (state->att.theta - prev_att.theta)) >> 8;
+    state->spin.p   = (T_INV * (state->att.phi - prev_att.phi)) >> 8;
+    state->spin.q   = (T_INV * (state->att.theta - prev_att.theta)) >> 8;
     // Q16.16 <-- Q6.10
     state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
-    //state->torque.L = (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
-    //state->torque.M = (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
-    //state->torque.N = (T_INV_I_N * (state->spin.r - prev_spin.r)) >> 8;
+    state->torque.L = (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
+    state->torque.M = (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
+    state->torque.N = (T_INV_I_N * (state->spin.r - prev_spin.r)) >> 8;
 
     // Override
-    state->torque.L = state->att.phi   * 2;
-    state->torque.M = state->att.theta * 2;
-    state->torque.N = state->spin.r;
+    //state->torque.L = state->att.phi   * 2;
+    //state->torque.M = state->att.theta * 2;
+    //state->torque.N = state->spin.r;
 
     // See project_dir/control_ae.m MATLAB file for calculations.
     // ae_1^2 = -1/(4b') Z +        0 L +  1/(2b') M + -1/(4d') N
@@ -160,7 +166,7 @@ void control_fn(qc_state_t* state) {
         //printf("T_INV %ld, dphi %ld dtheta %ld\n", T_INV, (state->att.phi - prev_att.phi), (state->att.theta - prev_att.theta));
         printf("LRPY: %hd %hd %hd %hd\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
         //printf("phi theta: %ld %ld\n", state->att.phi, state->att.theta);
-        //printf("pqr: %ld %ld %ld\n", state->spin.p, state->spin.q, state->spin.r);
+        printf("pqr: %ld %ld %ld\n", state->spin.p, state->spin.q, state->spin.r);
         printf("ZLMN: %ld %ld %ld %ld\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
         printf("ae_sq: %ld %ld %ld %ld\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
         printf("ae   : %u %u %u %u\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);

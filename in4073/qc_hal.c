@@ -26,6 +26,12 @@ void qc_hal_init(qc_hal_t* hal) {
     hal->get_inputs_fn  = &qc_hal_get_inputs;
     hal->set_outputs_fn = &qc_hal_set_outputs;
     hal->enable_motors_fn = &qc_hal_enable_motors;
+    hal->flash_init_fn  = &spi_flash_init;
+    hal->flash_read_fn  = &flash_read_bytes;
+    hal->flash_write_fn = &flash_write_bytes;
+    hal->flash_erase_fn = &flash_chip_erase;
+    hal->reset_fn       = &NVIC_SystemReset;
+    hal->get_time_us_fn = &get_time_us;
 }
 
 /** =======================================================
@@ -68,11 +74,11 @@ void qc_hal_get_inputs(qc_state_t* state) {
     state->sensor.voltage       = bat_volt;
 	//convert from int16_t to F16P16
     state->sensor.sax           = sax * ACC_G_SCALE_INV;
-    state->sensor.say           = say * ACC_G_SCALE_INV;
-    state->sensor.saz           = saz * ACC_G_SCALE_INV;
+    state->sensor.say           = -say * ACC_G_SCALE_INV;
+    state->sensor.saz           = -saz * ACC_G_SCALE_INV;
     state->sensor.sp            = sp  * GYRO_G_SCALE_INV;
-    state->sensor.sq            = sq  * GYRO_G_SCALE_INV;
-    state->sensor.sr            = sr  * GYRO_G_SCALE_INV; 
+    state->sensor.sq            = -sq  * GYRO_G_SCALE_INV;
+    state->sensor.sr            = -sr  * GYRO_G_SCALE_INV; 
 
 }
 

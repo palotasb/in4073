@@ -19,6 +19,12 @@ typedef struct qc_hal {
     void (*get_inputs_fn)(qc_state_t*);
     void (*set_outputs_fn)(qc_state_t*);
     void (*enable_motors_fn)(bool);
+    bool (*flash_init_fn)(void);
+    bool (*flash_write_fn)(uint32_t, uint8_t*, uint32_t);
+    bool (*flash_read_fn)(uint32_t, uint8_t*, uint32_t);
+    bool (*flash_erase_fn)(void);
+    void (*reset_fn)(void);
+    uint32_t (*get_time_us_fn)(void);
 } qc_hal_t;
 
 void qc_hal_init(qc_hal_t* hal);

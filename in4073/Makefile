@@ -238,6 +238,12 @@ cleanobj:
 upload: default
 	python dfu_serial/./serial_dfu.py $(DFUFLAGS)  _build/in4073.bin
 
+sim:
+	cd simulation/; make
+
+sim-run:
+	./simulation/sim &
+
 pc: 
 	cd pc_terminal/; make
 

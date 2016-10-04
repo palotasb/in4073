@@ -41,6 +41,8 @@ static void init_all(void);
 static void transmit_text(void);
 
 uint32_t iteration = 0;
+uint32_t control_iteration = 0;
+bool is_test_device = false;
 
 int main(void) {
     init_all();
@@ -52,6 +54,7 @@ int main(void) {
             profile_end(&qc_state.prof.pr[0], get_time_us());
             led_display();
             clear_timer_flag();
+            control_iteration++;
         }
 
         if (check_sensor_int_flag()) {
@@ -70,6 +73,7 @@ int main(void) {
 }
 
 void init_all(void) {
+    is_test_device = NRF_FICR->DEVICEID[0] == TESTDEVICE_ID0 && NRF_FICR->DEVICEID[1] == TESTDEVICE_ID1;
     // Hardware init
     uart_init();
     gpio_init();
@@ -101,7 +105,7 @@ void init_modes(void) {
     mode_2_manual_init(&qc_mode_tables[MODE_2_MANUAL]);
     mode_3_calibrate_init(&qc_mode_tables[MODE_3_CALIBRATE]);
     mode_4_yaw_init(&qc_mode_tables[MODE_4_YAW]);
-    mode_0_safe_init(&qc_mode_tables[MODE_5_FULL_CONTROL]);
+    mode_5_full_init(&qc_mode_tables[MODE_5_FULL_CONTROL]);
 }
 
 void transmit_text(void) {
