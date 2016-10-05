@@ -27,6 +27,7 @@
 #include "mode_3_calibrate.h"
 #include "mode_4_yaw.h"
 #include "mode_5_full.h"
+#include "mode_d_direct.h"
 #include "profile.h"
 
 // Start critical section code

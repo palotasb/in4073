@@ -194,6 +194,10 @@ static void handle_keypress(pc_command_t* command) {
 				command->mode = MODE_5_FULL_CONTROL;
 				command->mode_updated = true;
 				break;
+			case 'd':
+				command->mode = MODE_D_DIRECT;
+				command->mode_updated = true;
+				break;
 
 			// ----------------------------------
 			// Trimming
