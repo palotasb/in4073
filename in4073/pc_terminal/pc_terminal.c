@@ -122,6 +122,14 @@ void print_run_help(void) {
 	for (int i = 0; i <= 11; i++) {
 		fprintf(stderr, "%10u = %#10x: %s\n", 1u<<i, 1u<<i, message_id_to_pc_name(i));
 	}
+	for (int i = 0; i < QC_STATE_PROF_CNT; i++) {
+		fprintf(stderr, "%10u = %#10x: %s\n",
+		1u<<(i + MESSAGE_PROFILE_0_CURR_ID), 1u<<(i + MESSAGE_PROFILE_0_CURR_ID), message_id_to_pc_name(i + MESSAGE_PROFILE_0_CURR_ID));
+	}
+	for (int i = 0; i < QC_STATE_PROF_CNT; i++) {
+		fprintf(stderr, "%10u = %#10x: %s\n",
+		1u<<(i + MESSAGE_PROFILE_0_MAX_ID), 1u<<(i + MESSAGE_PROFILE_0_MAX_ID), message_id_to_pc_name(i + MESSAGE_PROFILE_0_MAX_ID));
+	}
 	fprintf(stderr, "C: start V: pause B: readback (safe mode only) N: reset\n\n");
 	fprintf(stderr, "Press X to REBOOT Quadcopter and EXIT terminal program.\n");
 	fprintf(stderr, "========================================================\n\n");

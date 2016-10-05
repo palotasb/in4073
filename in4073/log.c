@@ -117,7 +117,7 @@ bool log_read(uint32_t index, message_t* item) {
 
 void log_readback(void) {
 	message_t msg;
-	printf("> Log read (sum %lu)\n", logsize);
+	printf("> Log read (sum %"PRIu32")\n", logsize);
 	if (!sc)
 		printf("> Log serial error\n");
 	serialcomm_quick_send(sc, MESSAGE_LOG_START_ID, 0, 0);

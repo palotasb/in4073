@@ -5,6 +5,7 @@
 
 #define SAFE_VOLTAGE 1050
 extern bool is_test_device;
+extern uint32_t iteration;
 
 static void qc_system_log_data(qc_system_t* system);
 
@@ -75,15 +76,21 @@ void qc_system_step(qc_system_t* system) {
     system->hal->get_inputs_fn(system->state);
     if (!is_test_device && system->state->sensor.voltage < SAFE_VOLTAGE) {
        if(system->mode != MODE_1_PANIC)
-           printf("Low voltage (V = %ld centivolts)\n", system->state->sensor.voltage);
+           printf("Low voltage (V = %"PRId32" centivolts)\n", system->state->sensor.voltage);
 
        qc_system_set_mode(system, MODE_1_PANIC);
     }
-    qc_command_tick(system->command);  
-	system->current_mode_table->control_fn(system->state);
+
+    qc_command_tick(system->command);
+
+    profile_start_tag(&system->state->prof.pr[1], system->hal->get_time_us_fn(), iteration);
+    system->current_mode_table->control_fn(system->state);
+    profile_end(&system->state->prof.pr[1], system->hal->get_time_us_fn());
+
     system->hal->enable_motors_fn(
         system->current_mode_table->motor_on_fn(system->state)
         && system->state->option.enable_motors);
+
     system->hal->set_outputs_fn(system->state);
 
     qc_system_log_data(system);
@@ -118,6 +125,7 @@ void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
 }
 
 static void qc_system_log_data(qc_system_t* system) {
+    int pr_id;
     uint32_t bit_mask, index;
     for (bit_mask = 0x01, index = 0; bit_mask; bit_mask = bit_mask << 1, index++) {
         message_t msg;
@@ -182,6 +190,24 @@ static void qc_system_log_data(qc_system_t* system) {
                 MESSAGE_P1_VALUE(&msg) = system->state->trim.p1;
                 MESSAGE_P2_VALUE(&msg) = system->state->trim.p2;
                 MESSAGE_YAWP_VALUE(&msg) = system->state->trim.yaw_p;
+                break;
+            case MESSAGE_PROFILE_0_CURR_ID:
+            case MESSAGE_PROFILE_1_CURR_ID:
+            case MESSAGE_PROFILE_2_CURR_ID:
+            case MESSAGE_PROFILE_3_CURR_ID:
+            case MESSAGE_PROFILE_4_CURR_ID:
+                pr_id = index - MESSAGE_PROFILE_0_CURR_ID;
+                MESSAGE_PROFILE_TIME_VALUE(&msg) = system->state->prof.pr[pr_id].last_delta;
+                MESSAGE_PROFILE_TAG_VALUE(&msg) = system->state->prof.pr[pr_id].last_tag;
+                break;
+            case MESSAGE_PROFILE_0_MAX_ID:
+            case MESSAGE_PROFILE_1_MAX_ID:
+            case MESSAGE_PROFILE_2_MAX_ID:
+            case MESSAGE_PROFILE_3_MAX_ID:
+            case MESSAGE_PROFILE_4_MAX_ID:
+                pr_id = index - MESSAGE_PROFILE_0_MAX_ID;
+                MESSAGE_PROFILE_TIME_VALUE(&msg) = system->state->prof.pr[pr_id].max_delta;
+                MESSAGE_PROFILE_TAG_VALUE(&msg) = system->state->prof.pr[pr_id].max_tag;
                 break;
             default:
                 continue;

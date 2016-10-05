@@ -29,6 +29,7 @@ bool pc_log_init(pc_log_t* log, FILE* file) {
 }
 
 void pc_log_receive(pc_log_t* log, message_t* message) {
+    int pr_id;
     switch (message->ID) {
         case MESSAGE_LOG_END_ID:
             if (log->initialised) {
@@ -125,6 +126,27 @@ void pc_log_receive(pc_log_t* log, message_t* message) {
             log->state.trim.p2 = MESSAGE_P2_VALUE(message);
             log->set[PC_LOG_p1] = true;
             log->set[PC_LOG_p2] = true;
+            break;
+        case MESSAGE_PROFILE_0_CURR_ID:
+        case MESSAGE_PROFILE_1_CURR_ID:
+        case MESSAGE_PROFILE_2_CURR_ID:
+        case MESSAGE_PROFILE_3_CURR_ID:
+        case MESSAGE_PROFILE_4_CURR_ID:
+            pr_id = message->ID - (int)MESSAGE_PROFILE_0_CURR_ID;
+            log->state.prof.pr[pr_id].last_delta = MESSAGE_PROFILE_TIME_VALUE(message);
+            log->state.prof.pr[pr_id].last_tag = MESSAGE_PROFILE_TAG_VALUE(message);
+            log->set[PC_LOG_PR0_CURR + pr_id] = true;
+            break;
+        case MESSAGE_PROFILE_0_MAX_ID:
+        case MESSAGE_PROFILE_1_MAX_ID:
+        case MESSAGE_PROFILE_2_MAX_ID:
+        case MESSAGE_PROFILE_3_MAX_ID:
+        case MESSAGE_PROFILE_4_MAX_ID:
+            pr_id = message->ID - (int)MESSAGE_PROFILE_0_MAX_ID;
+            log->state.prof.pr[pr_id].max_delta = MESSAGE_PROFILE_TIME_VALUE(message);
+            log->state.prof.pr[pr_id].max_tag = MESSAGE_PROFILE_TAG_VALUE(message);
+            log->set[PC_LOG_PR0_MAX + pr_id] = true;
+            break;
         default:
             break;
     }
@@ -182,6 +204,10 @@ void pc_log_flush(pc_log_t* log) {
     pc_log_print(log, "%d"  _SEP, PC_LOG_yaw_p, log->state.trim.yaw_p);
     pc_log_print(log, "%d"  _SEP, PC_LOG_p1, log->state.trim.p1);
     pc_log_print(log, "%d"  _SEP, PC_LOG_p2, log->state.trim.p2);
+    for (int i = 0; i < QC_STATE_PROF_CNT; i++) {
+        pc_log_print(log, "%u"_SEP"%u" _SEP, PC_LOG_PR0_CURR+i, log->state.prof.pr[i].last_delta, log->state.prof.pr[i].last_tag);
+        pc_log_print(log, "%u"_SEP"%u" _SEP, PC_LOG_PR0_MAX+i, log->state.prof.pr[i].max_delta, log->state.prof.pr[i].max_tag);
+    }
     fprintf(log->file, _END);
     fflush(log->file);
 }
@@ -201,7 +227,7 @@ void pc_log_print(pc_log_t* log, const char * fmt, pc_log_item_t item, ...) {
             if (result[1] == '\0' || result[2] == '\0') {
                 result = 0;
             } else {
-                result = result + 2;
+                result = result + 2; // Step 2 to avoid %% escape sequence
             }
         }
     }

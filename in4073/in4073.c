@@ -49,7 +49,9 @@ int main(void) {
 
     while (1) {
         if (check_timer_flag()) {
+            profile_start_tag(&qc_state.prof.pr[0], get_time_us(), iteration);
             qc_system_step(&qc_system);
+            profile_end(&qc_state.prof.pr[0], get_time_us());
             led_display();
             clear_timer_flag();
             control_iteration++;
