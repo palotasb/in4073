@@ -50,21 +50,58 @@ typedef enum pc_log_item {
     _PC_LOG_LAST_ITEM_GUARD
 } pc_log_item_t;
 
+
+typedef struct pc_logfiles {
+	 FILE*       setpoints; //lift roll pitch yaw
+	 FILE*       motors; //ae0 to ae3
+	 FILE*       gyro; //sp sq sr
+	 FILE*       accelero; //sax say saz
+	 FILE*       position; //x y z
+	 FILE*       angle; //phi theta psi
+	 FILE*       force; //X Y Z
+	 FILE*       torque; //L M N
+	 FILE*       spin; //p q r
+	 FILE*       trim; //yaw_p, p1 p2
+	 FILE*       state; //mode voltage 
+	 FILE*		 baro; //pressure, temperature
+	 FILE*          single;
+	 bool           split_files;
+} pc_logfiles_t;
+
+
+
 #define PC_LOG_ITEM_COUNT   _PC_LOG_LAST_ITEM_GUARD
 
+#define SETPOINTS_FILE    "log/setpoints.txt" //lift roll pitch yaw
+#define MOTORS_FILE       "log/motors.txt" //ae0 to ae3
+#define GYRO_FILE         "log/gyro.txt" //sp sq sr
+#define ACCELERO_FILE     "log/accelero.txt" //sax say saz
+#define POSITION_FILE     "log/position.txt" //x y z
+#define ANGLE_FILE        "log/angle.txt" //phi theta psi
+#define FORCE_FILE        "log/force.txt" //X Y Z
+#define TORQUE_FILE       "log/torque.txt" //L M N
+#define SPIN_FILE         "log/spin.txt" //p q r
+#define TRIM_FILE         "log/trim.txt" //yaw_p, p1 p2
+#define STATE_FILE        "log/state.txt" //mode, voltage
+#define BARO_FILE         "log/baro.txt" // temp pressure
+
 typedef struct pc_log {
-    FILE*       file;
-    qc_state_t  state;
-    uint32_t    time;
-    qc_mode_t   mode;
-    bool        initialised;
-    bool        set[PC_LOG_ITEM_COUNT];
+    pc_logfiles_t*  files;
+    qc_state_t     state;
+    uint32_t       time;
+    qc_mode_t      mode;
+    bool           initialised;
+    bool           set[PC_LOG_ITEM_COUNT];
 } pc_log_t;
 
-bool pc_log_init(pc_log_t* log, FILE* file);
+bool pc_logfiles_open_default(pc_logfiles_t*);
+void pc_logfiles_set_single(pc_logfiles_t*, FILE*);
+bool pc_logfiles_close(pc_logfiles_t*);
+
+
+bool pc_log_init(pc_log_t* log, pc_logfiles_t*);
 
 void pc_log_receive(pc_log_t* log, message_t*);
 
-void pc_log_close(pc_log_t* log);
 
 #endif // PC_LOG_H

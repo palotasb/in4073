@@ -21,8 +21,127 @@ static void pc_log_flush(pc_log_t* log);
 static void pc_log_clear(pc_log_t* log);
 static void pc_log_print(pc_log_t* log, const char * fmt, pc_log_item_t item, ...);
 
-bool pc_log_init(pc_log_t* log, FILE* file) {
-    log->file = file;
+/******************************
+pc_logfiles_open_default()
+*******************************
+Description:
+	Opens the default log files and places the descriptors in the struct
+
+Inputs:
+	-	pc_logfiles_t* files:
+			Pointer to the file structure.
+			the structure will be updated with the new filedescriptors
+			split_files will be set to true 
+
+Returns:
+	true when all files are successfully opened
+
+Author:
+	Koos Eerden
+*******************************/
+
+bool pc_logfiles_open_default(pc_logfiles_t*  files) {
+	files->split_files = true;
+	if(!(files->setpoints = fopen(SETPOINTS_FILE, "a")))
+		return false;
+	if(!(files->motors = fopen(MOTORS_FILE, "a")))
+		return false;
+	if(!(files->gyro = fopen(GYRO_FILE, "a")))
+		return false;
+	if(!(files->accelero = fopen(ACCELERO_FILE, "a")))
+		return false;
+	if(!(files->position = fopen(POSITION_FILE, "a")))
+		return false;
+	if(!(files->angle = fopen(ANGLE_FILE, "a")))
+		return false;
+	if(!(files->force = fopen(FORCE_FILE, "a")))
+		return false;
+	if(!(files->torque = fopen(TORQUE_FILE, "a")))
+		return false;
+	if(!(files->spin = fopen(SPIN_FILE, "a")))
+		return false;
+	if(!(files->trim = fopen(TRIM_FILE, "a")))
+		return false;
+	if(!(files->state = fopen(STATE_FILE, "a")))
+		return false;
+	if(!(files->baro = fopen(BARO_FILE, "a")))
+		return false;
+	return true;
+}
+
+/******************************
+pc_logfiles_open_single()
+*******************************
+Description:
+	Opens a single logfile
+
+Inputs:
+	-	pc_logfiles_t* files:
+			Pointer to the file structure.
+			split_files will be set to false 
+
+	- FILE* f filedescriptor to the file
+
+Author:
+	Koos Eerden
+*******************************/
+
+void pc_logfiles_set_single(pc_logfiles_t* files, FILE* f){
+	files->split_files = false;
+	files->single = f;
+}
+
+/******************************
+pc_logfiles_close()
+*******************************
+Description:
+	Closes all the files if split_files is set to true,
+	otherwise the single logfile has to be closed manually
+
+Inputs:
+	-	pc_logfiles_t* files:
+			Pointer to the file structure.
+
+Returns:
+	true if successful, or if split_files was false
+Author:
+	Koos Eerden
+*******************************/
+bool pc_logfiles_close(pc_logfiles_t* files) {
+	if(files->split_files) {
+		if(fclose(files->setpoints))
+			return false;
+		if(fclose(files->motors))
+			return false;
+		if(fclose(files->gyro))
+			return false;
+		if(fclose(files->accelero))
+			return false;
+		if(fclose(files->position))
+			return false;
+		if(fclose(files->angle))
+			return false;
+		if(fclose(files->force))
+			return false;
+		if(fclose(files->torque))
+			return false;
+		if(fclose(files->spin))
+			return false;
+		if(fclose(files->trim))
+			return false;
+		if(fclose(files->state))
+			return false;
+		if(fclose(files->baro))
+			return false;
+	}
+
+	return true;
+}
+
+
+bool pc_log_init(pc_log_t* log, pc_logfiles_t* files) {
+
+    log->files = files;
     qc_state_init(&log->state);
     log->time = 0;
     log->mode = MODE_UNKNOWN;
@@ -34,12 +153,12 @@ bool pc_log_init(pc_log_t* log, FILE* file) {
 void pc_log_receive(pc_log_t* log, message_t* message) {
     switch (message->ID) {
         case MESSAGE_LOG_END_ID:
-            if (log->initialised) {
+            if (log->initialised && !log->files->split_files) {
                 pc_log_flush(log);
             }
             break;
         case MESSAGE_TIME_MODE_VOLTAGE_ID:
-            if (log->initialised) {
+            if (log->initialised && !log->files->split_files) {
                 pc_log_flush(log);
                 pc_log_clear(log);
             }
@@ -47,95 +166,147 @@ void pc_log_receive(pc_log_t* log, message_t* message) {
             log->time =                 MESSAGE_TIME_VALUE(message);
             log->state.sensor.voltage = MESSAGE_VOLTAGE_VALUE(message);
             log->mode = (qc_mode_t)     MESSAGE_MODE_VALUE(message);
-            log->set[PC_LOG_time] = true;
-            log->set[PC_LOG_mode] = true;
-            log->set[PC_LOG_voltage] = true;
+				if(log->files->split_files) {
+					fprintf(log->files->state, "%u" _SEP "%hhu" _SEP "%d\n", log->time, log->mode, log->state.sensor.voltage);
+				}else{
+		         log->set[PC_LOG_time] = true;
+		         log->set[PC_LOG_mode] = true;
+		         log->set[PC_LOG_voltage] = true;
+				}
             break;
         case MESSAGE_SPQR_ID:
             log->state.sensor.sp = MESSAGE_SP_VALUE(message);
             log->state.sensor.sq = MESSAGE_SQ_VALUE(message);
             log->state.sensor.sr = MESSAGE_SR_VALUE(message);
-            log->set[PC_LOG_sp] = true;
-            log->set[PC_LOG_sq] = true;
-            log->set[PC_LOG_sr] = true;
+				if(log->files->split_files) {
+					fprintf(log->files->gyro, "%u" _SEP "%d" _SEP "%d" _SEP "%d\n",	log->time, log->state.sensor.sp, 
+																											log->state.sensor.sq, log->state.sensor.sr);
+				}else{
+		         log->set[PC_LOG_sp] = true;
+		         log->set[PC_LOG_sq] = true;
+		         log->set[PC_LOG_sr] = true;
+				}
             break;
         case MESSAGE_SAXYZ_ID:
             log->state.sensor.sax = MESSAGE_SAX_VALUE(message);
             log->state.sensor.say = MESSAGE_SAY_VALUE(message);
             log->state.sensor.saz = MESSAGE_SAZ_VALUE(message);
-            log->set[PC_LOG_sax] = true;
-            log->set[PC_LOG_say] = true;
-            log->set[PC_LOG_saz] = true;
+				if(log->files->split_files) {
+					fprintf(log->files->accelero, "%u" _SEP "%d" _SEP "%d" _SEP "%d\n",	log->time, log->state.sensor.sax,
+																												log->state.sensor.say, log->state.sensor.saz);
+				}else{
+		         log->set[PC_LOG_sax] = true;
+		         log->set[PC_LOG_say] = true;
+		         log->set[PC_LOG_saz] = true;
+				}
             break;
         case MESSAGE_AE1234_ID:
             log->state.motor.ae1 = MESSAGE_AE1_VALUE(message);
             log->state.motor.ae2 = MESSAGE_AE2_VALUE(message);
             log->state.motor.ae3 = MESSAGE_AE3_VALUE(message);
             log->state.motor.ae4 = MESSAGE_AE4_VALUE(message);
-            log->set[PC_LOG_ae1] = true;
-            log->set[PC_LOG_ae2] = true;
-            log->set[PC_LOG_ae3] = true;
-            log->set[PC_LOG_ae4] = true;
-            break;
+				if(log->files->split_files) {
+					fprintf(log->files->motors, "%u" _SEP "%d" _SEP "%d" _SEP  "%d" _SEP "%d\n",	log->time, log->state.motor.ae1,
+																															log->state.motor.ae2,  log->state.motor.ae3,
+																															log->state.motor.ae4);
+				}else{
+		         log->set[PC_LOG_ae1] = true;
+		         log->set[PC_LOG_ae2] = true;
+		         log->set[PC_LOG_ae3] = true;
+		         log->set[PC_LOG_ae4] = true;
+				}
+				break;
         case MESSAGE_TEMP_PRESSURE_ID:
             log->state.sensor.temperature = MESSAGE_TEMP_VALUE(message);
             log->state.sensor.pressure =    MESSAGE_PRESSURE_VALUE(message);
-            log->set[PC_LOG_temperature] =  true;
-            log->set[PC_LOG_pressure] =     true;
+				if(log->files->split_files) {
+					fprintf(log->files->baro, "%u" _SEP "%f" _SEP "%f\n",	log->time, FLOAT_FP(log->state.sensor.temperature, 8),
+																							FLOAT_FP(log->state.sensor.pressure, 8));
+				}else{
+            	log->set[PC_LOG_temperature] =  true;
+            	log->set[PC_LOG_pressure] =     true;
+				}
             break;
         case MESSAGE_XYZPOS_ID:
             log->state.pos.x = MESSAGE_XPOS_VALUE(message);
             log->state.pos.y = MESSAGE_YPOS_VALUE(message);
             log->state.pos.z = MESSAGE_ZPOS_VALUE(message);
-            log->set[PC_LOG_x] = true;
-            log->set[PC_LOG_y] = true;
-            log->set[PC_LOG_z] = true;
-            break;
+				if(log->files->split_files) {
+					fprintf(log->files->position, "%u" _SEP "%d" _SEP "%d" _SEP "%d\n",	log->time, log->state.pos.x,
+																												log->state.pos.y, log->state.pos.z);
+				}else{
+		         log->set[PC_LOG_x] = true;
+		         log->set[PC_LOG_y] = true;
+		         log->set[PC_LOG_z] = true;
+				}
+		      break;
         case MESSAGE_PHI_THETA_PSI_ID:
             log->state.att.phi =    MESSAGE_PHI_VALUE(message);
             log->state.att.theta =  MESSAGE_THETA_VALUE(message);
             log->state.att.psi =    MESSAGE_PSI_VALUE(message);
-            log->set[PC_LOG_phi] =      true;
-            log->set[PC_LOG_theta] =    true;
-            log->set[PC_LOG_psi] =      true;
+				if(log->files->split_files) {
+					fprintf(log->files->angle, "%u" _SEP "%f" _SEP  "%f" _SEP "%f\n",	log->time, FLOAT_FP(log->state.att.phi, 8),
+																							FLOAT_FP(log->state.att.theta, 8),
+																							FLOAT_FP(log->state.att.psi, 8));
+				}else{
+            	log->set[PC_LOG_phi] =      true;
+            	log->set[PC_LOG_theta] =    true;
+            	log->set[PC_LOG_psi] =      true;
+				}
             break;
         case MESSAGE_XYZFORCE_ID:
             log->state.force.X = MESSAGE_XFORCE_VALUE(message);
             log->state.force.Y = MESSAGE_YFORCE_VALUE(message);
             log->state.force.Z = MESSAGE_ZFORCE_VALUE(message);
-            log->set[PC_LOG_X] = true;
-            log->set[PC_LOG_Y] = true;
-            log->set[PC_LOG_Z] = true;
+				if(log->files->split_files) {
+					fprintf(log->files->force, "%u" _SEP "%d" _SEP "%d" _SEP "%d\n",	log->time, log->state.force.X,
+																												log->state.force.Y, log->state.force.Z);
+				}else{
+		         log->set[PC_LOG_X] = true;
+		         log->set[PC_LOG_Y] = true;
+		         log->set[PC_LOG_Z] = true;
+				}
             break;
         case MESSAGE_LMN_ID:
             log->state.torque.L = MESSAGE_L_VALUE(message);
             log->state.torque.M = MESSAGE_M_VALUE(message);
             log->state.torque.N = MESSAGE_N_VALUE(message);
-            log->set[PC_LOG_L] = true;
-            log->set[PC_LOG_M] = true;
-            log->set[PC_LOG_N] = true;
+				if(log->files->split_files) {
+					fprintf(log->files->torque, "%u" _SEP "%d" _SEP "%d" _SEP "%d\n",	log->time, log->state.torque.L,
+																												log->state.torque.M, log->state.torque.N);
+				}else{
+		         log->set[PC_LOG_L] = true;
+		         log->set[PC_LOG_M] = true;
+		         log->set[PC_LOG_N] = true;
+				}
             break;
         case MESSAGE_PQR_ID:
             log->state.spin.p = MESSAGE_P_VALUE(message);
             log->state.spin.q = MESSAGE_Q_VALUE(message);
             log->state.spin.r = MESSAGE_R_VALUE(message);
-            log->set[PC_LOG_p] = true;
-            log->set[PC_LOG_q] = true;
-            log->set[PC_LOG_r] = true;
+				if(log->files->split_files) {
+					fprintf(log->files->spin, "%u" _SEP "%d" _SEP "%d" _SEP "%d\n",	log->time, log->state.spin.p,
+																												log->state.spin.q, log->state.spin.r);
+				}else{
+		         log->set[PC_LOG_p] = true;
+		         log->set[PC_LOG_q] = true;
+		         log->set[PC_LOG_r] = true;
+				}
             break;
         case MESSAGE_P12_ID:
             log->state.trim.p1 = MESSAGE_P1_VALUE(message);
             log->state.trim.p2 = MESSAGE_P2_VALUE(message);
-            log->set[PC_LOG_p1] = true;
-            log->set[PC_LOG_p2] = true;
+				if(log->files->split_files) {
+					fprintf(log->files->trim, "%u" _SEP "%d" _SEP "%d\n",	log->time, log->state.trim.p1, log->state.trim.p2);
+				}else{
+		         log->set[PC_LOG_p1] = true;
+		         log->set[PC_LOG_p2] = true;
+				}
         default:
             break;
     }
 }
 
-void pc_log_close(pc_log_t* log) {
-    fclose(log->file);
-}
 
 void pc_log_clear(pc_log_t* log) {
 	int i;
@@ -185,10 +356,10 @@ void pc_log_flush(pc_log_t* log) {
     pc_log_print(log, "%d"  _SEP, PC_LOG_yaw_p, log->state.trim.yaw_p);
     pc_log_print(log, "%d"  _SEP, PC_LOG_p1, log->state.trim.p1);
     pc_log_print(log, "%d"  _SEP, PC_LOG_p2, log->state.trim.p2);
-    fprintf(log->file, _END);
-    fflush(log->file);
+    fprintf(log->files->single, _END);
+    fflush(log->files->single);
     #ifdef WINDOWS
-        FlushFileBuffers((HANDLE) _fileno(log->file));
+        FlushFileBuffers((HANDLE) _fileno(log->files->single));
     #endif
 }
 
@@ -197,13 +368,13 @@ void pc_log_print(pc_log_t* log, const char * fmt, pc_log_item_t item, ...) {
         // If the value exists we print it with the specified format string
         va_list argptr;
         va_start(argptr, item);
-        vfprintf(log->file, fmt, argptr);
+        vfprintf(log->files->single, fmt, argptr);
         va_end(argptr);
     } else {
         // If no value then print as many NANs as many %_ format arguments we got
         const char * result = fmt;
         while (result && (result = strchr(result, '%')) != 0) {
-            fprintf(log->file, _NAN _SEP);
+            fprintf(log->files->single, _NAN _SEP);
             if (result[1] == '\0' || result[2] == '\0') {
                 result = 0;
             } else {
