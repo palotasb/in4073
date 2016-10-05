@@ -1,9 +1,9 @@
 #include "mode_4_yaw.h"
 #include "mode_constants.h"
-#include "in4073.h"
+#include "printf.h"
 
-/** MANUAL MODE OPERATION (MODE 2)
- *  ==============================
+/** YAW CONTROLLED MODE OPERATION (MODE 4)
+ *  ======================================
  *
  *  Quadcopter system diagram
  *  -------------------------
@@ -24,7 +24,7 @@
  *                       offsets ---> O ^ω=[0,0,sr]                 .......:    V
  *                                    ^                            :         +------+
  *                                    |                            :   ω_n | | c∫dt |
- *                                +---+                                :       | +------+
+ *                                +---+                            :       | +------+
  *                                |                             +------+   V    | v
  *                                |             sp=[sp,sq,sr] +-| Gyro |<- O <--+ ω
  *                                |  +--------------------+   | +------+  ω     V
@@ -37,10 +37,13 @@
  *                                                                 :
  *                                              Computed values <- : -> Physical values
  *
- *  In manual mode, the sensor data is not read, there is no feedback,
- *  the control loop is open. The exact configuration is as follows:
- *
- *  There are no estimated values (^a) because we have no feedback.
+ *  In yaw controlled mode only torque N is controlled. The setpoint
+ *  is effectively the yaw signal from the PC and the fed-back value
+ *  is the filtered sr value. In the C2 controller we add yaw_p gain
+ *  to the loop which can be set by the user between 1 and 256 ints.
+ *  Other sensor signals are not used, and there are no estimates in
+ *  the system apart from ^r = sr. An offset measured in calibration
+ *  mode is added to sr to approximate 0 rad/s stationary turn rate.
  *
  *  x_p = [0, 0, 0]
  *  φ_p = [roll, pitch, 0]
@@ -116,11 +119,18 @@ void mode_4_yaw_init(qc_mode_table_t* mode_table) {
  *  Author: Boldizsar Palotas
 **/
 void control_fn(qc_state_t* state) {
+
+    // Linear quantities
+    // -----------------
+
     // Positions are zero.
     // Hence velocities are zero.
     // Hence forces are zero except for Z to which -lift is added.
     // Q16.16 <-- Q8.8
     state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+
+    // Attitude-related quantitites
+    // ----------------------------
 
     // Roll and pitch set phi and theta but yaw is handled separately.
     // Q16.16 <-- Q2.14
@@ -165,13 +175,13 @@ void control_fn(qc_state_t* state) {
     counter++;
 
     if ((counter & 0x038) == 0x038) {
-        printf("LRPY: %hd %hd %hd %hd\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
-        printf("phi theta: %ld %ld\n", state->att.phi, state->att.theta);
-        printf("pqr: %ld %ld %ld\n", state->spin.p, state->spin.q, state->spin.r);
-        printf("sr ofsr dr yaw_p: %ld %ld %ld %ld\n", state->sensor.sr, state->offset.sr, (state->spin.r - prev_spin.r), state->trim.yaw_p);
-        printf("ZLMN: %ld %ld %ld %ld\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
-        //printf("ae_sq: %ld %ld %ld %ld\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
-        printf("ae   : %u %u %u %u\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
+        printf("LRPY: %"PRId16" %"PRId16" %"PRId16" %"PRId16"\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
+        //printf("phi theta: %"PRId32" %"PRId32"\n", state->att.phi, state->att.theta);
+        printf("pqr: %"PRId32" %"PRId32" %"PRId32"\n", state->spin.p, state->spin.q, state->spin.r);
+        printf("sr ofsr dr yaw_p: %"PRId32"ld %"PRId32" %"PRId32" %"PRId32"\n", state->sensor.sr, state->offset.sr, (state->spin.r - prev_spin.r), state->trim.yaw_p);
+        printf("ZLMN: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
+        //printf("ae_sq: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
+        printf("ae   : %"PRIu16" %"PRIu16" %"PRIu16" %"PRIu16"\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
     }
 
     // Save values as prev_state for next iteration.

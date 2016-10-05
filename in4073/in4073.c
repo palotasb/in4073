@@ -28,6 +28,8 @@ qc_command_t        qc_command;
 serialcomm_t        serialcomm;
 qc_hal_t            qc_hal;
 
+uint32_t led_patterns[] = {0, 0, 0, 0};
+
 // Custom functions
 // ----------------
 extern void qc_hal_tx_byte(uint8_t);
@@ -38,20 +40,27 @@ static void led_display(void);
 static void init_all(void);
 static void transmit_text(void);
 
+uint32_t iteration = 0;
+uint32_t control_iteration = 0;
+bool is_test_device = false;
+
 int main(void) {
     init_all();
 
     while (1) {
         if (check_timer_flag()) {
+            profile_start_tag(&qc_state.prof.pr[0], get_time_us(), iteration);
             qc_system_step(&qc_system);
+            profile_end(&qc_state.prof.pr[0], get_time_us());
             led_display();
             clear_timer_flag();
+            control_iteration++;
         }
-	
-		 if (check_sensor_int_flag()) {
-		     get_dmp_data();
-			  clear_sensor_int_flag();
-		 }
+
+        if (check_sensor_int_flag()) {
+            get_dmp_data();
+            clear_sensor_int_flag();
+        }
 
         if (text_queue.count) {
             transmit_text();
@@ -59,10 +68,12 @@ int main(void) {
 
         while (rx_queue.count)
             serialcomm_receive_char(&serialcomm, dequeue(&rx_queue));
+        iteration++;
     }
 }
 
 void init_all(void) {
+    is_test_device = NRF_FICR->DEVICEID[0] == TESTDEVICE_ID0 && NRF_FICR->DEVICEID[1] == TESTDEVICE_ID1;
     // Hardware init
     uart_init();
     gpio_init();
@@ -94,7 +105,8 @@ void init_modes(void) {
     mode_2_manual_init(&qc_mode_tables[MODE_2_MANUAL]);
     mode_3_calibrate_init(&qc_mode_tables[MODE_3_CALIBRATE]);
     mode_4_yaw_init(&qc_mode_tables[MODE_4_YAW]);
-    mode_0_safe_init(&qc_mode_tables[MODE_5_FULL_CONTROL]);
+    mode_5_full_init(&qc_mode_tables[MODE_5_FULL_CONTROL]);
+    mode_d_direct_init(&qc_mode_tables[MODE_D_DIRECT]);
 }
 
 void transmit_text(void) {
@@ -115,37 +127,36 @@ void led_display(void) {
     static uint32_t counter = 0;
     static const uint32_t colors[] = {BLUE, GREEN, YELLOW, RED};
     //static uint8_t intensities[] = {0, 0, 0, 0};
-    static uint32_t patterns[] = {0, 0, 0, 0};
 
-    patterns[3] = 0;
+    led_patterns[3] = 0;
     switch (qc_system.mode) {
         case MODE_0_SAFE:
-            patterns[1] = 0xffffffff;
+            led_patterns[1] = 0xffffffff;
             break;
         case MODE_1_PANIC:
-            patterns[1] = 0;
-            patterns[3] = 0xffffffff;
+            led_patterns[1] = 0;
+            led_patterns[3] = 0xffffffff;
             break;
         case MODE_2_MANUAL:
-            patterns[1] = 0xfafafafa;
+            led_patterns[1] = 0xfafafafa;
             break;
         case MODE_3_CALIBRATE:
-            patterns[1] = 0xffeaffea;
+            led_patterns[1] = 0xffeaffea;
             break;
         case MODE_4_YAW:
-            patterns[1] = 0xffaaffaa;
+            led_patterns[1] = 0xffaaffaa;
             break;
         case MODE_5_FULL_CONTROL:
-            patterns[1] = 0xfeaafeaa;
+            led_patterns[1] = 0xfeaafeaa;
             break;
         default:
             break;
     }
-    patterns[0] = 0xFF00FF00;
+    led_patterns[0] = 0xFF00FF00;
 
     counter++;
     for (int i = 0; i < 4; i++) {
-        if ((patterns[i] & (1ul << ((counter >> 3) & 0x1F))) == 0) {
+        if ((led_patterns[i] & (1ul << ((counter >> 3) & 0x1F))) == 0) {
             nrf_gpio_pin_set(colors[i]);
         } else {
             nrf_gpio_pin_clear(colors[i]);
@@ -220,3 +231,9 @@ void SysTick_Handler (void) {
         nrf_gpio_pin_toggle(RED);
     }
 }
+
+// Start critical section code
+// Original code by Boldizsar Palotas for previous university project.
+unsigned int CRITICALSECTION_NestingLevel = 0;
+
+// End critical section code

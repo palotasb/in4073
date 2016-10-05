@@ -53,6 +53,7 @@ $(abspath ./mode_2_manual.c) \
 $(abspath ./mode_3_calibrate.c) \
 $(abspath ./mode_4_yaw.c) \
 $(abspath ./mode_5_full.c) \
+$(abspath ./mode_d_direct.c) \
 $(abspath ./drivers/gpio.c) \
 $(abspath ./drivers/timers.c) \
 $(abspath ./drivers/uart.c) \
@@ -237,6 +238,12 @@ cleanobj:
 
 upload: default
 	python dfu_serial/./serial_dfu.py $(DFUFLAGS)  _build/in4073.bin
+
+sim:
+	cd simulation/; make
+
+sim-run:
+	./simulation/sim &
 
 pc: 
 	cd pc_terminal/; make

@@ -6,7 +6,8 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/select.h>
-
+#include <errno.h>
+#include <string.h>
 
 /*------------------------------------------------------------
  * Serial I/O 
@@ -25,7 +26,7 @@ int rs232_open(char *dev)
     int         result;  
     struct termios  tty;
 
-        fd_RS232 = open(dev, O_RDWR | O_NOCTTY);  
+    fd_RS232 = open(dev, O_RDWR | O_NOCTTY);  
     if(fd_RS232<0) return 1;
 
     result = isatty(fd_RS232);
@@ -48,7 +49,7 @@ int rs232_open(char *dev)
     cfsetispeed(&tty, B115200); 
 
     tty.c_cc[VMIN]= 0;
-    tty.c_cc[VTIME] = 1; // added timeout
+    tty.c_cc[VTIME] = 0; // added timeout
 
     tty.c_iflag &= ~(IXON|IXOFF|IXANY);
 
@@ -75,19 +76,8 @@ int rs232_getchar_nb()
 {
     int         result;
     unsigned char   c;
-    struct timeval timeout;
 
-    timeout.tv_sec = 0; 
-    timeout.tv_usec = 1000;
-
-    // Wait for input to become ready or until the time out; the first parameter is
-    // 1 more than the largest file descriptor in any of the sets
-    if (select(fd_RS232 + 1, &read_fds, &write_fds, &except_fds, &timeout) == 1)
-    {
-        result = read(fd_RS232, &c, 1);
-	 } else {
-        return -2;
-	 }
+    result = read(fd_RS232, &c, 1);
 
     result = (result == 0)? -2 : result;
     
@@ -103,4 +93,40 @@ int     rs232_putchar(char c)
         result = (int) write(fd_RS232, &c, 1);
     } while (result == 0);   
     return result;
+}
+
+int fd_vin, fd_vout;
+
+int virt_open(char* dev_in, char* dev_out) {
+    if ((fd_vin = open(dev_in,  O_RDONLY | O_NONBLOCK)) == -1) {
+        fprintf(stderr, "Error %d opening fifo to term. (%s)", errno, strerror(errno));
+        return -2;
+    }
+    errno = 0;
+    if ((fd_vout = open(dev_out, O_WRONLY)) == -1) {
+        fprintf(stderr, "Error %d opening fifo to sim. (%s)", errno, strerror(errno));
+        return -2;
+    }
+    return 0;
+}
+
+int virt_close(void) {
+    int err = 0;
+    if (close(fd_vin))
+        err += 1;
+    if (close(fd_vout)) 
+        err += 2;
+    return err;
+}
+
+int virt_getchar_nb(void) {
+    int         result;
+    unsigned char   c;
+    result = read(fd_vin, &c, 1);
+    result = (result == 0)? -2 : result;
+    return (result >= 0) ? (int) c : result;
+}
+
+int virt_putchar(char c) {
+    return write(fd_vout, &c, 1);
 }

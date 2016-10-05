@@ -76,12 +76,12 @@ static void handle_keypress(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'a':		//lift up
-				command->orient_kb.lift = min(command->orient_kb.lift + 1, 255);
+				command->orient_kb.lift = min(command->orient_kb.lift + 1, 127);
 				command->orient_updated = true;
 				break;
 			case 'y':		//to be used with Hungarian keyboard layout
 			case 'z':		//lift down
-				command->orient_kb.lift = max(command->orient_kb.lift - 1, 0);
+				command->orient_kb.lift = max(command->orient_kb.lift - 1, -128);
 				command->orient_updated = true;
 				break;
 			case 'q':		//yaw down
@@ -162,9 +162,14 @@ static void handle_keypress(pc_command_t* command) {
 			// Mode switching
 			// ----------------------------------
 
+			case -61: // first of ö sequence on Linux:
+				c2 = term_getchar_nb();
+				if (c2 != -74)
+					break;
+				// Otherwise fallthrough.
 			case '`':
 			case '0':
-			case -108: //ö
+			case -108: //ö on Windows
 				command->mode = MODE_0_SAFE;
 				command->mode_updated = true;
 				break;
@@ -187,6 +192,10 @@ static void handle_keypress(pc_command_t* command) {
 				break;
 			case '5':
 				command->mode = MODE_5_FULL_CONTROL;
+				command->mode_updated = true;
+				break;
+			case 'd':
+				command->mode = MODE_D_DIRECT;
 				command->mode_updated = true;
 				break;
 
@@ -259,7 +268,7 @@ static void handle_keypress(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'f':		// Log set mask
-				fprintf(stderr, "Enter LOG MASK: 0\b");
+				fprintf(stderr, "Enter LOG MASK: 0x0\b");
 				kb_state = LOG_MASK;
 				command->log_mask = 0;
 				break;
@@ -281,12 +290,15 @@ static void handle_keypress(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'g':		// Telemetry set mask
-				fprintf(stderr, "Enter TELEMETRY MASK: 0\b");
+				fprintf(stderr, "Enter TELEMETRY MASK: 0x0\b");
 				kb_state = TELE_MASK;
 				command->telemetry_mask = 0;
 				break;
 			case 'x':		// Reboot
 				command->reboot = true;
+				break;
+			case 'h':
+				print_run_help();
 				break;
 			default:
 				fprintf(stderr, "Unknown key (%d)\n", c);
@@ -295,93 +307,67 @@ static void handle_keypress(pc_command_t* command) {
 	}
 }
 
-static void read_log_mask(pc_command_t* command) {
+static bool read_hex(uint32_t* hex_number) {
 	char c = term_getchar_nb();
-	uint32_t digit = c - '0', copy;
-	if ('0' <= c && c <= '9') {
-		if (digit == 0 && command->log_mask == 0) {
-			return;
+	int8_t digit = -1;
+	uint32_t copy;
+	if ('0' <= c && c <= '9') digit = c - '0';
+	if ('a' <= c && c <= 'f') digit = c - 'a' + 10;
+	if ('A' <= c && c <= 'F') digit = c - 'A' + 10;
+	if (0 <= digit) {
+		if (digit == 0 && *hex_number == 0) {
+			return false;
 		}
-		if ((UINT_MAX - digit) / 10 < command->log_mask) {
-			return;
+		if ((UINT_MAX - digit) / 16 < *hex_number) {
+			return false;
 		}
-		copy = command->log_mask;
-		command->log_mask *= 10;
-		command->log_mask += digit;
+		copy = *hex_number;
+		*hex_number *= 16;
+		*hex_number += digit;
 		while (copy != 0) {
 			fprintf(stderr, "\b \b");
-			copy /= 10;
+			copy /= 16;
 		}
-		fprintf(stderr, "%u", command->log_mask);
+		fprintf(stderr, "\b\b");
+		fprintf(stderr, "%#x", *hex_number);
 	} else {
 		switch (c) {
 			case '\n':
 			case '\r':
-				command->log_mask_updated = true;
 				kb_state = HANDLE_PRESSES;
 				fprintf(stderr, "\n");
+				return true;
 				break;
-			case '\b':
-				if (command->log_mask == 0)
+			case 127:  // Ascii delete works on linux
+			case '\b': // ^H delete or Backspace on Windows
+				if (*hex_number == 0)
 					break;
-				command->log_mask /= 10;
+				*hex_number /= 16;
 				fprintf(stderr, "\b \b");
 				break;
 			case 27: // Escape
 				kb_state = HANDLE_PRESSES;
-				while (command->log_mask != 0) {
+				while (*hex_number != 0) {
 					fprintf(stderr, "\b \b");
-					command->log_mask /= 10;
+					*hex_number /= 16;
 				}
-				fprintf(stderr, "cancelled.\n");
+				fprintf(stderr, "\b\b[Cancelled.]\n");
 			default:
 				break;
 		}
 	}
+	return false;
+}
+
+static void read_log_mask(pc_command_t* command) {
+	if (read_hex(&command->log_mask)) {
+		command->log_mask_updated = true;
+	}
 }
 
 static void read_tele_mask(pc_command_t* command) {
-	char c = term_getchar_nb();
-	uint32_t digit = c - '0', copy;
-	if ('0' <= c && c <= '9') {
-		if (digit == 0 && command->telemetry_mask == 0) {
-			return;
-		}
-		if ((UINT_MAX - digit) / 10 < command->telemetry_mask) {
-			return;
-		}
-		copy = command->telemetry_mask;
-		command->telemetry_mask *= 10;
-		command->telemetry_mask += digit;
-		while (copy != 0) {
-			fprintf(stderr, "\b \b");
-			copy /= 10;
-		}
-		fprintf(stderr, "%u", command->telemetry_mask);
-	} else {
-		switch (c) {
-			case '\n':
-			case '\r':
-				command->telemetry_mask_updated = true;
-				kb_state = HANDLE_PRESSES;
-				fprintf(stderr, "\n");
-				break;
-			case '\b':
-				if (command->telemetry_mask == 0)
-					break;
-				command->telemetry_mask /= 10;
-				fprintf(stderr, "\b \b");
-				break;
-			case 27: // Escape
-				kb_state = HANDLE_PRESSES;
-				while (command->telemetry_mask != 0) {
-					fprintf(stderr, "\b \b");
-					command->telemetry_mask /= 10;
-				}
-				fprintf(stderr, "cancelled.\n");
-			default:
-				break;
-		}
+	if (read_hex(&command->telemetry_mask)) {
+		command->telemetry_mask_updated = true;
 	}
 }
 

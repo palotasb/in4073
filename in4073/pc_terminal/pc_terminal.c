@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
+#include <ctype.h>
 
 /** PC TERMINAL BLOCK DIAGRAM
  *  =========================
@@ -51,72 +53,93 @@ void print_help(void) {
  */
 int main(int argc, char *argv[])
 {
-	char *serial = NULL;
+	char *serial = SERIAL_DEV;
 	char *js = NULL;
+	char *virtual_out = NULL;
+	char *virtual_in = NULL;
+
 	bool printhelp = false;
 
-	switch (argc){
-		case 1:
-			serial = SERIAL_DEV;
-			js = JS_DEV;
-			break;
-		case 2:
-			if(!strcmp(argv[1],"-ns")) {
-				js = JS_DEV;
-			}else if (!strcmp(argv[1],"-nj")) {
+	opterr = 0;
+	int c;
+	while ((c = getopt (argc, argv, "s::j::n:vh")) != -1) {
+		switch (c) {
+		case 's':
+			if (optarg)
+				serial = optarg;
+			else
 				serial = SERIAL_DEV;
-			}else {
-				printhelp = true;
-			}			
 			break;
-		case 3:
-			if(!strcmp(argv[1],"-s")) {
+		case 'j':
+			if (optarg)
+				js = optarg;
+			else
 				js = JS_DEV;
-				serial = argv[2];
-			}else if (!strcmp(argv[1],"-j")) {
-				serial = SERIAL_DEV;
-				js = argv[2];
-			}else if (!strcmp(argv[1],"-ns")  && !strcmp(argv[2],"-nj")){
-				js = NULL;
-				serial = NULL;
-			} else {
-				printhelp = true;
-			}
 			break;
-		case 4:
-			if(!strcmp(argv[1],"-s") && !strcmp(argv[3],"-nj")) {
-				js = NULL;
-				serial = argv[2];
-			}else if(!strcmp(argv[1],"-ns") && !strcmp(argv[2],"-j")) {
+		case 'n':
+			fprintf(stderr, "Arg: -n%s\n", optarg);
+			if (optarg[0] == 's')
 				serial = NULL;
-				js = argv[3];
-			}else {
-				printhelp = true;
-			}	
+			else if (optarg[0] == 'j')
+				js = NULL;
+			else
+				{ fprintf(stderr, "Unknown option -n%s.\n", optarg); printhelp = true; }
 			break;
-		case 5:
-			if(!strcmp(argv[1],"-s") && !strcmp(argv[3],"-j")) {
-				js = argv[4];
-				serial = argv[2];
-			}else {
-				printhelp = true;
-			}	
+		case 'v':
+			virtual_in = VIRTUAL_IN_DEV;
+			virtual_out = VIRTUAL_OUT_DEV;
+			break;
+		case 'h':
+			printhelp = true;
+			break;
+		case '?':
+			if (optopt == 's' || optopt == 'j' || optopt == 'n')
+				fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+			else if (isprint(optopt))
+				fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+			else
+				fprintf (stderr, "Unknown option character `\\x%x'.\n",	optopt);
+			printhelp = true;
 			break;
 		default:
-			printhelp = true;
+			return 2;
+		}
 	}
-	
+
 	if(printhelp) {
 		print_help();
 	} else {
-		run_terminal(serial, js);
+		run_terminal(serial, js, virtual_in, virtual_out);
   	}
 	return 0;
 }
 
-void run_terminal(char* serial, char* js) {
+void print_run_help(void) {
+	fprintf(stderr, "========================================================\n");
+	fprintf(stderr, "Terminal program - Embedded Real-Time Systems\n");
+	fprintf(stderr, "--------------------------------------------------------\n\n");
+	fprintf(stderr, "Press ESC to PANIC or the number keys to enter modes.\n");
+	fprintf(stderr, "Motors - E: enable R: disable\n\n");
+	fprintf(stderr, "Logging (telemetry) - F (G) to select what to log (enter sum)\n");
+	for (int i = 0; i <= 11; i++) {
+		fprintf(stderr, "%10u = %#10x: %s\n", 1u<<i, 1u<<i, message_id_to_pc_name(i));
+	}
+	for (int i = 0; i < QC_STATE_PROF_CNT; i++) {
+		fprintf(stderr, "%10u = %#10x: %s\n",
+		1u<<(i + MESSAGE_PROFILE_0_CURR_ID), 1u<<(i + MESSAGE_PROFILE_0_CURR_ID), message_id_to_pc_name(i + MESSAGE_PROFILE_0_CURR_ID));
+	}
+	for (int i = 0; i < QC_STATE_PROF_CNT; i++) {
+		fprintf(stderr, "%10u = %#10x: %s\n",
+		1u<<(i + MESSAGE_PROFILE_0_MAX_ID), 1u<<(i + MESSAGE_PROFILE_0_MAX_ID), message_id_to_pc_name(i + MESSAGE_PROFILE_0_MAX_ID));
+	}
+	fprintf(stderr, "C: start V: pause B: readback (safe mode only) N: reset\n\n");
+	fprintf(stderr, "Press X to REBOOT Quadcopter and EXIT terminal program.\n");
+	fprintf(stderr, "========================================================\n\n");
+}
 
-	bool do_serial, do_js;
+void run_terminal(char* serial, char* js, char* virt_in, char* virt_out) {
+
+	bool do_serial, do_js, do_virt;
 	bool error = false;
 	bool abort = false;
 	char* errormsg = "";
@@ -135,20 +158,34 @@ void run_terminal(char* serial, char* js) {
 	pc_log_init(&pc_log, &log_files);
 	pc_log_init(&pc_telemetry, &telemetry_files);
 
-	do_serial = (serial != NULL);
+	do_virt = virt_in != NULL && virt_out != NULL;
+	do_serial = (serial != NULL) || do_virt;
 	do_js = (js != NULL);
 
+	if (do_virt)
+		fprintf(stderr, "Starting in virtual mode. IN: %s OUT: %s\n", virt_in, virt_out);
+
 	if(do_serial){
-		if(rs232_open(serial)){
-			fprintf(stderr, "Error: could not open serial device\n");
-			exit(1);
+		if(!do_virt) {
+			if (rs232_open(serial)){
+				fprintf(stderr, "Error: could not open serial device\n");
+				exit(1);
+			}
+		} else {
+			if (virt_open(virt_in, virt_out)) {
+				fprintf(stderr, "Error opening virtual serial pipes.\n");
+				exit(1);
+			}
 		}
 		// Serial communication protocol initialisation
 		 serialcomm_init(&sc);
 		 sc.tx_frame             = &tx_frame;
 		 sc.rx_frame             = &rx_frame;
 		 sc.rx_complete_callback = &pc_rx_complete;
-		 sc.tx_byte              = (void (*)(uint8_t)) &rs232_putchar;
+		 if (!do_virt)
+		 	sc.tx_byte              = (void (*)(uint8_t)) &rs232_putchar;
+		 else
+		 	sc.tx_byte 				= (void (*)(uint8_t)) &virt_putchar;
 		 serialcomm_send_start(&sc);
 		 serialcomm_send_restart_request(&sc);	
 	}
@@ -160,24 +197,7 @@ void run_terminal(char* serial, char* js) {
 		}
 	}
 
-	fprintf(stderr, "========================================================\n");
-	fprintf(stderr, "Terminal program - Embedded Real-Time Systems\n");
-	fprintf(stderr, "--------------------------------------------------------\n\n");
-	fprintf(stderr, "Press the number keys to enter modes.\n");
-	fprintf(stderr, "Press ESC or 1 (one) to enter PANIC mode.\n");
-	fprintf(stderr, "Press E to enable motors (after startup and each panic).\n");
-	fprintf(stderr, "Press R to disable motors manually.\n\n");
-	fprintf(stderr, "Logging data:\n");
-	fprintf(stderr, "Press C to start, V to stop, B to read back, N to reset.\n");
-	fprintf(stderr, "(Reading back only in safe mode.)\n\n");
-	fprintf(stderr, "How to select data for logging (telemetry):\n");
-	fprintf(stderr, "Press F (G) and enter the sum of the relevant value IDs:\n");
-	for (int i = 0; i <= 11; i++) {
-		fprintf(stderr, "\t%6u = %#8x: %s\n", 1u<<i, 1u<<i, message_id_to_pc_name(i));
-	}
-	fprintf(stderr, "Press F, ENTER (G, ENTER) to log nothing by default.\n\n");
-	fprintf(stderr, "Press X to REBOOT Quadcopter and EXIT terminal program.\n");
-	fprintf(stderr, "========================================================\n\n");
+	print_run_help();
 	
 	/* send & receive
 	 */
@@ -202,17 +222,23 @@ void run_terminal(char* serial, char* js) {
 		
 		//handle input
 		if(do_serial){
-			if ((c = rs232_getchar_nb()) >= 0) {
-				serialcomm_receive_char(&sc, (uint8_t) c);
-			} /*else if (c == -1) {
-				error = true;
-				errormsg = "couldn't read serial device";
-			}*/
+			if (!do_virt) {
+				if ((c = rs232_getchar_nb()) >= 0) {
+					serialcomm_receive_char(&sc, (uint8_t) c);
+				} /*else if (c == -1) {
+					error = true;
+					errormsg = "couldn't read serial device";
+				}*/
+			} else {
+				if ((c = virt_getchar_nb()) >= 0) {
+					serialcomm_receive_char(&sc, (uint8_t) c);
+				}
+			}
 
 			while (pc_command_get_message(&command, &tx_frame.message)) {
 				while (time_get_ms() - last_msg < 1) { }
 				serialcomm_send(&sc);
-				//fprintf(stderr, "< Sending %s v32:[%d %d] v16:[%hd %hd %hd %hd] v8:[%hd %hd %hd %hd  %hd %hd %hd %hd]\n",
+				//fprintf(stderr, "< Sending %s v32:[%d %d] v16:[%hd %hd %hd %hd] v8:[%hhd %hhd %hhd %hhd  %hhd %hhd %hhd %hhd]\n",
 				//	message_id_to_qc_name(tx_frame.message.ID),
 				//	tx_frame.message.value.v32[0], tx_frame.message.value.v32[1],
 				//	tx_frame.message.value.v16[0], tx_frame.message.value.v16[1], tx_frame.message.value.v16[2], tx_frame.message.value.v16[3],
@@ -224,8 +250,13 @@ void run_terminal(char* serial, char* js) {
 				}
 				last_msg = time_get_ms();
 				// Don't completely block communications...
-				if ((c = rs232_getchar_nb()) >= 0) 
-					serialcomm_receive_char(&sc, (uint8_t) c);
+				if (!do_virt) {
+					if ((c = rs232_getchar_nb()) >= 0) 
+						serialcomm_receive_char(&sc, (uint8_t) c);
+				} else {
+					if ((c = virt_getchar_nb()) >= 0)
+						serialcomm_receive_char(&sc, (uint8_t) c);
+				}
 				read_keyboard(&command);
 			}
 
@@ -242,8 +273,12 @@ void run_terminal(char* serial, char* js) {
 		fprintf(stderr, "Error: %s\n", errormsg);
 	}
 
-	if(do_serial)
+	while (time_get_ms() - last_msg < 250) { }
+
+	if(do_serial && !do_virt)
 		rs232_close();
+	if(do_virt)
+		virt_close();
 	if(do_js)
 		close_joystick();
 	
