@@ -84,17 +84,6 @@ static bool motor_on_fn(qc_state_t* state);
 static qc_state_att_t   prev_att;
 static qc_state_spin_t  prev_spin;
 
-// filtering
-#define FILT_A_CNT  4
-#define FILT_B_CNT  4
-#define FILT_COEFF_FRAC_BITS    8
-static const int32_t const filt_a[FILT_A_CNT] = {64, 64, 64, 64};
-static int32_t filt_x[FILT_A_CNT];
-static const int32_t const filt_b[FILT_B_CNT] = {0xDEAD, 0, 0, 0};
-static int32_t filt_y[FILT_B_CNT];
-
-static int32_t filter(int32_t val);
-
 /** =======================================================
  *  mode_5_full_init -- Initialise mode table for FULL.
  *  =======================================================
@@ -144,7 +133,6 @@ void control_fn(qc_state_t* state) {
     state->spin.p   = (state->trim.p2 + 1) * ((T_INV * (state->att.phi - prev_att.phi)) >> 8) - (state->sensor.sp - state->offset.sp);
     state->spin.q   = (state->trim.p1 + 1) * ((T_INV * (state->att.theta - prev_att.theta)) >> 8) - (state->sensor.sq - state->offset.sq);
     // Q16.16 <-- Q6.10
-    state->sensor.sr = filter(state->sensor.sr);
     state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10) - (state->sensor.sr - state->offset.sr);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
@@ -199,27 +187,6 @@ void control_fn(qc_state_t* state) {
     prev_spin.r = state->spin.r;
 }
 
-int32_t filter(int32_t val) {
-    int32_t y = 0;
-    for (int i = 0; i < FILT_A_CNT - 1; i++) {
-        filt_x[i + 1] = filt_x[i];
-    }
-    filt_x[0] = val;
-    // y = filt_a[0] * filt_x[0] + filt_a[1] * filt_x[1];
-    for (int i = 0; i < FILT_A_CNT; i++) {
-        y += (filt_a[i] * filt_x[i]) >> FILT_COEFF_FRAC_BITS;
-    }
-    // y -= (filt_b[1] * filt_y[1] + filt_b[2] * filt_x[2])
-    for (int i = 1; i < FILT_B_CNT; i++) {
-        y -= (filt_b[i] * filt_y[i]) >> FILT_COEFF_FRAC_BITS;
-    }
-    filt_y[0] = y;
-    for (int i = 0; i < FILT_B_CNT - 1; i++) {
-        filt_y[i + 1] = filt_y[i];
-    }
-    return y;
-}
-
 /** =======================================================
  *  trans_fn -- Mode transition function.
  *  =======================================================
@@ -258,13 +225,6 @@ void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
     prev_spin.p = state->spin.p;
     prev_spin.q = state->spin.q;
     prev_spin.r = state->spin.r;
-
-    for (int i = 0; i < FILT_A_CNT; i++) {
-        filt_x[i] = 0;
-    }
-    for (int i = 0; i < FILT_B_CNT; i++) {
-        filt_y[i] = 0;
-    }
 }
 
 /** =======================================================
