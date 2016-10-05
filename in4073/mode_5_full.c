@@ -179,13 +179,13 @@ void control_fn(qc_state_t* state) {
     counter++;
 
     if ((counter & 0x038) == 0x038) {
-        printf("LRPY: %hd %hd %hd %hd\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
-        //printf("phi theta: %ld %ld\n", state->att.phi, state->att.theta);
-        printf("pqr: %ld %ld %ld\n", state->spin.p, state->spin.q, state->spin.r);
-        printf("sr ofsr dr yaw_p: %ld %ld %ld %ld\n", state->sensor.sr, state->offset.sr, (state->spin.r - prev_spin.r), state->trim.yaw_p);
-        printf("ZLMN: %ld %ld %ld %ld\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
-        //printf("ae_sq: %ld %ld %ld %ld\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
-        printf("ae   : %u %u %u %u\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
+        printf("LRPY: %"PRId16" %"PRId16" %"PRId16" %"PRId16"\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
+        //printf("phi theta: %"PRId32" %"PRId32"\n", state->att.phi, state->att.theta);
+        printf("pqr: %"PRId32" %"PRId32" %"PRId32"\n", state->spin.p, state->spin.q, state->spin.r);
+        printf("sr ofsr dr yaw_p: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->sensor.sr, state->offset.sr, (state->spin.r - prev_spin.r), state->trim.yaw_p);
+        printf("ZLMN: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
+        //printf("ae_sq: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
+        printf("ae   : %"PRIu16" %"PRIu16" %"PRIu16" %"PRIu16"\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
     }
 
     // Save values as prev_state for next iteration.

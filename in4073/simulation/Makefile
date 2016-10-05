@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS = -std=gnu11 -g -Wall -Wformat=0  -DQUADCOPTER=2 -DSIMULATION=1
+CFLAGS = -std=gnu11 -g -Wall -DQUADCOPTER=2 -DSIMULATION=1
 EXEC = ./sim
 
 ifeq ($(OS),Windows_NT)

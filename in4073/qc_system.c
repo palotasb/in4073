@@ -76,7 +76,7 @@ void qc_system_step(qc_system_t* system) {
     system->hal->get_inputs_fn(system->state);
     if (!is_test_device && system->state->sensor.voltage < SAFE_VOLTAGE) {
        if(system->mode != MODE_1_PANIC)
-           printf("Low voltage (V = %ld centivolts)\n", system->state->sensor.voltage);
+           printf("Low voltage (V = %"PRId32" centivolts)\n", system->state->sensor.voltage);
 
        qc_system_set_mode(system, MODE_1_PANIC);
     }
