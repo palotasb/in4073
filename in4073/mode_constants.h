@@ -151,12 +151,12 @@
 
 #include "fixedpoint.h"
 
-#define LIFT_MULTIPLIER     16
+#define LIFT_MULTIPLIER     30
 #define ROLL_MULTIPLIER     1
 #define PITCH_MULTIPLIER    1
 // This could be 10 based on the LAB-4 tests but it seemed too large
 // in offline no-joystick tests.
-#define YAW_MULTIPLIER      5
+#define YAW_MULTIPLIER      10
 
 // Inverse of the control loop time constant in seconds
 // 1 / (0.01 [s]) = 1000 / 10 [1/s] in Q24.8 format.
@@ -168,7 +168,7 @@
  // [N m] in Q24.8 format.
 #define I_M         FP_FRAC(1, 32, 8)
  // [N m] in Q24.8 format.
-#define I_N         FP_FRAC(1, 8, 8)
+#define I_N         FP_FRAC(1, 64, 8)
 
 // Inverse of the product of the control loop time constant and the
 // moment of inertia for the L, M, N torque
@@ -184,7 +184,7 @@
 // 1/b'
 #define _1_B        FP_INT(50, 2)
 // 1/d'
-#define _1_D        FP_INT(50, 2)
+#define _1_D        FP_INT(150, 2)
 // - 1/(4b')
 #define M1_4B       (- _1_B / 4)
 // 1/(2b')
@@ -225,5 +225,7 @@
 //gyroscope scale factor: 1 over the amount of bits per G
 //Its in F16P16 format, meaning 1 over 131 (= 0,007633588)
 #define GYRO_G_SCALE_INV 500
+
+#define MAX_MOTOR_SPEED  600
 
 #endif // MODE_CONSTANTS_H

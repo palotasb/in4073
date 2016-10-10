@@ -8,4 +8,4 @@ arm-gcc/
 *.log
 *telemetry.txt
 local.makefile
-pc_terminal
+pc_terminal/pc_terminal

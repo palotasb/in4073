@@ -310,9 +310,14 @@ void pc_rx_complete(message_t* message) {
 	}
 
     // Special handling
+
+	static mode_t last_mode = MODE_0_SAFE;
     switch (message->ID) {
     	case MESSAGE_TIME_MODE_VOLTAGE_ID:
-    		fprintf(stderr, "Entered mode %d\n", MESSAGE_MODE_VALUE(message));
+			if (MESSAGE_MODE_VALUE(message) != last_mode) {
+				last_mode = MESSAGE_MODE_VALUE(message);
+    			fprintf(stderr, "Entered mode %d\n", last_mode);
+			}
     		if (MESSAGE_MODE_VALUE(message) == MODE_1_PANIC) {
     			command.mode_panic_status = 0;
     		}

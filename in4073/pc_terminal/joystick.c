@@ -44,7 +44,7 @@ int read_joystick(pc_command_t *command)
 			case JS_EVENT_AXIS:
 				switch (js.number){ 
 					case 0:	//x axis inverted
-						command->orient_js.roll = max((js.value / 256 ) + 127, 0);
+						command->orient_js.roll = max((js.value / 256 ), -127);
 						break;
 					case 1: //y axis, pitch inverted
 						command->orient_js.pitch = (js.value / 256);
@@ -53,7 +53,7 @@ int read_joystick(pc_command_t *command)
 						command->orient_js.yaw = (js.value / 256);
 						break;	
 					case 3: //throttle, lift
-						command->orient_js.lift = -(js.value / 256);
+						command->orient_js.lift = -(js.value / 256) + 127;
 						break;		
 				}
 				command->orient_updated = true;	
