@@ -32,8 +32,6 @@ unsigned long long timespec_ms(struct timespec*);
 pc_command_t	command;
 pc_log_t		pc_log;
 pc_log_t		pc_telemetry;
-pc_logfiles_t telemetry_files;
-pc_logfiles_t log_files;
 
 void print_help(void) {
 	term_puts("\nUsage: pc-terminal [SERIAL] [JOYSTICK] \n");
@@ -149,14 +147,10 @@ void run_terminal(char* serial, char* js, char* virt_in, char* virt_out) {
 	int c;
 
 	pc_command_init(&command);
-	
-	pc_logfiles_open_default(&telemetry_files);
+
 	FILE* pc_log_file = fopen("pc_log.txt", "a");
-	pc_logfiles_set_single(&log_files, pc_log_file);
-
-
-	pc_log_init(&pc_log, &log_files);
-	pc_log_init(&pc_telemetry, &telemetry_files);
+	pc_log_init(&pc_log, pc_log_file);
+	pc_log_init(&pc_telemetry, stdout);
 
 	do_virt = virt_in != NULL && virt_out != NULL;
 	do_serial = (serial != NULL) || do_virt;
@@ -282,9 +276,6 @@ void run_terminal(char* serial, char* js, char* virt_in, char* virt_out) {
 	if(do_js)
 		close_joystick();
 	
-	pc_logfiles_close(&telemetry_files);
-	fclose(pc_log_file);
-
 	fprintf(stderr, "\n<exit>\n");
 	term_exitio();
 }
