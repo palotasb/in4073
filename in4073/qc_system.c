@@ -1,5 +1,6 @@
 #include "qc_system.h"
 #include "qc_mode.h"
+#include "mode_constants.h"
 #include "printf.h"
 #include "log.h"
 
@@ -89,7 +90,8 @@ void qc_system_step(qc_system_t* system) {
 
     system->hal->enable_motors_fn(
         system->current_mode_table->motor_on_fn(system->state)
-        && system->state->option.enable_motors);
+        && system->state->option.enable_motors
+        && ZERO_LIFT_THRESHOLD < system->state->orient.lift);
 
     system->hal->set_outputs_fn(system->state);
 
@@ -109,7 +111,7 @@ void qc_system_step(qc_system_t* system) {
 void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
     if (!system->current_mode_table->trans_fn(system->state, mode))
         return;
-    if (!IS_SAFE_OR_PANIC_MODE(mode) && 128 < system->state->orient.lift) {
+    if (!IS_SAFE_OR_PANIC_MODE(mode) && ZERO_LIFT_THRESHOLD < system->state->orient.lift) {
         printf("Turn motor speed down first!\n");
         return;
     }
