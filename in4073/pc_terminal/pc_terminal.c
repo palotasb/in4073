@@ -119,7 +119,7 @@ void print_run_help(void) {
 	fprintf(stderr, "Press ESC to PANIC or the number keys to enter modes.\n");
 	fprintf(stderr, "Motors - E: enable R: disable\n\n");
 	fprintf(stderr, "Logging (telemetry) - F (G) to select what to log (enter sum)\n");
-	for (int i = 0; i <= 11; i++) {
+	for (int i = 0; i <= 12; i++) {
 		fprintf(stderr, "%10u = %#10x: %s\n", 1u<<i, 1u<<i, message_id_to_pc_name(i));
 	}
 	for (int i = 0; i < QC_STATE_PROF_CNT; i++) {

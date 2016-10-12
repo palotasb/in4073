@@ -134,17 +134,23 @@ static void qc_system_log_data(qc_system_t* system) {
             case MESSAGE_TIME_MODE_VOLTAGE_ID:
                 MESSAGE_TIME_VALUE(&msg) = system->hal->get_time_us_fn();
                 MESSAGE_MODE_VALUE(&msg) = system->mode;
-                MESSAGE_VOLTAGE_VALUE(&msg) = system->state->sensor.voltage;
+                MESSAGE_VOLTAGE_VALUE(&msg) = FP_CHUNK(system->state->sensor.voltage, 8, 16);
+                break;
+            case MESSAGE_SETPOINT_ID:
+                MESSAGE_SETPOINT_LIFT_VALUE(&msg)   = system->state->orient.lift;
+                MESSAGE_SETPOINT_ROLL_VALUE(&msg)   = system->state->orient.roll;
+                MESSAGE_SETPOINT_PITCH_VALUE(&msg)  = system->state->orient.pitch;
+                MESSAGE_SETPOINT_YAW_VALUE(&msg)    = system->state->orient.yaw;
                 break;
             case MESSAGE_SPQR_ID:
-                MESSAGE_SP_VALUE(&msg) = system->state->sensor.sp;
-                MESSAGE_SQ_VALUE(&msg) = system->state->sensor.sq;
-                MESSAGE_SR_VALUE(&msg) = system->state->sensor.sr;
+                MESSAGE_SP_VALUE(&msg) = FP_CHUNK(system->state->sensor.sp, 8, 16);
+                MESSAGE_SQ_VALUE(&msg) = FP_CHUNK(system->state->sensor.sq, 8, 16);
+                MESSAGE_SR_VALUE(&msg) = FP_CHUNK(system->state->sensor.sr, 8, 16);
                 break;
             case MESSAGE_SAXYZ_ID:
-                MESSAGE_SAX_VALUE(&msg) = system->state->sensor.sax;
-                MESSAGE_SAY_VALUE(&msg) = system->state->sensor.say;
-                MESSAGE_SAZ_VALUE(&msg) = system->state->sensor.saz;
+                MESSAGE_SAX_VALUE(&msg) = FP_CHUNK(system->state->sensor.sax, 8, 16);
+                MESSAGE_SAY_VALUE(&msg) = FP_CHUNK(system->state->sensor.say, 8, 16);
+                MESSAGE_SAZ_VALUE(&msg) = FP_CHUNK(system->state->sensor.saz, 8, 16);
                 break;
             case MESSAGE_AE1234_ID:
                 MESSAGE_AE1_VALUE(&msg) = system->state->motor.ae1;
@@ -162,29 +168,29 @@ static void qc_system_log_data(qc_system_t* system) {
                 MESSAGE_ZPOS_VALUE(&msg) = system->state->pos.z;
                 break;
             case MESSAGE_PHI_THETA_PSI_ID:
-                MESSAGE_PHI_VALUE(&msg) = system->state->att.phi;
-                MESSAGE_THETA_VALUE(&msg) = system->state->att.theta;
-                MESSAGE_PSI_VALUE(&msg) = system->state->att.psi;
+                MESSAGE_PHI_VALUE(&msg)     = FP_CHUNK(system->state->att.phi, 8, 16);
+                MESSAGE_THETA_VALUE(&msg)   = FP_CHUNK(system->state->att.theta, 8, 16);
+                MESSAGE_PSI_VALUE(&msg)     = FP_CHUNK(system->state->att.psi, 8, 16);
                 break;
             case MESSAGE_XYZFORCE_ID:
-                MESSAGE_XFORCE_VALUE(&msg) = system->state->force.X;
-                MESSAGE_YFORCE_VALUE(&msg) = system->state->force.Y;
-                MESSAGE_ZFORCE_VALUE(&msg) = system->state->force.Z;
+                MESSAGE_XFORCE_VALUE(&msg) = FP_CHUNK(system->state->force.X, 8, 16);
+                MESSAGE_YFORCE_VALUE(&msg) = FP_CHUNK(system->state->force.Y, 8, 16);
+                MESSAGE_ZFORCE_VALUE(&msg) = FP_CHUNK(system->state->force.Z, 8, 16);
                 break;
             case MESSAGE_LMN_ID:
-                MESSAGE_L_VALUE(&msg) = system->state->torque.L;
-                MESSAGE_M_VALUE(&msg) = system->state->torque.M;
-                MESSAGE_N_VALUE(&msg) = system->state->torque.N;
+                MESSAGE_L_VALUE(&msg) = FP_CHUNK(system->state->torque.L, 8, 16);
+                MESSAGE_M_VALUE(&msg) = FP_CHUNK(system->state->torque.M, 8, 16);
+                MESSAGE_N_VALUE(&msg) = FP_CHUNK(system->state->torque.N, 8, 16);
                 break;
             case MESSAGE_UVW_ID:
-                MESSAGE_U_VALUE(&msg) = system->state->velo.u;
-                MESSAGE_V_VALUE(&msg) = system->state->velo.v;
-                MESSAGE_W_VALUE(&msg) = system->state->velo.w;
+                MESSAGE_U_VALUE(&msg) = FP_CHUNK(system->state->velo.u, 8, 16);
+                MESSAGE_V_VALUE(&msg) = FP_CHUNK(system->state->velo.v, 8, 16);
+                MESSAGE_W_VALUE(&msg) = FP_CHUNK(system->state->velo.w, 8, 16);
                 break;
             case MESSAGE_PQR_ID:
-                MESSAGE_P_VALUE(&msg) = system->state->spin.p;
-                MESSAGE_Q_VALUE(&msg) = system->state->spin.q;
-                MESSAGE_R_VALUE(&msg) = system->state->spin.r;
+                MESSAGE_P_VALUE(&msg) = FP_CHUNK(system->state->spin.p, 8, 16);
+                MESSAGE_Q_VALUE(&msg) = FP_CHUNK(system->state->spin.q, 8, 16);
+                MESSAGE_R_VALUE(&msg) = FP_CHUNK(system->state->spin.r, 8, 16);
                 break;
             case MESSAGE_P12_ID:
                 MESSAGE_P1_VALUE(&msg) = system->state->trim.p1;
