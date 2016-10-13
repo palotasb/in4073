@@ -2,6 +2,7 @@
 #include "console.h"
 #include "joystick.h"
 #include "pc_command.h"
+#include "../mode_constants.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
