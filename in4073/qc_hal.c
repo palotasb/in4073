@@ -75,9 +75,11 @@ void qc_hal_get_inputs(qc_state_t* state) {
 	 if(state->sensor.voltage_avg == -1) {
         state->sensor.voltage_avg = bat_volt;
 	 }else{
-        state->sensor.voltage_avg -= state->sensor.voltage_avg >> 2;
-        state->sensor.voltage_avg += bat_volt >> 2;
+        state->sensor.voltage_avg -= state->sensor.voltage_avg >> 4;
+        state->sensor.voltage_avg += bat_volt >> 4;
     }
+
+    state->sensor.voltage = state->sensor.voltage_avg;
 
 
 	//convert from int16_t to F16P16
