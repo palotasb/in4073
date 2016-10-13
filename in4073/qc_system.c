@@ -136,7 +136,7 @@ static void qc_system_log_data(qc_system_t* system) {
             case MESSAGE_TIME_MODE_VOLTAGE_ID:
                 MESSAGE_TIME_VALUE(&msg) = system->hal->get_time_us_fn();
                 MESSAGE_MODE_VALUE(&msg) = system->mode;
-                MESSAGE_VOLTAGE_VALUE(&msg) = FP_CHUNK(system->state->sensor.voltage, 8, 16);
+                MESSAGE_VOLTAGE_VALUE(&msg) = system->state->sensor.voltage;
                 break;
             case MESSAGE_SETPOINT_ID:
                 MESSAGE_SETPOINT_LIFT_VALUE(&msg)   = system->state->orient.lift;
@@ -145,14 +145,14 @@ static void qc_system_log_data(qc_system_t* system) {
                 MESSAGE_SETPOINT_YAW_VALUE(&msg)    = system->state->orient.yaw;
                 break;
             case MESSAGE_SPQR_ID:
-                MESSAGE_SP_VALUE(&msg) = FP_CHUNK(system->state->sensor.sp, 8, 16);
-                MESSAGE_SQ_VALUE(&msg) = FP_CHUNK(system->state->sensor.sq, 8, 16);
-                MESSAGE_SR_VALUE(&msg) = FP_CHUNK(system->state->sensor.sr, 8, 16);
+                MESSAGE_SP_VALUE(&msg) = FP_CHUNK(system->state->sensor.sp - system->state->offset.sp, 8, 16);
+                MESSAGE_SQ_VALUE(&msg) = FP_CHUNK(system->state->sensor.sq - system->state->offset.sq, 8, 16);
+                MESSAGE_SR_VALUE(&msg) = FP_CHUNK(system->state->sensor.sr - system->state->offset.sr, 8, 16);
                 break;
             case MESSAGE_SAXYZ_ID:
-                MESSAGE_SAX_VALUE(&msg) = FP_CHUNK(system->state->sensor.sax, 8, 16);
-                MESSAGE_SAY_VALUE(&msg) = FP_CHUNK(system->state->sensor.say, 8, 16);
-                MESSAGE_SAZ_VALUE(&msg) = FP_CHUNK(system->state->sensor.saz, 8, 16);
+                MESSAGE_SAX_VALUE(&msg) = FP_CHUNK(system->state->sensor.sax - system->state->offset.sax, 8, 16);
+                MESSAGE_SAY_VALUE(&msg) = FP_CHUNK(system->state->sensor.say - system->state->offset.say, 8, 16);
+                MESSAGE_SAZ_VALUE(&msg) = FP_CHUNK(system->state->sensor.saz - system->state->offset.saz, 8, 16);
                 break;
             case MESSAGE_AE1234_ID:
                 MESSAGE_AE1_VALUE(&msg) = system->state->motor.ae1;

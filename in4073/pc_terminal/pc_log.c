@@ -46,7 +46,7 @@ void pc_log_receive(pc_log_t* log, message_t* message) {
             }
             log->initialised = true;
             log->time =                 MESSAGE_TIME_VALUE(message);
-            log->state.sensor.voltage = FP_EXTEND(MESSAGE_VOLTAGE_VALUE(message), 16, 8);
+            log->state.sensor.voltage = MESSAGE_VOLTAGE_VALUE(message);
             log->mode = (qc_mode_t)     MESSAGE_MODE_VALUE(message);
             log->set[PC_LOG_time] = true;
             log->set[PC_LOG_mode] = true;
