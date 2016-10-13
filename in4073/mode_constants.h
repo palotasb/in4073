@@ -232,7 +232,7 @@
 
 #define YAWP_FRAC_BITS  7
 #define YAWP_MAX        FP_INT(10, YAWP_FRAC_BITS)
-#define YAWP_DEFAULT    FP_FRAC(1, 1,   YAWP_FRAC_BITS)
+#define YAWP_DEFAULT    (FP_FRAC(1, 64,   YAWP_FRAC_BITS) + 4)
 #define YAWP_MIN        (-(YAWP_DEFAULT) + 1)
 
 #define P1_FRAC_BITS    7
