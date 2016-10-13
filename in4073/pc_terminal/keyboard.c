@@ -204,27 +204,27 @@ static void handle_keypress(pc_command_t* command) {
 			// ----------------------------------
 
 			case 'u':		//yaw control P up
-				command->trim.yaw_p = min(command->trim.yaw_p + 1, 255);
+				command->trim.yaw_p = min(command->trim.yaw_p + 1, YAWP_MAX);
 				command->trim_updated = true;
 				break;
 			case 'j':		//yaw control P down
-				command->trim.yaw_p = max(command->trim.yaw_p - 1, 0);
+				command->trim.yaw_p = max(command->trim.yaw_p - 1, YAWP_MIN);
 				command->trim_updated = true;
 				break;
 			case 'i':		//roll/pitch P1 control up
-				command->trim.p1 = min(command->trim.p1 + 1, 127);
+				command->trim.p1 = min(command->trim.p1 + 1, P1_MAX);
 				command->trim_updated = true;
 				break;
 			case 'k':		//roll/pitch P1 control down
-				command->trim.p1 = max(command->trim.p1 - 1, -128);
+				command->trim.p1 = max(command->trim.p1 - 1, P1_MIN);
 				command->trim_updated = true;
 				break;
 			case 'o':		//roll/pitch P2 control up
-				command->trim.p2 = min(command->trim.p2 + 1, 127);
+				command->trim.p2 = min(command->trim.p2 + 1, P2_MAX);
 				command->trim_updated = true;
 				break;
 			case 'l':		//roll/pitch P2 control down
-				command->trim.p2 = max(command->trim.p2 - 1, -128);
+				command->trim.p2 = max(command->trim.p2 - 1, P2_MIN);
 				command->trim_updated = true;
 				break;
 

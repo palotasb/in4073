@@ -148,7 +148,7 @@ void control_fn(qc_state_t* state) {
     state->torque.L = (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
     state->torque.M = (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
     // YAW P-value can be zero but we don't want 0 control over here.
-    state->torque.N = ((state->trim.yaw_p + 1) * ((T_INV_I_N * (state->spin.r)) >> 8)) >> 7;
+    state->torque.N = ((state->trim.yaw_p + YAWP_DEFAULT) * ((T_INV_I_N * (state->spin.r)) >> 8)) >> YAWP_FRAC_BITS;
 
     // Override
     state->torque.L = FP_EXTEND(state->orient.roll, 16, 14);

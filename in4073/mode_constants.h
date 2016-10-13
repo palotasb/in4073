@@ -230,4 +230,19 @@
 
 #define ZERO_LIFT_THRESHOLD (4 * (LIFT_MULTIPLIER))
 
+#define YAWP_FRAC_BITS  7
+#define YAWP_MAX        FP_INT(10, YAWP_FRAC_BITS)
+#define YAWP_DEFAULT    FP_FRAC(1, 1,   YAWP_FRAC_BITS)
+#define YAWP_MIN        (-(YAWP_DEFAULT) + 1)
+
+#define P1_FRAC_BITS    7
+#define P1_MAX          FP_INT(10, P1_FRAC_BITS)
+#define P1_DEFAULT      FP_FRAC(1, 1,   P1_FRAC_BITS)
+#define P1_MIN          (-(P1_DEFAULT) + 1)
+
+#define P2_FRAC_BITS    7
+#define P2_MAX          FP_INT(10, P2_FRAC_BITS)
+#define P2_DEFAULT      FP_FRAC(1, 1,   P2_FRAC_BITS)
+#define P2_MIN          (-(P2_DEFAULT) + 1)
+
 #endif // MODE_CONSTANTS_H
