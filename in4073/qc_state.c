@@ -73,6 +73,7 @@ void qc_state_clear_sensor(qc_state_t* state) {
     state->sensor.temperature   = 0;
     state->sensor.pressure      = 0;
     state->sensor.voltage       = 0;
+    state->sensor.voltage_avg   = -1;
 }
 
 /** =======================================================
