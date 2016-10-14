@@ -259,8 +259,4 @@ upload-run: in4073 pc
 	python dfu_serial/./serial_dfu.py $(DFUFLAGS) _build/in4073.bin
 	cd pc_terminal/; make run
 
-upload-run-nj: in4073 pc
-	python dfu_serial/./serial_dfu.py $(DFUFLAGS) _build/in4073.bin
-	cd pc_terminal/; make run-nj
-
 -include $(DEPENDENCIES)
