@@ -134,7 +134,7 @@ class SubplotAnimation(animation.TimedAnimation):
         self.ax_att.set_ylabel('Attitude [rad]')
         self.ax_att.set_ylim(-np.pi, np.pi)
         self.ax_spin.set_ylabel('Spin [rad/s]')
-        self.ax_spin.set_ylim(-5, 5)
+        self.ax_spin.set_ylim(-64, 64)
         self.ax_torque.set_ylabel('Torque [N m]')
         self.ax_torque.set_ylim(-10, 10)
         self.ax_sp.set_ylabel('Sensor spin [rad/s]')
@@ -257,8 +257,8 @@ class SubplotAnimation(animation.TimedAnimation):
         
         for ax in (self.axes_autoscale):
             ax.relim()
-            ax.autoscale_view(False, False, True)
             ax.autoscale('y')
+            ax.autoscale_view(False, False, True)
 
     def process_line(self, line):
         words = ['NaN'] + line.split("\t")
