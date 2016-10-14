@@ -269,8 +269,8 @@ void serialcomm_send(serialcomm_t* sc) {
         "UVW",
         "PQR", // 10
         "P12",
-        "LOG_END",
-        "LOG_START",
+        "SETPOINT",
+        0, // 15
         0, // 14
         0, // 15
         "TEXT",
@@ -287,7 +287,11 @@ void serialcomm_send(serialcomm_t* sc) {
         "MESSAGE_PROFILE_2_MAX_ID",
         "MESSAGE_PROFILE_3_MAX_ID",
         "MESSAGE_PROFILE_4_MAX_ID",
-        0
+        0, // 30
+        0, // 31,
+        "LOG_END", // 32
+        "LOG_START", // 33
+        "TEXT" // 34
     };
 
     const char * const message_id_to_pc_name(uint8_t id) {

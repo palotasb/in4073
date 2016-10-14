@@ -53,6 +53,7 @@ $(abspath ./mode_2_manual.c) \
 $(abspath ./mode_3_calibrate.c) \
 $(abspath ./mode_4_yaw.c) \
 $(abspath ./mode_5_full.c) \
+$(abspath ./mode_d_direct.c) \
 $(abspath ./drivers/gpio.c) \
 $(abspath ./drivers/timers.c) \
 $(abspath ./drivers/uart.c) \
@@ -122,6 +123,7 @@ CFLAGS += -mfloat-abi=soft # we don't want floats - no hardware fpu
 # keep every function in separate section. This will allow linker to dump unused functions
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
 CFLAGS += -fno-builtin --short-enums
+CFLAGS += -MMD -MP
 
 # keep every function in separate section. This will allow linker to dump unused functions
 LDFLAGS += -Xlinker -Map=$(LISTING_DIRECTORY)/$(OUTPUT_FILENAME).map
@@ -141,6 +143,7 @@ ASMFLAGS += -DNRF51
 ASMFLAGS += -DSOFTDEVICE_PRESENT
 ASMFLAGS += -DS110
 ASMFLAGS += -DBLE_STACK_SUPPORT_REQD
+ASMFLAGS += -MMD -MP
 #default target - first one defined
 
 DFUFLAGS = 
@@ -173,6 +176,7 @@ vpath %.c $(C_PATHS)
 vpath %.s $(ASM_PATHS)
 
 OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
+DEPENDENCIES = $(OBJECTS:.o=.d)
 
 in4073: OUTPUT_FILENAME := in4073
 in4073: LINKER_SCRIPT=in4073.ld
@@ -196,12 +200,10 @@ $(OBJECT_DIRECTORY)/%.o: %.s
 	@echo Compiling file: $(notdir $<)
 	$(NO_ECHO)$(CC) $(ASMFLAGS) $(INC_PATHS) -c -o $@ $<
 
-
 # Link
 $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).out: $(BUILD_DIRECTORIES) $(OBJECTS)
 	@echo Linking target: $(OUTPUT_FILENAME).out
 	$(NO_ECHO)$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).out
-
 
 ## Create binary .bin file from the .out file
 $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).bin: $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).out
@@ -250,26 +252,11 @@ pc:
 pc-run: 
 	cd pc_terminal/; make run
 
-pc-nj:
-	cd pc_terminal/; make run-nj
-
 upload-only:
 	python dfu_serial/./serial_dfu.py $(DFUFLAGS)  _build/in4073.bin
 
-upload-only-run:
-	python dfu_serial/./serial_dfu.py $(DFUFLAGS)  _build/in4073.bin
-	cd pc_terminal/; make run
-
-upload-only-run-nj:
-	python dfu_serial/./serial_dfu.py $(DFUFLAGS)  _build/in4073.bin
-	cd pc_terminal/; make run-nj
-
-upload-run: default pc
+upload-run: in4073 pc
 	python dfu_serial/./serial_dfu.py $(DFUFLAGS) _build/in4073.bin
 	cd pc_terminal/; make run
 
-upload-run-nj: default pc
-	python dfu_serial/./serial_dfu.py $(DFUFLAGS) _build/in4073.bin
-	cd pc_terminal/; make run-nj
-
-
+-include $(DEPENDENCIES)

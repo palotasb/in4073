@@ -126,21 +126,21 @@ void control_fn(qc_state_t* state) {
 
     // Roll and pitch set phi and theta but yaw is handled separately.
     // Q16.16 <-- Q2.14
-    state->att.phi      = FP_EXTEND(state->orient.roll, 16, 14);
-    state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14);
+    state->att.phi      = FP_EXTEND(state->orient.roll, 16, 14) - state->sensor.sphi;
+    state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14) - state->sensor.stheta;
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
-    state->spin.p   = (state->trim.p2 + 1) * ((T_INV * (state->att.phi - prev_att.phi)) >> 8) - (state->sensor.sp - state->offset.sp);
-    state->spin.q   = (state->trim.p1 + 1) * ((T_INV * (state->att.theta - prev_att.theta)) >> 8) - (state->sensor.sq - state->offset.sq);
+    state->spin.p   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.phi , 0, 2, P1_FRAC_BITS - 2);
+    state->spin.q   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.theta , 0, 2, P1_FRAC_BITS - 2);
     // Q16.16 <-- Q6.10
     state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10) - (state->sensor.sr - state->offset.sr);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
     // Roll/Pitch 2nd P-value (P2) can be zero but we don't want 0 control over here.
-    state->torque.L = (state->trim.p2 + 1) * (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
-    state->torque.M = (state->trim.p2 + 1) * (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
+    state->torque.L = FP_MUL3(state->trim.p2 + P2_DEFAULT , FP_MUL3(I_L , state->spin.p, 0, 3, 5), 0, 2, P2_FRAC_BITS - 2);
+    state->torque.M = FP_MUL3(state->trim.p2 + P2_DEFAULT , FP_MUL3(I_M , state->spin.q, 0, 3, 5), 0, 2, P2_FRAC_BITS - 2);
     // YAW P-value can be zero but we don't want 0 control over here.
-    state->torque.N = (state->trim.yaw_p + 1) * ((T_INV_I_N * (state->spin.r - prev_spin.r)) >> 8);
+    state->torque.N = FP_MUL3(state->trim.yaw_p + YAWP_DEFAULT , (T_INV_I_N * state->spin.r) >> 8, 0, 0, YAWP_FRAC_BITS);
 
     // See project_dir/control_ae.m MATLAB file for calculations.
     // ae_1^2 = -1/(4b') Z +        0 L +  1/(2b') M + -1/(4d') N
@@ -156,10 +156,10 @@ void control_fn(qc_state_t* state) {
     int32_t ae3_sq = (M1_4B * state->force.Z - _1_2B * state->torque.M - _1_4D * state->torque.N) >> 8;
     int32_t ae4_sq = (M1_4B * state->force.Z + _1_2B * state->torque.L + _1_4D * state->torque.N) >> 8;
 
-    state->motor.ae1 = 1000 * 1000 < ae1_sq ? 1000 : ae1_sq < 0 ? 0 : fp_sqrt(ae1_sq);
-    state->motor.ae2 = 1000 * 1000 < ae2_sq ? 1000 : ae2_sq < 0 ? 0 : fp_sqrt(ae2_sq);
-    state->motor.ae3 = 1000 * 1000 < ae3_sq ? 1000 : ae3_sq < 0 ? 0 : fp_sqrt(ae3_sq);
-    state->motor.ae4 = 1000 * 1000 < ae4_sq ? 1000 : ae4_sq < 0 ? 0 : fp_sqrt(ae4_sq);
+    state->motor.ae1 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae1_sq ? MAX_MOTOR_SPEED : ae1_sq < 0 ? 0 : fp_sqrt(ae1_sq);
+    state->motor.ae2 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae2_sq ? MAX_MOTOR_SPEED : ae2_sq < 0 ? 0 : fp_sqrt(ae2_sq);
+    state->motor.ae3 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae3_sq ? MAX_MOTOR_SPEED : ae3_sq < 0 ? 0 : fp_sqrt(ae3_sq);
+    state->motor.ae4 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae4_sq ? MAX_MOTOR_SPEED : ae4_sq < 0 ? 0 : fp_sqrt(ae4_sq);
 
     // Debug output, can be removed later
     // ----------------------------------
@@ -167,13 +167,13 @@ void control_fn(qc_state_t* state) {
     counter++;
 
     if ((counter & 0x038) == 0x038) {
-        printf("LRPY: %"PRId16" %"PRId16" %"PRId16" %"PRId16"\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
+        //printf("LRPY: %"PRId16" %"PRId16" %"PRId16" %"PRId16"\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
         //printf("phi theta: %"PRId32" %"PRId32"\n", state->att.phi, state->att.theta);
-        printf("pqr: %"PRId32" %"PRId32" %"PRId32"\n", state->spin.p, state->spin.q, state->spin.r);
-        printf("sr ofsr dr yaw_p: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->sensor.sr, state->offset.sr, (state->spin.r - prev_spin.r), state->trim.yaw_p);
-        printf("ZLMN: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
+        //printf("pqr: %"PRId32" %"PRId32" %"PRId32"\n", state->spin.p, state->spin.q, state->spin.r);
+        //printf("sr ofsr dr yaw_p: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->sensor.sr, state->offset.sr, (state->spin.r - prev_spin.r), state->trim.yaw_p);
+        //printf("ZLMN: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
         //printf("ae_sq: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
-        printf("ae   : %"PRIu16" %"PRIu16" %"PRIu16" %"PRIu16"\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
+        //printf("ae   : %"PRIu16" %"PRIu16" %"PRIu16" %"PRIu16"\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
     }
 
     // Save values as prev_state for next iteration.
@@ -200,6 +200,8 @@ void control_fn(qc_state_t* state) {
  *  Author: Boldizsar Palotas
 **/
 bool trans_fn(qc_state_t* state, qc_mode_t new_mode) {
+    volatile int i = 0;
+    filter(i);
     return IS_SAFE_OR_PANIC_MODE(new_mode);
 }
 
@@ -240,5 +242,5 @@ void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
  *  Author: Boldizsar Palotas
 **/
 bool motor_on_fn(qc_state_t* state) {
-    return false;
+    return true;
 }

@@ -151,12 +151,13 @@
 
 #include "fixedpoint.h"
 
-#define LIFT_MULTIPLIER     16
-#define ROLL_MULTIPLIER     1
-#define PITCH_MULTIPLIER    1
+#define LIFT_SHIFT     5
+#define LIFT_MULTIPLIER (1 << LIFT_SHIFT)
+#define ROLL_SHIFT     0
+#define PITCH_SHIFT    0
 // This could be 10 based on the LAB-4 tests but it seemed too large
 // in offline no-joystick tests.
-#define YAW_MULTIPLIER      5
+#define YAW_SHIFT      5
 
 // Inverse of the control loop time constant in seconds
 // 1 / (0.01 [s]) = 1000 / 10 [1/s] in Q24.8 format.
@@ -168,7 +169,7 @@
  // [N m] in Q24.8 format.
 #define I_M         FP_FRAC(1, 32, 8)
  // [N m] in Q24.8 format.
-#define I_N         FP_FRAC(1, 8, 8)
+#define I_N         FP_FRAC(1, 64, 8)
 
 // Inverse of the product of the control loop time constant and the
 // moment of inertia for the L, M, N torque
@@ -184,7 +185,7 @@
 // 1/b'
 #define _1_B        FP_INT(50, 2)
 // 1/d'
-#define _1_D        FP_INT(50, 2)
+#define _1_D        FP_INT(150, 2)
 // - 1/(4b')
 #define M1_4B       (- _1_B / 4)
 // 1/(2b')
@@ -225,5 +226,27 @@
 //gyroscope scale factor: 1 over the amount of bits per G
 //Its in F16P16 format, meaning 1 over 131 (= 0,007633588)
 #define GYRO_G_SCALE_INV 500
+
+#define ATT_SCALE_INV 3
+
+#define MAX_MOTOR_SPEED  600
+
+#define ZERO_LIFT_THRESHOLD (4 * (LIFT_MULTIPLIER))
+
+
+#define P1_FRAC_BITS    4
+#define P1_MAX          FP_INT(100, P1_FRAC_BITS)
+#define P1_DEFAULT      (FP_FRAC(10, 1,   P1_FRAC_BITS) + 176)
+#define P1_MIN          (-(P1_DEFAULT) + 1)
+
+#define P2_FRAC_BITS    4
+#define P2_MAX          FP_INT(100, P2_FRAC_BITS)
+#define P2_DEFAULT      (FP_FRAC(1, 2,   P2_FRAC_BITS) + 127)
+#define P2_MIN          (-(P2_DEFAULT) + 1)
+
+#define YAWP_FRAC_BITS  7
+#define YAWP_MAX        FP_INT(10, YAWP_FRAC_BITS)
+#define YAWP_DEFAULT    (FP_FRAC(1, 64,   YAWP_FRAC_BITS) + 4)
+#define YAWP_MIN        (-(YAWP_DEFAULT) + 1)
 
 #endif // MODE_CONSTANTS_H

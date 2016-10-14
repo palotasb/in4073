@@ -1,9 +1,9 @@
-#include "mode_4_yaw.h"
+#include "mode_d_direct.h"
 #include "mode_constants.h"
 #include "printf.h"
 
-/** YAW CONTROLLED MODE OPERATION (MODE 4)
- *  ======================================
+/** MANUAL MODE OPERATION (MODE 2)
+ *  ==============================
  *
  *  Quadcopter system diagram
  *  -------------------------
@@ -14,44 +14,39 @@
  *   | | |
  *   | | +-------------------------------------------------+               : Plant, or
  *   | +------------------------+                          |               : Quadcopter
- *   | x_p=[roll,pitch,0] v_p=0 |          f_p=[0,0,-lift] |               :        /
- *   | φ_p=0      ω_p=[0,0,yaw] |     v_e            t_p=0 |             u = ae^2  /
- *   V           +--+  +----+   V     ω_e +--+  +------+   V         +---+ :  +---+
- *   +---------->|C1|->|d/dt|-> O --> O ->|C2|->|k d/dt|-> O ------->| T |--->| P |
- *        x_s    +--+  +----+     v_s ^ - +--+  +------+     f_s     +---+ :  +---+
- *        φ_s                     ω_s |                      t_s           :    | f
- *                                  - | ^v=[0,0,0]                         :    | t
- *                       offsets ---> O ^ω=[0,0,sr]                 .......:    V
- *                                    ^                            :         +------+
- *                                    |                            :   ω_n | | c∫dt |
- *                                +---+                            :       | +------+
- *                                |                             +------+   V    | v
- *                                |             sp=[sp,sq,sr] +-| Gyro |<- O <--+ ω
- *                                |  +--------------------+   | +------+  ω     V
- *                                +--| Butterworth filter |<--+    :         +------+
- *                                   +--------------------+        :   φ_n | | ∫dt  |
- *                                                                 :   Z_n | +------+
- *                                                              +------+   V    | x
- *                                                            <-| Acc. |<- O <--+ φ
+ *   | x_p=[roll,pitch,0]       | v_p=0    f_p=[0,0,-lift] |               :        /
+ *   | φ_p=0                    | ω_p=[0,0,yaw]      t_p=0 |             u = ae^2  /
+ *   V           +--+  +----+   V         +--+  +------+   V         +---+ :  +---+
+ *   +---------->|C1|->|d/dt|-> O ------->|C2|->|k d/dt|-> O ------->| T |--->| P |
+ *        x_s    +--+  +----+     v_s     +--+  +------+     f_s     +---+ :  +---+
+ *        φ_s                     ω_s                        t_s           :    | f
+ *                                                                         :    | t
+ *                                                                  .......:    V
+ *                                                                 :         +------+
+ *                                                                 :   ω_n | | c∫dt |
+ *                                                                 :       | +------+
+ *                                                              +------+   V    | v
+ *                                                            +-| Gyro |<- O <--+ ω
+ *                                                          sp| +------+  ω     V
+ *                                                       X <--+    :         +------+
+ *                                                                 :   φ_n | | ∫dt  |
+ *                                                       X <--+    :   Z_n | +------+
+ *                                                          sa| +------+   V    | x
+ *                                                            +-| Acc. |<- O <--+ φ
  *                                                              +------+ [φ;θ;Z]
  *                                                                 :
  *                                              Computed values <- : -> Physical values
  *
- *  In yaw controlled mode only torque N is controlled. The setpoint
- *  is effectively the yaw signal from the PC and the fed-back value
- *  is the filtered sr value. In the C2 controller we add yaw_p gain
- *  to the loop which can be set by the user between 1 and 256 ints.
- *  Other sensor signals are not used, and there are no estimates in
- *  the system apart from ^r = sr. An offset measured in calibration
- *  mode is added to sr to approximate 0 rad/s stationary turn rate.
+ *  In manual mode, the sensor data is not read, there is no feedback,
+ *  the control loop is open. The exact configuration is as follows:
+ *
+ *  There are no estimated values (^a) because we have no feedback.
  *
  *  x_p = [0, 0, 0]
  *  φ_p = [roll, pitch, 0]
  *
  *  v_p = [0, 0, 0]
  *  ω_p = [0, 0, yaw]
- *  ^v  = [0, 0, 0] 
- *  ^ω  = [0, 0, sr]
  *
  *  f_p = [0, 0, -lift]
  *  t_p = [0, 0, 0]
@@ -81,25 +76,15 @@ static bool motor_on_fn(qc_state_t* state);
 static qc_state_att_t   prev_att;
 static qc_state_spin_t  prev_spin;
 
-// filtering
-#define FILT_A_CNT  4
-#define FILT_B_CNT  4
-#define FILT_COEFF_FRAC_BITS    8
-static const int32_t const filt_a[FILT_A_CNT] = {64, 64, 64, 64};
-static int32_t filt_x[FILT_A_CNT];
-static const int32_t const filt_b[FILT_B_CNT] = {0xDEAD, 0, 0, 0};
-static int32_t filt_y[FILT_B_CNT];
-
-static int32_t filter(int32_t val);
 
 /** =======================================================
- *  mode_4_yaw_init -- Initialise mode table for YAW.
+ *  mode_d_direct_init -- Initialise mode table for DIRECT.
  *  =======================================================
  *  Parameters:
  *  - mode_table: Pointer to the mode table to initialise.
  *  Author: Boldizsar Palotas
 **/
-void mode_4_yaw_init(qc_mode_table_t* mode_table) {
+void mode_d_direct_init(qc_mode_table_t* mode_table) {
     mode_table->control_fn  = &control_fn;
     mode_table->trans_fn    = &trans_fn;
     mode_table->enter_fn    = &enter_fn;
@@ -127,32 +112,15 @@ void control_fn(qc_state_t* state) {
     // Hence velocities are zero.
     // Hence forces are zero except for Z to which -lift is added.
     // Q16.16 <-- Q8.8
-    state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+    state->force.Z  = - FP_EXTEND(state->orient.lift, 16, 8);
 
     // Attitude-related quantitites
     // ----------------------------
 
-    // Roll and pitch set phi and theta but yaw is handled separately.
-    // Q16.16 <-- Q2.14
-    state->att.phi      = FP_EXTEND(state->orient.roll, 16, 14);
-    state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14);
-
-    // Q16.16 = Q24.8 * Q16.16 >> 8
-    state->spin.p   = (T_INV * (state->att.phi - prev_att.phi)) >> 8;
-    state->spin.q   = (T_INV * (state->att.theta - prev_att.theta)) >> 8;
-    // Q16.16 <-- Q6.10
-    //state->sensor.sr = filter(state->sensor.sr);
-    state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10) - (state->sensor.sr - state->offset.sr);
-
-    // Q16.16 = Q24.8 * Q16.16 >> 8
-    state->torque.L = (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
-    state->torque.M = (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
-    // YAW P-value can be zero but we don't want 0 control over here.
-    state->torque.N = ((state->trim.yaw_p + YAWP_DEFAULT) * ((T_INV_I_N * (state->spin.r)) >> 8)) >> YAWP_FRAC_BITS;
-
     // Override
     state->torque.L = FP_EXTEND(state->orient.roll, 16, 14);
     state->torque.M = FP_EXTEND(state->orient.pitch, 16, 14);
+    state->torque.N = FP_EXTEND(state->orient.yaw, 16, 10);
 
     // See project_dir/control_ae.m MATLAB file for calculations.
     // ae_1^2 = -1/(4b') Z +        0 L +  1/(2b') M + -1/(4d') N
@@ -178,14 +146,9 @@ void control_fn(qc_state_t* state) {
     static uint32_t counter = 0;
     counter++;
 
-    if ((counter & 0x038) == 0x038) {
+    if ((counter & 0x3) == 0) {
         //printf("LRPY: %"PRId16" %"PRId16" %"PRId16" %"PRId16"\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
-        //printf("phi theta: %"PRId32" %"PRId32"\n", state->att.phi, state->att.theta);
-        //printf("pqr: %"PRId32" %"PRId32" %"PRId32"\n", state->spin.p, state->spin.q, state->spin.r);
-        //printf("sr ofsr dr yaw_p: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->sensor.sr, state->offset.sr, (state->spin.r - prev_spin.r), state->trim.yaw_p);
-        //printf("ZLMN: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
-        //printf("ae_sq: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
-        //printf("ae   : %"PRIu16" %"PRIu16" %"PRIu16" %"PRIu16"\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
+        //printf("ae: %"PRIu16" %"PRIu16" %"PRIu16" %"PRIu16"\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
     }
 
     // Save values as prev_state for next iteration.
@@ -197,27 +160,6 @@ void control_fn(qc_state_t* state) {
     prev_spin.p = state->spin.p;
     prev_spin.q = state->spin.q;
     prev_spin.r = state->spin.r;
-}
-
-int32_t filter(int32_t val) {
-    int32_t y = 0;
-    for (int i = 0; i < FILT_A_CNT - 1; i++) {
-        filt_x[i + 1] = filt_x[i];
-    }
-    filt_x[0] = val;
-    // y = filt_a[0] * filt_x[0] + filt_a[1] * filt_x[1];
-    for (int i = 0; i < FILT_A_CNT; i++) {
-        y += (filt_a[i] * filt_x[i]) >> FILT_COEFF_FRAC_BITS;
-    }
-    // y -= (filt_b[1] * filt_y[1] + filt_b[2] * filt_x[2])
-    for (int i = 1; i < FILT_B_CNT; i++) {
-        y -= (filt_b[i] * filt_y[i]) >> FILT_COEFF_FRAC_BITS;
-    }
-    filt_y[0] = y;
-    for (int i = 0; i < FILT_B_CNT - 1; i++) {
-        filt_y[i + 1] = filt_y[i];
-    }
-    return y;
 }
 
 /** =======================================================
@@ -258,14 +200,6 @@ void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
     prev_spin.p = state->spin.p;
     prev_spin.q = state->spin.q;
     prev_spin.r = state->spin.r;
-
-    for (int i = 0; i < FILT_A_CNT; i++) {
-        filt_x[i] = 0;
-    }
-    for (int i = 0; i < FILT_B_CNT; i++) {
-        filt_y[i] = 0;
-    }
-    filter(state->force.X);
 }
 
 /** =======================================================

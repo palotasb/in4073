@@ -119,7 +119,7 @@ void print_run_help(void) {
 	fprintf(stderr, "Press ESC to PANIC or the number keys to enter modes.\n");
 	fprintf(stderr, "Motors - E: enable R: disable\n\n");
 	fprintf(stderr, "Logging (telemetry) - F (G) to select what to log (enter sum)\n");
-	for (int i = 0; i <= 11; i++) {
+	for (int i = 0; i <= 12; i++) {
 		fprintf(stderr, "%10u = %#10x: %s\n", 1u<<i, 1u<<i, message_id_to_pc_name(i));
 	}
 	for (int i = 0; i < QC_STATE_PROF_CNT; i++) {
@@ -231,6 +231,9 @@ void run_terminal(char* serial, char* js, char* virt_in, char* virt_out) {
 
 			while (pc_command_get_message(&command, &tx_frame.message)) {
 				while (time_get_ms() - last_msg < 1) { }
+				if (tx_frame.message.ID == MESSAGE_SET_P12_ID)
+					fprintf(stderr, "yawp: %d, p1: %d, p2: %d\n",
+						command.trim.yaw_p, command.trim.p1, command.trim.p2);
 				serialcomm_send(&sc);
 				//fprintf(stderr, "< Sending %s v32:[%d %d] v16:[%hd %hd %hd %hd] v8:[%hhd %hhd %hhd %hhd  %hhd %hhd %hhd %hhd]\n",
 				//	message_id_to_qc_name(tx_frame.message.ID),
@@ -301,9 +304,14 @@ void pc_rx_complete(message_t* message) {
 	}
 
     // Special handling
+
+	static mode_t last_mode = MODE_0_SAFE;
     switch (message->ID) {
     	case MESSAGE_TIME_MODE_VOLTAGE_ID:
-    		fprintf(stderr, "Entered mode %d\n", MESSAGE_MODE_VALUE(message));
+			if (MESSAGE_MODE_VALUE(message) != last_mode) {
+				last_mode = MESSAGE_MODE_VALUE(message);
+    			fprintf(stderr, "Entered mode %d\n", last_mode);
+			}
     		if (MESSAGE_MODE_VALUE(message) == MODE_1_PANIC) {
     			command.mode_panic_status = 0;
     		}

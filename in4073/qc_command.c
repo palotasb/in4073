@@ -1,5 +1,6 @@
 #include "qc_command.h"
 #include <stdio.h>
+#include "mode_constants.h"
 #include "log.h"
 #include "printf.h"
 
@@ -106,8 +107,18 @@ void qc_command_rx_message(qc_command_t* command, message_t* message) {
         case MESSAGE_SET_OPTION_ID:
             switch (MESSAGE_OPTNUM_VALUE(message)) {
                 case 1: // Motor enable
-                    if (MESSAGE_OPTMOD_VALUE(message) == 1) // Set option
-                        command->system->state->option.enable_motors = (bool) MESSAGE_OPTVAL_VALUE(message);
+                    if (MESSAGE_OPTMOD_VALUE(message) == 1) { // Set option
+                        if (MESSAGE_OPTVAL_VALUE(message)) {
+                            if (command->system->state->orient.lift < ZERO_LIFT_THRESHOLD) {
+                                command->system->state->option.enable_motors = true;
+                                printf("Motors enabled!\n");
+                            } else
+                                printf("Motors NOT enabled. Turn down throttle first!\n");
+                        } else {
+                            command->system->state->option.enable_motors = false;
+                            printf("Motors disabled.\n");
+                        }
+                    }
                     break;
                 case 5: // Raw
                     if (MESSAGE_OPTMOD_VALUE(message) == 2) // Toggle option
@@ -165,10 +176,10 @@ void qc_command_set_mode(qc_command_t* command, qc_mode_t mode) {
 void qc_command_set_lift_roll_pitch_yaw(qc_command_t* command,
     f8p8_t lift, f8p8_t roll, f8p8_t pitch, f8p8_t yaw
 ) {
-    command->system->state->orient.lift  = (lift);
-    command->system->state->orient.roll  = (roll);
-    command->system->state->orient.pitch = (pitch);
-    command->system->state->orient.yaw   = (yaw);
+    command->system->state->orient.lift  = (lift) << LIFT_SHIFT;
+    command->system->state->orient.roll  = (roll) << ROLL_SHIFT;
+    command->system->state->orient.pitch = (pitch) << PITCH_SHIFT;
+    command->system->state->orient.yaw   = (yaw) << YAW_SHIFT;
 }
 
 void qc_command_tick(qc_command_t* command) {

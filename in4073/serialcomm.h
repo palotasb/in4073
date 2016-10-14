@@ -16,8 +16,11 @@
  */
 typedef union message_value {
     uint32_t v32[MESSAGE_VALUE_SIZE / 4];   // Interpret as array of 32 bit values
+    int32_t  i32[MESSAGE_VALUE_SIZE / 4];
     uint16_t v16[MESSAGE_VALUE_SIZE / 2];   // Interpret as array of 16 bit values
+    int16_t  i16[MESSAGE_VALUE_SIZE / 2];
     uint8_t   v8[MESSAGE_VALUE_SIZE];       // Interpret as array of  8 bit values
+    int8_t    i8[MESSAGE_VALUE_SIZE];
 } message_value_t;
 
 /*------------------------------------------------------------------
@@ -71,25 +74,25 @@ typedef struct message {
 #define MESSAGE_SPQR_ID                 1
 
 #define MESSAGE_SP_ID                   MESSAGE_SPQR_ID
-#define MESSAGE_SP_VALUE(message)       ((message)->value.v16[0])
+#define MESSAGE_SP_VALUE(message)       ((message)->value.i16[0])
 
 #define MESSAGE_SQ_ID                   MESSAGE_SPQR_ID
-#define MESSAGE_SQ_VALUE(message)       ((message)->value.v16[1])
+#define MESSAGE_SQ_VALUE(message)       ((message)->value.i16[1])
 
 #define MESSAGE_SR_ID                   MESSAGE_SPQR_ID
-#define MESSAGE_SR_VALUE(message)       ((message)->value.v16[2])
+#define MESSAGE_SR_VALUE(message)       ((message)->value.i16[2])
 
 // MESSAGE 2
 #define MESSAGE_SAXYZ_ID                2
 
 #define MESSAGE_SAX_ID                  MESSAGE_SAXYZ_ID
-#define MESSAGE_SAX_VALUE(message)      ((message)->value.v16[0])
+#define MESSAGE_SAX_VALUE(message)      ((message)->value.i16[0])
 
 #define MESSAGE_SAY_ID                  MESSAGE_SAXYZ_ID
-#define MESSAGE_SAY_VALUE(message)      ((message)->value.v16[1])
+#define MESSAGE_SAY_VALUE(message)      ((message)->value.i16[1])
 
 #define MESSAGE_SAZ_ID                  MESSAGE_SAXYZ_ID
-#define MESSAGE_SAZ_VALUE(message)      ((message)->value.v16[2])
+#define MESSAGE_SAZ_VALUE(message)      ((message)->value.i16[2])
 
 // MESSAGE 3
 #define MESSAGE_AE1234_ID               3
@@ -119,96 +122,101 @@ typedef struct message {
 #define MESSAGE_XYZPOS_ID               5
 
 #define MESSAGE_XPOS_ID                 MESSAGE_XYZPOS_ID
-#define MESSAGE_XPOS_VALUE(message)     ((message)->value.v16[0])
+#define MESSAGE_XPOS_VALUE(message)     ((message)->value.i16[0])
 
 #define MESSAGE_YPOS_ID                 MESSAGE_XYZPOS_ID
-#define MESSAGE_YPOS_VALUE(message)     ((message)->value.v16[1])
+#define MESSAGE_YPOS_VALUE(message)     ((message)->value.i16[1])
 
 #define MESSAGE_ZPOS_ID                 MESSAGE_XYZPOS_ID
-#define MESSAGE_ZPOS_VALUE(message)     ((message)->value.v16[2])
+#define MESSAGE_ZPOS_VALUE(message)     ((message)->value.i16[2])
 
 // MESSAGE 6
 #define MESSAGE_PHI_THETA_PSI_ID        6
 
 #define MESSAGE_PHI_ID                  MESSAGE_PHI_THETA_PSI_ID
-#define MESSAGE_PHI_VALUE(message)      ((message)->value.v16[0])
+#define MESSAGE_PHI_VALUE(message)      ((message)->value.i16[0])
 
 #define MESSAGE_THETA_ID                MESSAGE_PHI_THETA_PSI_ID
-#define MESSAGE_THETA_VALUE(message)    ((message)->value.v16[1])
+#define MESSAGE_THETA_VALUE(message)    ((message)->value.i16[1])
 
 #define MESSAGE_PSI_ID                  MESSAGE_PHI_THETA_PSI_ID
-#define MESSAGE_PSI_VALUE(message)      ((message)->value.v16[2])
+#define MESSAGE_PSI_VALUE(message)      ((message)->value.i16[2])
 
 // MESSAGE 7
 #define MESSAGE_XYZFORCE_ID             7
 
 #define MESSAGE_XFORCE_ID               MESSAGE_XYZFORCE_ID
-#define MESSAGE_XFORCE_VALUE(message)   ((message)->value.v16[0])
+#define MESSAGE_XFORCE_VALUE(message)   ((message)->value.i16[0])
 
 #define MESSAGE_YFORCE_ID               MESSAGE_XYZFORCE_ID
-#define MESSAGE_YFORCE_VALUE(message)   ((message)->value.v16[1])
+#define MESSAGE_YFORCE_VALUE(message)   ((message)->value.i16[1])
 
 #define MESSAGE_ZFORCE_ID               MESSAGE_XYZFORCE_ID
-#define MESSAGE_ZFORCE_VALUE(message)   ((message)->value.v16[2])
+#define MESSAGE_ZFORCE_VALUE(message)   ((message)->value.i16[2])
 
 // MESSAGE 8
 #define MESSAGE_LMN_ID                  8
 
 #define MESSAGE_L_ID                    MESSAGE_LMN_ID
-#define MESSAGE_L_VALUE(message)        ((message)->value.v16[0])
+#define MESSAGE_L_VALUE(message)        ((message)->value.i16[0])
 
 #define MESSAGE_M_ID                    MESSAGE_LMN_ID
-#define MESSAGE_M_VALUE(message)        ((message)->value.v16[1])
+#define MESSAGE_M_VALUE(message)        ((message)->value.i16[1])
 
 #define MESSAGE_N_ID                    MESSAGE_LMN_ID
-#define MESSAGE_N_VALUE(message)        ((message)->value.v16[2])
+#define MESSAGE_N_VALUE(message)        ((message)->value.i16[2])
 
 // MESSAGE 9
 #define MESSAGE_UVW_ID                  9
 
 #define MESSAGE_U_ID                    MESSAGE_UVW_ID
-#define MESSAGE_U_VALUE(message)        ((message)->value.v16[0])
+#define MESSAGE_U_VALUE(message)        ((message)->value.i16[0])
 
 #define MESSAGE_V_ID                    MESSAGE_UVW_ID
-#define MESSAGE_V_VALUE(message)        ((message)->value.v16[1])
+#define MESSAGE_V_VALUE(message)        ((message)->value.i16[1])
 
 #define MESSAGE_W_ID                    MESSAGE_UVW_ID
-#define MESSAGE_W_VALUE(message)        ((message)->value.v16[2])
+#define MESSAGE_W_VALUE(message)        ((message)->value.i16[2])
 
 // MESSAGE 10
 #define MESSAGE_PQR_ID                  10
 
 #define MESSAGE_P_ID                    MESSAGE_PQR_ID
-#define MESSAGE_P_VALUE(message)        ((message)->value.v16[0])
+#define MESSAGE_P_VALUE(message)        ((message)->value.i16[0])
 
 #define MESSAGE_Q_ID                    MESSAGE_PQR_ID
-#define MESSAGE_Q_VALUE(message)        ((message)->value.v16[1])
+#define MESSAGE_Q_VALUE(message)        ((message)->value.i16[1])
 
 #define MESSAGE_R_ID                    MESSAGE_PQR_ID
-#define MESSAGE_R_VALUE(message)        ((message)->value.v16[2])
+#define MESSAGE_R_VALUE(message)        ((message)->value.i16[2])
 
 // MESSAGE 11
 #define MESSAGE_P12_ID                  11
 
 #define MESSAGE_P1_ID                   MESSAGE_P12_ID
-#define MESSAGE_P1_VALUE(message)       ((message)->value.v16[0])
+#define MESSAGE_P1_VALUE(message)       ((message)->value.i16[0])
 
 #define MESSAGE_P2_ID                   MESSAGE_P12_ID
-#define MESSAGE_P2_VALUE(message)       ((message)->value.v16[1])
+#define MESSAGE_P2_VALUE(message)       ((message)->value.i16[1])
 
 #define MESSAGE_YAWP_ID                 MESSAGE_P12_ID
-#define MESSAGE_YAWP_VALUE(message)     ((message)->value.v16[2])
+#define MESSAGE_YAWP_VALUE(message)     ((message)->value.i16[2])
 
 // MESSAGE 12
-#define MESSAGE_LOG_END_ID              12
+#define MESSAGE_SETPOINT_ID             12
 
-// MESSAGE 13
-#define MESSAGE_LOG_START_ID            13
+#define MESSAGE_SETPOINT_LIFT_ID        MESSAGE_SETPOINT_ID
+#define MESSAGE_SETPOINT_LIFT_VALUE(message) ((message)->value.i16[0])
 
-// MESSAGE 16
-#define MESSAGE_TEXT_ID                 16
+#define MESSAGE_SETPOINT_ROLL_ID        MESSAGE_SETPOINT_ID
+#define MESSAGE_SETPOINT_ROLL_VALUE(message) ((message)->value.i16[1])
 
-#define MESSAGE_TEXT_VALUE(message)     ((message)->value.v8[0])
+#define MESSAGE_SETPOINT_PITCH_ID       MESSAGE_SETPOINT_ID
+#define MESSAGE_SETPOINT_PITCH_VALUE(message)   ((message)->value.i16[2])
+
+#define MESSAGE_SETPOINT_YAW_ID         MESSAGE_SETPOINT_ID
+#define MESSAGE_SETPOINT_YAW_VALUE(message) ((message)->value.i16[3])
+
 
 //MESSAGE 20-29
 #define MESSAGE_PROFILE_0_CURR_ID       20
@@ -226,6 +234,17 @@ typedef struct message {
 #define MESSAGE_PROFILE_TIME_VALUE(message) ((message)->value.v32[0])
 #define MESSAGE_PROFILE_TAG_VALUE(message)  ((message)->value.v32[1])
 
+// MESSAGE 32
+#define MESSAGE_LOG_END_ID              32
+
+// MESSAGE 33
+#define MESSAGE_LOG_START_ID            33
+
+// MESSAGE 34
+#define MESSAGE_TEXT_ID                 34
+
+#define MESSAGE_TEXT_VALUE(message)     ((message)->value.v8[0])
+
 // Messages in PC -> Quadcopter direction
 
 // MESSAGE 0
@@ -237,28 +256,28 @@ typedef struct message {
 #define MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID   1
 
 #define MESSAGE_SET_LIFT_ID             MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID
-#define MESSAGE_SET_LIFT_VALUE(message) ((message)->value.v16[0])
+#define MESSAGE_SET_LIFT_VALUE(message) ((message)->value.i16[0])
 
 #define MESSAGE_SET_ROLL_ID             MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID
-#define MESSAGE_SET_ROLL_VALUE(message) ((message)->value.v16[1])
+#define MESSAGE_SET_ROLL_VALUE(message) ((message)->value.i16[1])
 
 #define MESSAGE_SET_PITCH_ID            MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID
-#define MESSAGE_SET_PITCH_VALUE(message)    ((message)->value.v16[2])
+#define MESSAGE_SET_PITCH_VALUE(message)    ((message)->value.i16[2])
 
 #define MESSAGE_SET_YAW_ID              MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID
-#define MESSAGE_SET_YAW_VALUE(message)  ((message)->value.v16[3])
+#define MESSAGE_SET_YAW_VALUE(message)  ((message)->value.i16[3])
 
 // MESSAGE 2
 #define MESSAGE_SET_P12_ID              2
 
 #define MESSAGE_SET_P1_ID               MESSAGE_SET_P12_ID
-#define MESSAGE_SET_P1_VALUE(message)   ((message)->value.v16[0])
+#define MESSAGE_SET_P1_VALUE(message)   ((message)->value.i16[0])
 
 #define MESSAGE_SET_P2_ID               MESSAGE_SET_P12_ID
-#define MESSAGE_SET_P2_VALUE(message)   ((message)->value.v16[1])
+#define MESSAGE_SET_P2_VALUE(message)   ((message)->value.i16[1])
 
 #define MESSAGE_SET_YAWP_ID             MESSAGE_SET_P12_ID
-#define MESSAGE_SET_YAWP_VALUE(message) ((message)->value.v16[2])
+#define MESSAGE_SET_YAWP_VALUE(message) ((message)->value.i16[2])
 
 // MESSAGE 3
 #define MESSAGE_SET_KEYCODE_ID          3

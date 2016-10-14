@@ -24,6 +24,7 @@ $(abspath ../mode_2_manual.c) \
 $(abspath ../mode_3_calibrate.c) \
 $(abspath ../mode_4_yaw.c) \
 $(abspath ../mode_5_full.c) \
+$(abspath ../mode_d_direct.c) \
 
 all:
 	$(CC) $(CFLAGS) $(CFILES) -lm -o $(EXEC)

@@ -72,7 +72,21 @@ void qc_hal_get_inputs(qc_state_t* state) {
     state->sensor.temperature   = temperature;
     state->sensor.pressure      = pressure;
     state->sensor.voltage       = bat_volt;
+	 if(state->sensor.voltage_avg == -1) {
+        state->sensor.voltage_avg = bat_volt;
+	 }else{
+        state->sensor.voltage_avg -= state->sensor.voltage_avg >> 4;
+        state->sensor.voltage_avg += bat_volt >> 4;
+    }
+
+    state->sensor.voltage = state->sensor.voltage_avg;
+
+
 	//convert from int16_t to F16P16
+
+    state->sensor.sphi          = phi * ATT_SCALE_INV;
+    state->sensor.stheta        = theta * ATT_SCALE_INV;
+    state->sensor.spsi          = psi * ATT_SCALE_INV;
     state->sensor.sax           = sax * ACC_G_SCALE_INV;
     state->sensor.say           = -say * ACC_G_SCALE_INV;
     state->sensor.saz           = -saz * ACC_G_SCALE_INV;

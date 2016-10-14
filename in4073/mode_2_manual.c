@@ -152,10 +152,10 @@ void control_fn(qc_state_t* state) {
     int32_t ae3_sq = (M1_4B * state->force.Z - _1_2B * state->torque.M - _1_4D * state->torque.N) >> 8;
     int32_t ae4_sq = (M1_4B * state->force.Z + _1_2B * state->torque.L + _1_4D * state->torque.N) >> 8;
 
-    state->motor.ae1 = 1000 * 1000 < ae1_sq ? 1000 : ae1_sq < 0 ? 0 : fp_sqrt(ae1_sq);
-    state->motor.ae2 = 1000 * 1000 < ae2_sq ? 1000 : ae2_sq < 0 ? 0 : fp_sqrt(ae2_sq);
-    state->motor.ae3 = 1000 * 1000 < ae3_sq ? 1000 : ae3_sq < 0 ? 0 : fp_sqrt(ae3_sq);
-    state->motor.ae4 = 1000 * 1000 < ae4_sq ? 1000 : ae4_sq < 0 ? 0 : fp_sqrt(ae4_sq);
+    state->motor.ae1 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae1_sq ? MAX_MOTOR_SPEED : ae1_sq < 0 ? 0 : fp_sqrt(ae1_sq);
+    state->motor.ae2 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae2_sq ? MAX_MOTOR_SPEED : ae2_sq < 0 ? 0 : fp_sqrt(ae2_sq);
+    state->motor.ae3 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae3_sq ? MAX_MOTOR_SPEED : ae3_sq < 0 ? 0 : fp_sqrt(ae3_sq);
+    state->motor.ae4 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae4_sq ? MAX_MOTOR_SPEED : ae4_sq < 0 ? 0 : fp_sqrt(ae4_sq);
 
     // Debug output, can be removed later
     // ----------------------------------
@@ -164,7 +164,7 @@ void control_fn(qc_state_t* state) {
 
     if ((counter & 0x38) == 0x38) {
         //printf("T_INV %"PRId32", dphi %"PRId32" dtheta %"PRId32"\n", T_INV, (state->att.phi - prev_att.phi), (state->att.theta - prev_att.theta));
-        printf("LRPY: %"PRId16" %"PRId16" %"PRId16" %"PRId16"\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
+        //printf("LRPY: %"PRId16" %"PRId16" %"PRId16" %"PRId16"\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
         //printf("phi theta: %"PRId32" %"PRId32"\n", state->att.phi, state->att.theta);
         printf("pqr: %"PRId32" %"PRId32" %"PRId32"\n", state->spin.p, state->spin.q, state->spin.r);
         printf("ZLMN: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
