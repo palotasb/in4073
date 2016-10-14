@@ -194,28 +194,28 @@ typedef struct message {
 #define MESSAGE_P12_ID                  11
 
 #define MESSAGE_P1_ID                   MESSAGE_P12_ID
-#define MESSAGE_P1_VALUE(message)       ((message)->value.v16[0])
+#define MESSAGE_P1_VALUE(message)       ((message)->value.i16[0])
 
 #define MESSAGE_P2_ID                   MESSAGE_P12_ID
-#define MESSAGE_P2_VALUE(message)       ((message)->value.v16[1])
+#define MESSAGE_P2_VALUE(message)       ((message)->value.i16[1])
 
 #define MESSAGE_YAWP_ID                 MESSAGE_P12_ID
-#define MESSAGE_YAWP_VALUE(message)     ((message)->value.v16[2])
+#define MESSAGE_YAWP_VALUE(message)     ((message)->value.i16[2])
 
 // MESSAGE 12
 #define MESSAGE_SETPOINT_ID             12
 
 #define MESSAGE_SETPOINT_LIFT_ID        MESSAGE_SETPOINT_ID
-#define MESSAGE_SETPOINT_LIFT_VALUE(message) ((message)->value.v16[0])
+#define MESSAGE_SETPOINT_LIFT_VALUE(message) ((message)->value.i16[0])
 
 #define MESSAGE_SETPOINT_ROLL_ID        MESSAGE_SETPOINT_ID
-#define MESSAGE_SETPOINT_ROLL_VALUE(message) ((message)->value.v16[1])
+#define MESSAGE_SETPOINT_ROLL_VALUE(message) ((message)->value.i16[1])
 
 #define MESSAGE_SETPOINT_PITCH_ID       MESSAGE_SETPOINT_ID
-#define MESSAGE_SETPOINT_PITCH_VALUE(message)   ((message)->value.v16[2])
+#define MESSAGE_SETPOINT_PITCH_VALUE(message)   ((message)->value.i16[2])
 
 #define MESSAGE_SETPOINT_YAW_ID         MESSAGE_SETPOINT_ID
-#define MESSAGE_SETPOINT_YAW_VALUE(message) ((message)->value.v16[3])
+#define MESSAGE_SETPOINT_YAW_VALUE(message) ((message)->value.i16[3])
 
 
 //MESSAGE 20-29
@@ -256,28 +256,28 @@ typedef struct message {
 #define MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID   1
 
 #define MESSAGE_SET_LIFT_ID             MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID
-#define MESSAGE_SET_LIFT_VALUE(message) ((message)->value.v16[0])
+#define MESSAGE_SET_LIFT_VALUE(message) ((message)->value.i16[0])
 
 #define MESSAGE_SET_ROLL_ID             MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID
-#define MESSAGE_SET_ROLL_VALUE(message) ((message)->value.v16[1])
+#define MESSAGE_SET_ROLL_VALUE(message) ((message)->value.i16[1])
 
 #define MESSAGE_SET_PITCH_ID            MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID
-#define MESSAGE_SET_PITCH_VALUE(message)    ((message)->value.v16[2])
+#define MESSAGE_SET_PITCH_VALUE(message)    ((message)->value.i16[2])
 
 #define MESSAGE_SET_YAW_ID              MESSAGE_SET_LIFT_ROLL_PITCH_YAW_ID
-#define MESSAGE_SET_YAW_VALUE(message)  ((message)->value.v16[3])
+#define MESSAGE_SET_YAW_VALUE(message)  ((message)->value.i16[3])
 
 // MESSAGE 2
 #define MESSAGE_SET_P12_ID              2
 
 #define MESSAGE_SET_P1_ID               MESSAGE_SET_P12_ID
-#define MESSAGE_SET_P1_VALUE(message)   ((message)->value.v16[0])
+#define MESSAGE_SET_P1_VALUE(message)   ((message)->value.i16[0])
 
 #define MESSAGE_SET_P2_ID               MESSAGE_SET_P12_ID
-#define MESSAGE_SET_P2_VALUE(message)   ((message)->value.v16[1])
+#define MESSAGE_SET_P2_VALUE(message)   ((message)->value.i16[1])
 
 #define MESSAGE_SET_YAWP_ID             MESSAGE_SET_P12_ID
-#define MESSAGE_SET_YAWP_VALUE(message) ((message)->value.v16[2])
+#define MESSAGE_SET_YAWP_VALUE(message) ((message)->value.i16[2])
 
 // MESSAGE 3
 #define MESSAGE_SET_KEYCODE_ID          3

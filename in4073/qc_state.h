@@ -18,13 +18,13 @@
 **/
 typedef struct qc_state_orient {
     // Q8.8
-    q16_t       lift;
+    q32_t       lift;
     // Q2.14
-    q16_t       roll;
+    q32_t       roll;
     // Q2.14
-    q16_t       pitch;
+    q32_t       pitch;
     // Q6.10
-    q16_t       yaw;
+    q32_t       yaw;
 } qc_state_orient_t;
 
 /** State: motor
@@ -57,6 +57,9 @@ typedef struct qc_state_motor {
  *  Author: Boldizsar Palotas
 **/
 typedef struct qc_state_sensor {
+    f16p16_t    sphi;
+    f16p16_t    stheta;
+    f16p16_t    spsi;
     f16p16_t    sp;
     f16p16_t    sq;
     f16p16_t    sr;

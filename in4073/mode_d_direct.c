@@ -147,8 +147,8 @@ void control_fn(qc_state_t* state) {
     counter++;
 
     if ((counter & 0x3) == 0) {
-        printf("LRPY: %"PRId16" %"PRId16" %"PRId16" %"PRId16"\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
-        printf("ae: %"PRIu16" %"PRIu16" %"PRIu16" %"PRIu16"\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
+        //printf("LRPY: %"PRId16" %"PRId16" %"PRId16" %"PRId16"\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
+        //printf("ae: %"PRIu16" %"PRIu16" %"PRIu16" %"PRIu16"\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
     }
 
     // Save values as prev_state for next iteration.

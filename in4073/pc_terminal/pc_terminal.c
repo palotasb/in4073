@@ -231,6 +231,9 @@ void run_terminal(char* serial, char* js, char* virt_in, char* virt_out) {
 
 			while (pc_command_get_message(&command, &tx_frame.message)) {
 				while (time_get_ms() - last_msg < 1) { }
+				if (tx_frame.message.ID == MESSAGE_SET_P12_ID)
+					fprintf(stderr, "yawp: %d, p1: %d, p2: %d\n",
+						command.trim.yaw_p, command.trim.p1, command.trim.p2);
 				serialcomm_send(&sc);
 				//fprintf(stderr, "< Sending %s v32:[%d %d] v16:[%hd %hd %hd %hd] v8:[%hhd %hhd %hhd %hhd  %hhd %hhd %hhd %hhd]\n",
 				//	message_id_to_qc_name(tx_frame.message.ID),

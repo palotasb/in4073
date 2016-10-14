@@ -137,21 +137,21 @@ void control_fn(qc_state_t* state) {
 
     // Roll and pitch set phi and theta but yaw is handled separately.
     // Q16.16 <-- Q2.14
-    state->att.phi      = FP_EXTEND(state->orient.roll, 16, 14);
-    state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14);
+    state->att.phi      = FP_EXTEND(state->orient.roll, 16, 14) - state->sensor.sphi;
+    state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14) - state->sensor.stheta;
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
-    state->spin.p   = ((state->trim.p1 + P1_DEFAULT) * (((T_INV * (state->att.phi - prev_att.phi)) >> 8) - (state->sensor.sp - state->offset.sp))) >> P1_FRAC_BITS;
-    state->spin.q   = ((state->trim.p1 + P1_DEFAULT) * (((T_INV * (state->att.theta - prev_att.theta)) >> 8) - (state->sensor.sq - state->offset.sq))) >> P1_FRAC_BITS;
+    state->spin.p   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.phi , 0, 2, P1_FRAC_BITS - 2);
+    state->spin.q   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.theta , 0, 2, P1_FRAC_BITS - 2);
     // Q16.16 <-- Q6.10
     state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10) - (state->sensor.sr - state->offset.sr);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
     // Roll/Pitch 2nd P-value (P2) can be zero but we don't want 0 control over here.
-    state->torque.L = ((state->trim.p2 + P2_DEFAULT) * (T_INV_I_L * (state->spin.p)) >> 8) >> P2_FRAC_BITS;
-    state->torque.M = ((state->trim.p2 + P2_DEFAULT) * (T_INV_I_M * (state->spin.q)) >> 8) >> P2_FRAC_BITS;
+    state->torque.L = FP_MUL3(state->trim.p2 + P2_DEFAULT , FP_MUL3(I_L , state->spin.p, 0, 3, 5), 0, 2, P2_FRAC_BITS - 2);
+    state->torque.M = FP_MUL3(state->trim.p2 + P2_DEFAULT , FP_MUL3(I_M , state->spin.q, 0, 3, 5), 0, 2, P2_FRAC_BITS - 2);
     // YAW P-value can be zero but we don't want 0 control over here.
-    state->torque.N = ((state->trim.yaw_p + YAWP_DEFAULT) * ((T_INV_I_N * (state->spin.r)) >> 8)) >> YAWP_FRAC_BITS;
+    state->torque.N = FP_MUL3(state->trim.yaw_p + YAWP_DEFAULT , (T_INV_I_N * state->spin.r) >> 8, 0, 0, YAWP_FRAC_BITS);
 
     // See project_dir/control_ae.m MATLAB file for calculations.
     // ae_1^2 = -1/(4b') Z +        0 L +  1/(2b') M + -1/(4d') N

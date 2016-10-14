@@ -139,10 +139,10 @@ static void qc_system_log_data(qc_system_t* system) {
                 MESSAGE_VOLTAGE_VALUE(&msg) = system->state->sensor.voltage;
                 break;
             case MESSAGE_SETPOINT_ID:
-                MESSAGE_SETPOINT_LIFT_VALUE(&msg)   = system->state->orient.lift;
-                MESSAGE_SETPOINT_ROLL_VALUE(&msg)   = system->state->orient.roll;
-                MESSAGE_SETPOINT_PITCH_VALUE(&msg)  = system->state->orient.pitch;
-                MESSAGE_SETPOINT_YAW_VALUE(&msg)    = system->state->orient.yaw;
+                MESSAGE_SETPOINT_LIFT_VALUE(&msg)   = system->state->orient.lift >> LIFT_SHIFT;
+                MESSAGE_SETPOINT_ROLL_VALUE(&msg)   = system->state->orient.roll >> ROLL_SHIFT;
+                MESSAGE_SETPOINT_PITCH_VALUE(&msg)  = system->state->orient.pitch >> PITCH_SHIFT;
+                MESSAGE_SETPOINT_YAW_VALUE(&msg)    = system->state->orient.yaw >> YAW_SHIFT;
                 break;
             case MESSAGE_SPQR_ID:
                 MESSAGE_SP_VALUE(&msg) = FP_CHUNK(system->state->sensor.sp - system->state->offset.sp, 8, 16);

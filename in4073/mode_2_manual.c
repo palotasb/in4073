@@ -164,7 +164,7 @@ void control_fn(qc_state_t* state) {
 
     if ((counter & 0x38) == 0x38) {
         //printf("T_INV %"PRId32", dphi %"PRId32" dtheta %"PRId32"\n", T_INV, (state->att.phi - prev_att.phi), (state->att.theta - prev_att.theta));
-        printf("LRPY: %"PRId16" %"PRId16" %"PRId16" %"PRId16"\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
+        //printf("LRPY: %"PRId16" %"PRId16" %"PRId16" %"PRId16"\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
         //printf("phi theta: %"PRId32" %"PRId32"\n", state->att.phi, state->att.theta);
         printf("pqr: %"PRId32" %"PRId32" %"PRId32"\n", state->spin.p, state->spin.q, state->spin.r);
         printf("ZLMN: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);

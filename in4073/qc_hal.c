@@ -83,6 +83,10 @@ void qc_hal_get_inputs(qc_state_t* state) {
 
 
 	//convert from int16_t to F16P16
+
+    state->sensor.sphi          = phi * ATT_SCALE_INV;
+    state->sensor.stheta        = theta * ATT_SCALE_INV;
+    state->sensor.spsi          = psi * ATT_SCALE_INV;
     state->sensor.sax           = sax * ACC_G_SCALE_INV;
     state->sensor.say           = -say * ACC_G_SCALE_INV;
     state->sensor.saz           = -saz * ACC_G_SCALE_INV;

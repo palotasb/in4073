@@ -64,6 +64,9 @@ void qc_state_clear_motor(qc_state_t* state) {
  *  Author: Boldizsar Palotas
 **/
 void qc_state_clear_sensor(qc_state_t* state) {
+    state->sensor.sphi  = 0;
+    state->sensor.stheta= 0;
+    state->sensor.spsi  = 0;
     state->sensor.sp    = 0;
     state->sensor.sq    = 0;
     state->sensor.sr    = 0;
