@@ -137,8 +137,12 @@ void control_fn(qc_state_t* state) {
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
     // Roll/Pitch 2nd P-value (P2) can be zero but we don't want 0 control over here.
-    state->torque.L = FP_MUL3(state->trim.p2 + P2_DEFAULT , FP_MUL3(I_L , state->spin.p, 0, 3, 5), 0, 2, P2_FRAC_BITS - 2);
-    state->torque.M = FP_MUL3(state->trim.p2 + P2_DEFAULT , FP_MUL3(I_M , state->spin.q, 0, 3, 5), 0, 2, P2_FRAC_BITS - 2);
+    state->torque.L = FP_MUL3(state->trim.p2 + P2_DEFAULT ,
+                                FP_MUL3(I_L , state->spin.p - state->sensor.sp, 0, 3, 5),
+                                0, 2, P2_FRAC_BITS - 2);
+    state->torque.M = FP_MUL3(state->trim.p2 + P2_DEFAULT ,
+                                FP_MUL3(I_M , state->spin.q - state->sensor.sq, 0, 3, 5),
+                                0, 2, P2_FRAC_BITS - 2);
     // YAW P-value can be zero but we don't want 0 control over here.
     state->torque.N = FP_MUL3(state->trim.yaw_p + YAWP_DEFAULT , (T_INV_I_N * state->spin.r) >> 8, 0, 0, YAWP_FRAC_BITS);
 
@@ -200,8 +204,6 @@ void control_fn(qc_state_t* state) {
  *  Author: Boldizsar Palotas
 **/
 bool trans_fn(qc_state_t* state, qc_mode_t new_mode) {
-    volatile int i = 0;
-    filter(i);
     return IS_SAFE_OR_PANIC_MODE(new_mode);
 }
 
