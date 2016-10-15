@@ -219,18 +219,19 @@ void run_terminal(char* serial, char* js, char* virt_in, char* virt_out) {
 			if (!do_virt) {
 				if ((c = rs232_getchar_nb()) >= 0) {
 					serialcomm_receive_char(&sc, (uint8_t) c);
-				} /*else if (c == -1) {
-					error = true;
-					errormsg = "couldn't read serial device";
-				}*/
+				} else {
+					usleep(500);
+				}
 			} else {
 				if ((c = virt_getchar_nb()) >= 0) {
 					serialcomm_receive_char(&sc, (uint8_t) c);
+				} else {
+					usleep(500);
 				}
 			}
 
 			while (pc_command_get_message(&command, &tx_frame.message)) {
-				while (time_get_ms() - last_msg < 1) { }
+				while (time_get_ms() - last_msg < 1) { usleep(500); }
 				if (tx_frame.message.ID == MESSAGE_SET_P12_ID)
 					fprintf(stderr, "yawp: %d, p1: %d, p2: %d\n",
 						command.trim.yaw_p, command.trim.p1, command.trim.p2);
