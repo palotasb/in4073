@@ -227,7 +227,7 @@ void pc_log_flush(pc_log_t* log) {
     pc_log_print(log, "%d"  _SEP, PC_LOG_ae1, log->state.motor.ae1);
     pc_log_print(log, "%d"  _SEP, PC_LOG_ae2, log->state.motor.ae2);
     pc_log_print(log, "%d"  _SEP, PC_LOG_ae3, log->state.motor.ae3);
-    pc_log_print(log, "%d"  _SEP, PC_LOG_ae4, log->state.motor.ae3);
+    pc_log_print(log, "%d"  _SEP, PC_LOG_ae4, log->state.motor.ae4);
     pc_log_print(log, "%f"  _SEP, PC_LOG_sp,    FLOAT_FP(log->state.sensor.sp, 16));
     pc_log_print(log, "%f"  _SEP, PC_LOG_sq,    FLOAT_FP(log->state.sensor.sq, 16));
     pc_log_print(log, "%f"  _SEP, PC_LOG_sr,    FLOAT_FP(log->state.sensor.sr, 16));
