@@ -42,3 +42,16 @@ uint32_t fp_sqrt(uint32_t n) {
 
     return res;
 }
+
+// pi in q16.16 format
+#define PI_Q16 205887
+
+f16p16_t fp_angle_clip(f16p16_t angle) {
+    while (PI_Q16 < angle) {
+        angle -= 2 * PI_Q16;
+    }
+    while (angle < - PI_Q16) {
+        angle += 2 * PI_Q16;
+    }
+    return angle;
+}

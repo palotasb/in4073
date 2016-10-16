@@ -99,4 +99,6 @@ typedef int8_t          q8_t;
     uint32_t fp_sqrt(uint32_t n);
 #endif // QUADCOPTER
 
+f16p16_t fp_angle_clip(f16p16_t);
+
 #endif // FIXEDPOINT_H

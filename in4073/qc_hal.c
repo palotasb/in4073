@@ -84,15 +84,12 @@ void qc_hal_get_inputs(qc_state_t* state) {
 
 	//convert from int16_t to F16P16
 
-    state->sensor.sphi          = phi * ATT_SCALE_INV;
-    state->sensor.stheta        = theta * ATT_SCALE_INV;
-    state->sensor.spsi          = psi * ATT_SCALE_INV;
-    state->sensor.sax           = sax * ACC_G_SCALE_INV;
-    state->sensor.say           = -say * ACC_G_SCALE_INV;
-    state->sensor.saz           = -saz * ACC_G_SCALE_INV;
-    state->sensor.sp            = sp  * GYRO_G_SCALE_INV;
-    state->sensor.sq            = -sq  * GYRO_G_SCALE_INV;
-    state->sensor.sr            = -sr  * GYRO_G_SCALE_INV; 
+    state->sensor.sax           = sax * ACC_G_SCALE_INV - state->offset.sax;
+    state->sensor.say           = -say * ACC_G_SCALE_INV - state->offset.say;
+    state->sensor.saz           = -saz * ACC_G_SCALE_INV - state->offset.saz;
+    state->sensor.sp            = GYRO_CONV_FROM_NATIVE( sp) - state->offset.sp;
+    state->sensor.sq            = GYRO_CONV_FROM_NATIVE(-sq) - state->offset.sq;
+    state->sensor.sr            = GYRO_CONV_FROM_NATIVE(-sr) - state->offset.sr; 
 
 }
 

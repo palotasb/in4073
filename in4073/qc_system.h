@@ -96,4 +96,6 @@ void qc_system_step(qc_system_t* system);
 
 void qc_system_set_mode(qc_system_t* system, qc_mode_t mode);
 
+void qc_kalman_filter(qc_state_t* state);
+
 #endif // QC_SYSTEM_H

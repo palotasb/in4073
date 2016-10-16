@@ -84,17 +84,6 @@ static bool motor_on_fn(qc_state_t* state);
 static qc_state_att_t   prev_att;
 static qc_state_spin_t  prev_spin;
 
-// filtering
-#define FILT_A_CNT  4
-#define FILT_B_CNT  4
-#define FILT_COEFF_FRAC_BITS    8
-static const int32_t const filt_a[FILT_A_CNT] = {64, 64, 64, 64};
-static int32_t filt_x[FILT_A_CNT];
-static const int32_t const filt_b[FILT_B_CNT] = {0xDEAD, 0, 0, 0};
-static int32_t filt_y[FILT_B_CNT];
-
-static int32_t filter(int32_t val);
-
 /** =======================================================
  *  mode_5_full_init -- Initialise mode table for FULL.
  *  =======================================================
@@ -144,12 +133,16 @@ void control_fn(qc_state_t* state) {
     state->spin.p   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.phi , 0, 2, P1_FRAC_BITS - 2);
     state->spin.q   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.theta , 0, 2, P1_FRAC_BITS - 2);
     // Q16.16 <-- Q6.10
-    state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10) - (state->sensor.sr - state->offset.sr);
+    state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10) - (state->sensor.sr);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
     // Roll/Pitch 2nd P-value (P2) can be zero but we don't want 0 control over here.
-    state->torque.L = FP_MUL3(state->trim.p2 + P2_DEFAULT , FP_MUL3(I_L , state->spin.p, 0, 3, 5), 0, 2, P2_FRAC_BITS - 2);
-    state->torque.M = FP_MUL3(state->trim.p2 + P2_DEFAULT , FP_MUL3(I_M , state->spin.q, 0, 3, 5), 0, 2, P2_FRAC_BITS - 2);
+    state->torque.L = FP_MUL3(state->trim.p2 + P2_DEFAULT ,
+                                FP_MUL3(I_L , state->spin.p - state->sensor.sp, 0, 3, 5),
+                                0, 2, P2_FRAC_BITS - 2);
+    state->torque.M = FP_MUL3(state->trim.p2 + P2_DEFAULT ,
+                                FP_MUL3(I_M , state->spin.q - state->sensor.sq, 0, 3, 5),
+                                0, 2, P2_FRAC_BITS - 2);
     // YAW P-value can be zero but we don't want 0 control over here.
     state->torque.N = FP_MUL3(state->trim.yaw_p + YAWP_DEFAULT , (T_INV_I_N * state->spin.r) >> 8, 0, 0, YAWP_FRAC_BITS);
 
@@ -198,27 +191,6 @@ void control_fn(qc_state_t* state) {
     prev_spin.r = state->spin.r;
 }
 
-int32_t filter(int32_t val) {
-    int32_t y = 0;
-    for (int i = 0; i < FILT_A_CNT - 1; i++) {
-        filt_x[i + 1] = filt_x[i];
-    }
-    filt_x[0] = val;
-    // y = filt_a[0] * filt_x[0] + filt_a[1] * filt_x[1];
-    for (int i = 0; i < FILT_A_CNT; i++) {
-        y += (filt_a[i] * filt_x[i]) >> FILT_COEFF_FRAC_BITS;
-    }
-    // y -= (filt_b[1] * filt_y[1] + filt_b[2] * filt_x[2])
-    for (int i = 1; i < FILT_B_CNT; i++) {
-        y -= (filt_b[i] * filt_y[i]) >> FILT_COEFF_FRAC_BITS;
-    }
-    filt_y[0] = y;
-    for (int i = 0; i < FILT_B_CNT - 1; i++) {
-        filt_y[i + 1] = filt_y[i];
-    }
-    return y;
-}
-
 /** =======================================================
  *  trans_fn -- Mode transition function.
  *  =======================================================
@@ -232,8 +204,6 @@ int32_t filter(int32_t val) {
  *  Author: Boldizsar Palotas
 **/
 bool trans_fn(qc_state_t* state, qc_mode_t new_mode) {
-    volatile int i = 0;
-    filter(i);
     return IS_SAFE_OR_PANIC_MODE(new_mode);
 }
 
@@ -259,13 +229,6 @@ void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
     prev_spin.p = state->spin.p;
     prev_spin.q = state->spin.q;
     prev_spin.r = state->spin.r;
-
-    for (int i = 0; i < FILT_A_CNT; i++) {
-        filt_x[i] = 0;
-    }
-    for (int i = 0; i < FILT_B_CNT; i++) {
-        filt_y[i] = 0;
-    }
 }
 
 /** =======================================================
