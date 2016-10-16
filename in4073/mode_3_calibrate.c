@@ -45,9 +45,9 @@ void mode_3_calibrate_init(qc_mode_table_t* mode_table) {
 void control_fn(qc_state_t* state) {
 
 	if(cal_state.busy){
-		 cal_state.sp 			+= FP_CHUNK(state->sensor.sp, 8, 16);
-		 cal_state.sq			+= FP_CHUNK(state->sensor.sq, 8, 16);
-		 cal_state.sr			+= FP_CHUNK(state->sensor.sr, 8, 16);
+		 cal_state.sp 		+= FP_CHUNK(state->sensor.sp, 8, 16);
+		 cal_state.sq		+= FP_CHUNK(state->sensor.sq, 8, 16);
+		 cal_state.sr		+= FP_CHUNK(state->sensor.sr, 8, 16);
 		 cal_state.sax 		+= FP_CHUNK(state->sensor.sax, 8, 16);
 		 cal_state.say 		+= FP_CHUNK(state->sensor.say, 8, 16);
 		 cal_state.saz 		+= FP_CHUNK(state->sensor.saz, 8, 16);
@@ -55,12 +55,12 @@ void control_fn(qc_state_t* state) {
 		 //update offset
 		 if(cal_state.counter++ == CALIBRATE_SAMPLES - 1){ 
 			 cal_state.busy = false;
-			 state->offset.sp  =	FP_EXTEND(cal_state.sp, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
-			 state->offset.sq  =	FP_EXTEND(cal_state.sq, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
-			 state->offset.sr  =	FP_EXTEND(cal_state.sr, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
-			 state->offset.sax =	FP_EXTEND(cal_state.sax, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
-			 state->offset.say =	FP_EXTEND(cal_state.say, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
-			 state->offset.saz =	FP_EXTEND(cal_state.saz, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.sp  +=	FP_EXTEND(cal_state.sp, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.sq  +=	FP_EXTEND(cal_state.sq, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.sr  +=	FP_EXTEND(cal_state.sr, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.sax +=	FP_EXTEND(cal_state.sax, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.say +=	FP_EXTEND(cal_state.say, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.saz +=	FP_EXTEND(cal_state.saz, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
 			 printf("Calibration done\n");
 		}		
 	}
@@ -80,7 +80,7 @@ void control_fn(qc_state_t* state) {
  *  Author: Boldizsar Palotas
 **/
 bool trans_fn(qc_state_t* state, qc_mode_t new_mode) {
-    return IS_SAFE_OR_PANIC_MODE(new_mode);
+    return IS_SAFE_OR_PANIC_MODE(new_mode) || new_mode == MODE_3_CALIBRATE;
 }
 
 /** =======================================================
