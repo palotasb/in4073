@@ -159,9 +159,15 @@
 // in offline no-joystick tests.
 #define YAW_SHIFT      5
 
+// Control loop time constant in seconds
+// 0.01s in Q16.16 format
+#define T_CONST_FRAC_BITS       10
+#define T_CONST                 ((q32_t) FP_FLOAT(0.01, T_CONST_FRAC_BITS))
+
 // Inverse of the control loop time constant in seconds
 // 1 / (0.01 [s]) = 1000 / 10 [1/s] in Q24.8 format.
-#define T_INV       ((q32_t)(FP_FRAC(1000, 10, 8)))
+#define T_INV_FRAC_BITS         8
+#define T_INV                   ((q32_t)(FP_FRAC(1000, 10, T_INV_FRAC_BITS)))
 
 // Moment of inertia around the x, y, z axis (for L, M, N torque) [N m]
  // [N m] in Q24.8 format.
@@ -197,6 +203,9 @@
 #define PI_Q29      1686629713
 //                   \  \  \  \.
 
+// Value of pi/2 in a Qx.30 format (highest precision if 3 <= x)
+#define PI_2_Q30    PI_Q29
+
 // Value of pi/180 in a Qx.36 format (highest precision, x can be -4).
 // The values of the integer and missing fractional part are zero.
 // This is valid int32_t (not just uint32_t)
@@ -223,9 +232,23 @@
 //Its in F16P16 format, meaning 1 over 16384 (= 0.000061035)
 #define ACC_G_SCALE_INV 4
 
-//gyroscope scale factor: 1 over the amount of bits per G
-//Its in F16P16 format, meaning 1 over 131 (= 0,007633588)
-#define GYRO_G_SCALE_INV 500
+// Gyroscope scale factor:
+// FS_native = +/- 2000 DPS = +/- 34.906 rad/s = 69.813 rad/s
+// precn_native = FS / (2^16 bit) = 0,001065 (rad/s)/bit
+// precn_target = (1 rad/s) / (2^16 bit)
+//
+// repr_native [bits] * precn_native [rad/s/bit] = value [rad/s]
+//
+//                 repr_native [bits] * precn_target [(rad/s)/bit]
+// value [rad/s] = -----------------------------------------------
+//                          precn_native [(rad/s)/bits]
+//
+// repr_target = repr_native * GYRO_CONV_CONST
+// repr_target = repr_native * 69.81317
+
+#define GYRO_CONV_CONST_FRAC_BITS       10
+#define GYRO_CONV_CONST                 ((f16p16_t) FP_FLOAT(69.81317, GYRO_CONV_CONST_FRAC_BITS))
+#define GYRO_CONV_FROM_NATIVE(value)    FP_MUL1((int32_t)(value) , GYRO_CONV_CONST, GYRO_CONV_CONST_FRAC_BITS)
 
 #define ATT_SCALE_INV 3
 
@@ -248,5 +271,13 @@
 #define YAWP_MAX        FP_INT(10, YAWP_FRAC_BITS)
 #define YAWP_DEFAULT    (FP_FRAC(1, 64,   YAWP_FRAC_BITS) + 4)
 #define YAWP_MIN        (-(YAWP_DEFAULT) + 1)
+
+// Kalman filter constants
+
+#define KALMAN_WEIGHT_FRAC_BITS      12
+#define KALMAN_GYRO_WEIGHT      ((q32_t) FP_FLOAT(.99f, KALMAN_WEIGHT_FRAC_BITS))
+#define KALMAN_ACC_WEIGHT       (FP_INT(1, KALMAN_WEIGHT_FRAC_BITS) - KALMAN_GYRO_WEIGHT)
+#define KALMAN_M_FRAC_BITS      10
+#define KALMAN_M                (PI_2_Q30 >> 20)
 
 #endif // MODE_CONSTANTS_H

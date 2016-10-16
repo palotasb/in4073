@@ -133,7 +133,7 @@ void control_fn(qc_state_t* state) {
     state->spin.p   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.phi , 0, 2, P1_FRAC_BITS - 2);
     state->spin.q   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.theta , 0, 2, P1_FRAC_BITS - 2);
     // Q16.16 <-- Q6.10
-    state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10) - (state->sensor.sr - state->offset.sr);
+    state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10) - (state->sensor.sr);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
     // Roll/Pitch 2nd P-value (P2) can be zero but we don't want 0 control over here.
