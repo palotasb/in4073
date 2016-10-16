@@ -157,7 +157,7 @@
 #define PITCH_SHIFT    0
 // This could be 10 based on the LAB-4 tests but it seemed too large
 // in offline no-joystick tests.
-#define YAW_SHIFT      5
+#define YAW_SHIFT      2
 
 // Control loop time constant in seconds
 // 0.01s in Q16.16 format
