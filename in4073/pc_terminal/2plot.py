@@ -132,14 +132,14 @@ class SubplotAnimation(animation.TimedAnimation):
         self.ax_force.set_ylabel('Force [N]')
         self.ax_force.set_ylim(-5, 5)
         self.ax_setpoint.set_ylabel('Setpoints [?]')
-        self.axes_autoscale = self.axes_autoscale + [self.ax_setpoint]
+        self.ax_setpoint.set_ylim(-0.6, 0.6)
         self.ax_motor.set_ylabel('Motor')
         self.ax_motor.set_ylim(0, 1000)
 
         self.ax_att.set_ylabel('Attitude [rad]')
-        self.ax_att.set_ylim(-np.pi, np.pi)
+        self.ax_att.set_ylim(-np.pi/2, np.pi/2)
         self.ax_spin.set_ylabel('Spin [rad/s]')
-        self.ax_spin.set_ylim(-3*np.pi, 3*np.pi)
+        self.ax_spin.set_ylim(-15*np.pi, 15*np.pi)
         self.ax_torque.set_ylabel('Torque [N m]')
         self.ax_torque.set_ylim(-10, 10)
         self.ax_sp.set_ylabel('Sensor spin [rad/s]')
@@ -147,7 +147,6 @@ class SubplotAnimation(animation.TimedAnimation):
         self.ax_sacc.set_ylabel('Sensor acc [m/s/s]')
         self.ax_sacc.set_ylim(-2.1, 2.1)
         self.ax_satt.set_ylabel('Sensor att [rad]')
-        #self.axes_autoscale = self.axes_autoscale + [self.ax_satt]
         self.ax_satt.set_ylim(-np.pi, np.pi)
 
         # COLORS
@@ -195,10 +194,10 @@ class SubplotAnimation(animation.TimedAnimation):
         self.lines_force = [self.line_X, self.line_Y, self.line_Z]
         for l in self.lines_force:
             self.ax_force.add_line(l)
-        self.line_lift  = Line2D([], [], color=c1, label='lift')
-        self.line_roll  = Line2D([], [], color=c2, label='roll')
-        self.line_pitch = Line2D([], [], color=c3, label='pitch')
-        self.line_yaw   = Line2D([], [], color=c4, label='yaw')
+        self.line_lift  = Line2D([], [], color=c4, label='lift')
+        self.line_roll  = Line2D([], [], color=c1, label='roll')
+        self.line_pitch = Line2D([], [], color=c2, label='pitch')
+        self.line_yaw   = Line2D([], [], color=c3, label='yaw')
         self.lines_setpoint = [self.line_lift, self.line_roll, self.line_pitch, self.line_yaw]
         for l in self.lines_setpoint:
             self.ax_setpoint.add_line(l)
