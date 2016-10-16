@@ -115,7 +115,7 @@ class SubplotAnimation(animation.TimedAnimation):
         self.axes_autoscale = []
 
         self.ax_mode.set_ylabel('mode')
-        self.ax_mode.set_ylim(-0.5, 6.5)
+        self.ax_mode.set_ylim(-0.5, 5.5)
         self.ax_voltage.set_ylabel('Voltage [V]')
         self.ax_voltage.set_ylim(0, 15)
         self.ax_pressure.set_ylabel('Pressure [kPa]')

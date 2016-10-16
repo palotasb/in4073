@@ -72,11 +72,6 @@ static bool trans_fn(qc_state_t* state, qc_mode_t new_mode);
 static void enter_fn(qc_state_t* state, qc_mode_t old_mode);
 static bool motor_on_fn(qc_state_t* state);
 
-// Structs containing the relevant previous-iteration values.
-static qc_state_att_t   prev_att;
-static qc_state_spin_t  prev_spin;
-
-
 /** =======================================================
  *  mode_2_manual_init -- Initialise mode table for MANUAL.
  *  =======================================================
@@ -123,20 +118,20 @@ void control_fn(qc_state_t* state) {
     state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
-    state->spin.p   = (T_INV * (state->att.phi - prev_att.phi)) >> 8;
-    state->spin.q   = (T_INV * (state->att.theta - prev_att.theta)) >> 8;
+    state->spin.p   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.phi , 0, 2, P1_FRAC_BITS - 2);
+    state->spin.q   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.theta , 0, 2, P1_FRAC_BITS - 2);
     // Q16.16 <-- Q6.10
     state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
-    state->torque.L = (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
-    state->torque.M = (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
-    state->torque.N = (T_INV_I_N * (state->spin.r - prev_spin.r)) >> 8;
-
-    // Override
-    //state->torque.L = state->att.phi   * 2;
-    //state->torque.M = state->att.theta * 2;
-    //state->torque.N = state->spin.r;
+    state->torque.L = FP_MUL3(state->trim.p2 + P2_DEFAULT ,
+                              FP_MUL3(I_L , state->spin.p, 0, 3, 5),
+                              0, 2, P2_FRAC_BITS - 2);
+    state->torque.M = FP_MUL3(state->trim.p2 + P2_DEFAULT ,
+                              FP_MUL3(I_M , state->spin.q, 0, 3, 5),
+                              0, 2, P2_FRAC_BITS - 2);
+    state->torque.N = FP_MUL3(state->trim.yaw_p + YAWP_DEFAULT ,
+                             (T_INV_I_N * state->spin.r) >> 8, 0, 0, YAWP_FRAC_BITS);
 
     // See project_dir/control_ae.m MATLAB file for calculations.
     // ae_1^2 = -1/(4b') Z +        0 L +  1/(2b') M + -1/(4d') N
@@ -163,24 +158,13 @@ void control_fn(qc_state_t* state) {
     counter++;
 
     if ((counter & 0x38) == 0x38) {
-        //printf("T_INV %"PRId32", dphi %"PRId32" dtheta %"PRId32"\n", T_INV, (state->att.phi - prev_att.phi), (state->att.theta - prev_att.theta));
         //printf("LRPY: %"PRId16" %"PRId16" %"PRId16" %"PRId16"\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
         //printf("phi theta: %"PRId32" %"PRId32"\n", state->att.phi, state->att.theta);
-        printf("pqr: %"PRId32" %"PRId32" %"PRId32"\n", state->spin.p, state->spin.q, state->spin.r);
-        printf("ZLMN: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
-        printf("ae_sq: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
-        printf("ae: %"PRIu16" %"PRIu16" %"PRIu16" %"PRIu16"\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
+        //printf("pqr: %"PRId32" %"PRId32" %"PRId32"\n", state->spin.p, state->spin.q, state->spin.r);
+        //printf("ZLMN: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
+        //printf("ae_sq: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
+        //printf("ae: %"PRIu16" %"PRIu16" %"PRIu16" %"PRIu16"\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
     }
-
-    // Save values as prev_state for next iteration.
-    // ---------------------------------------------
-    prev_att.phi = state->att.phi;
-    prev_att.theta = state->att.theta;
-    // Saving psi is unneded
-
-    prev_spin.p = state->spin.p;
-    prev_spin.q = state->spin.q;
-    prev_spin.r = state->spin.r;
 }
 
 /** =======================================================
@@ -215,12 +199,6 @@ void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
     state->force.X  = 0;
     state->force.Y  = 0;
     state->att.psi = 0;
-
-    prev_att.phi = state->att.phi;
-    prev_att.theta = state->att.theta;
-    prev_spin.p = state->spin.p;
-    prev_spin.q = state->spin.q;
-    prev_spin.r = state->spin.r;
 }
 
 /** =======================================================

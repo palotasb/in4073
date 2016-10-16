@@ -19,12 +19,11 @@ typedef enum qc_mode {
     MODE_3_CALIBRATE    = 3,
     MODE_4_YAW          = 4,
     MODE_5_FULL_CONTROL = 5,
-    MODE_D_DIRECT       = 6,
     MODE_UNKNOWN        = 0xFF
 } qc_mode_t;
 
 // The number of valid flight modes
-#define MODE_COUNT  7
+#define MODE_COUNT  6
 
 // Returns whether a number is a valid flight mode
 #define IS_VALID_MODE(mode_id)  ((mode_id) == MODE_0_SAFE || \
@@ -32,8 +31,7 @@ typedef enum qc_mode {
                                 (mode_id) == MODE_2_MANUAL || \
                                 (mode_id) == MODE_3_CALIBRATE || \
                                 (mode_id) == MODE_4_YAW || \
-                                (mode_id) == MODE_5_FULL_CONTROL || \
-                                (mode_id) == MODE_D_DIRECT)
+                                (mode_id) == MODE_5_FULL_CONTROL)
 
 // Returns whether a flight mode is safe or panic (the ones which can be reached from any mode)
 #define IS_SAFE_OR_PANIC_MODE(mode_id) ((mode_id) == MODE_0_SAFE || (mode_id) == MODE_1_PANIC)
