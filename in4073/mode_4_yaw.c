@@ -138,21 +138,23 @@ void control_fn(qc_state_t* state) {
     state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
-    state->spin.p   = (T_INV * (state->att.phi - prev_att.phi)) >> 8;
-    state->spin.q   = (T_INV * (state->att.theta - prev_att.theta)) >> 8;
+    state->spin.p   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.phi , 0, 2, P1_FRAC_BITS - 2);
+    state->spin.q   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.theta , 0, 2, P1_FRAC_BITS - 2);
     // Q16.16 <-- Q6.10
     //state->sensor.sr = filter(state->sensor.sr);
-    state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10) - (state->sensor.sr - state->offset.sr);
+    state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10) - (state->sensor.sr);
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
-    state->torque.L = (T_INV_I_L * (state->spin.p - prev_spin.p)) >> 8;
-    state->torque.M = (T_INV_I_M * (state->spin.q - prev_spin.q)) >> 8;
+    state->torque.L = FP_MUL3(state->trim.p2 + P2_DEFAULT ,
+                              FP_MUL3(I_L , state->spin.p, 0, 3, 5),
+                              0, 2, P2_FRAC_BITS - 2);
+    state->torque.M = FP_MUL3(state->trim.p2 + P2_DEFAULT ,
+                              FP_MUL3(I_M , state->spin.q, 0, 3, 5),
+                              0, 2, P2_FRAC_BITS - 2);
     // YAW P-value can be zero but we don't want 0 control over here.
-    state->torque.N = ((state->trim.yaw_p + YAWP_DEFAULT) * ((T_INV_I_N * (state->spin.r)) >> 8)) >> YAWP_FRAC_BITS;
-
-    // Override
-    state->torque.L = FP_EXTEND(state->orient.roll, 16, 14);
-    state->torque.M = FP_EXTEND(state->orient.pitch, 16, 14);
+    state->torque.N = FP_MUL3(state->trim.yaw_p + YAWP_DEFAULT ,
+                              FP_MUL3(T_INV_I_N , state->spin.r, 0, 3, T_INV_FRAC_BITS - 3),
+                              0, 3, YAWP_FRAC_BITS - 3);
 
     // See project_dir/control_ae.m MATLAB file for calculations.
     // ae_1^2 = -1/(4b') Z +        0 L +  1/(2b') M + -1/(4d') N

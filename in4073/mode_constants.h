@@ -170,19 +170,20 @@
 #define T_INV                   ((q32_t)(FP_FRAC(1000, 10, T_INV_FRAC_BITS)))
 
 // Moment of inertia around the x, y, z axis (for L, M, N torque) [N m]
- // [N m] in Q24.8 format.
+// [N m] in Q24.8 format.
 #define I_L         FP_FRAC(1, 32, 8)
- // [N m] in Q24.8 format.
+// [N m] in Q24.8 format.
 #define I_M         FP_FRAC(1, 32, 8)
- // [N m] in Q24.8 format.
-#define I_N         FP_FRAC(1, 64, 8)
+// [N m] in Q24.8 format.
+#define I_N_FRAC_BITS   8
+#define I_N             ((int32_t)FP_FLOAT(0.25, I_N_FRAC_BITS))
 
 // Inverse of the product of the control loop time constant and the
 // moment of inertia for the L, M, N torque
 // Q24.8
 #define T_INV_I_L   FP_MUL1(T_INV, I_L, 8)
 #define T_INV_I_M   FP_MUL1(T_INV, I_M, 8)
-#define T_INV_I_N   FP_MUL1(T_INV, I_N, 8)
+#define T_INV_I_N   FP_MUL1(T_INV, I_N, I_N_FRAC_BITS)
 // FP_MUL1 is the post-shifted fixp multiplication.
 
 // The b' and d' constants and some commonly-used multiples of them.
@@ -267,9 +268,9 @@
 #define P2_DEFAULT      (FP_FRAC(1, 2,   P2_FRAC_BITS) + 127)
 #define P2_MIN          (-(P2_DEFAULT) + 1)
 
-#define YAWP_FRAC_BITS  7
+#define YAWP_FRAC_BITS  10
 #define YAWP_MAX        FP_INT(10, YAWP_FRAC_BITS)
-#define YAWP_DEFAULT    (FP_FRAC(1, 64,   YAWP_FRAC_BITS) + 4)
+#define YAWP_DEFAULT    ((int32_t) FP_FLOAT(0.035f, YAWP_FRAC_BITS))
 #define YAWP_MIN        (-(YAWP_DEFAULT) + 1)
 
 // Kalman filter constants
