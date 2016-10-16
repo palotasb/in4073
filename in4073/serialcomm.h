@@ -58,8 +58,51 @@ typedef struct message {
 
 // Messages in the Quadcopter -> PC direction
 
-// MESSAGE 0
+// Start loggable messages
+
 #define MESSAGE_TIME_MODE_VOLTAGE_ID    0
+#define MESSAGE_SPQR_ID                 1
+#define MESSAGE_SAXYZ_ID                2
+#define MESSAGE_S_ATT_ID                3
+
+#define MESSAGE_AE1234_ID               4
+#define MESSAGE_LMN_ID                  5
+#define MESSAGE_PQR_ID                  6
+#define MESSAGE_PHI_THETA_PSI_ID        7
+
+#define MESSAGE_SETPOINT_ID             8
+#define MESSAGE_XYZFORCE_ID             9
+#define MESSAGE_UVW_ID                  10
+#define MESSAGE_XYZPOS_ID               11
+
+#define MESSAGE_TEMP_PRESSURE_ID        12
+#define MESSAGE_P12_ID                  13
+// 14
+// 15
+
+#define MESSAGE_PROFILE_0_CURR_ID       16
+#define MESSAGE_PROFILE_1_CURR_ID       17
+#define MESSAGE_PROFILE_2_CURR_ID       18
+#define MESSAGE_PROFILE_3_CURR_ID       19
+
+#define MESSAGE_PROFILE_4_CURR_ID       20
+#define MESSAGE_PROFILE_0_MAX_ID        21
+#define MESSAGE_PROFILE_1_MAX_ID        22
+#define MESSAGE_PROFILE_2_MAX_ID        23
+
+#define MESSAGE_PROFILE_3_MAX_ID        24
+#define MESSAGE_PROFILE_4_MAX_ID        25
+
+// End loggable messages
+// Start control messages
+
+#define MESSAGE_LOG_END_ID              32
+#define MESSAGE_LOG_START_ID            33
+#define MESSAGE_TEXT_ID                 34
+
+// End control messages
+
+// MESSAGE_TIME_MODE_VOLTAGE_ID
 
 #define MESSAGE_TIME_ID                 MESSAGE_TIME_MODE_VOLTAGE_ID
 #define MESSAGE_TIME_VALUE(message)     ((message)->value.v32[0])
@@ -70,8 +113,7 @@ typedef struct message {
 #define MESSAGE_VOLTAGE_ID              MESSAGE_TIME_MODE_VOLTAGE_ID
 #define MESSAGE_VOLTAGE_VALUE(message)  ((message)->value.v16[3])
 
-// MESSAGE 1
-#define MESSAGE_SPQR_ID                 1
+// MESSAGE_SPQR_ID
 
 #define MESSAGE_SP_ID                   MESSAGE_SPQR_ID
 #define MESSAGE_SP_VALUE(message)       ((message)->value.i16[0])
@@ -82,8 +124,7 @@ typedef struct message {
 #define MESSAGE_SR_ID                   MESSAGE_SPQR_ID
 #define MESSAGE_SR_VALUE(message)       ((message)->value.i16[2])
 
-// MESSAGE 2
-#define MESSAGE_SAXYZ_ID                2
+// MESSAGE_SAX_ID
 
 #define MESSAGE_SAX_ID                  MESSAGE_SAXYZ_ID
 #define MESSAGE_SAX_VALUE(message)      ((message)->value.i16[0])
@@ -94,8 +135,18 @@ typedef struct message {
 #define MESSAGE_SAZ_ID                  MESSAGE_SAXYZ_ID
 #define MESSAGE_SAZ_VALUE(message)      ((message)->value.i16[2])
 
-// MESSAGE 3
-#define MESSAGE_AE1234_ID               3
+// MESSAGE MESSAGE_S_ATT_ID
+
+#define MESSAGE_S_PHI_ID                MESSAGE_S_ATT_ID
+#define MESSAGE_S_PHI_VALUE(message)    ((message)->value.i16[0])
+
+#define MESSAGE_S_THETA_ID              MESSAGE_S_ATT_ID
+#define MESSAGE_S_THETA_VALUE(message)  ((message)->value.i16[1])
+
+#define MESSAGE_S_PSI_ID                MESSAGE_S_ATT_ID
+#define MESSAGE_S_PSI_VALUE(message)    ((message)->value.i16[2])
+
+// MESSAGE_AE1234_ID
 
 #define MESSAGE_AE1_ID                  MESSAGE_AE1234_ID
 #define MESSAGE_AE1_VALUE(message)      ((message)->value.v16[0])
@@ -109,8 +160,7 @@ typedef struct message {
 #define MESSAGE_AE4_ID                  MESSAGE_AE1234_ID
 #define MESSAGE_AE4_VALUE(message)      ((message)->value.v16[3])
 
-// MESSAGE 4
-#define MESSAGE_TEMP_PRESSURE_ID        4
+// MESSAGE_TEMP_PRESSURE_ID
 
 #define MESSAGE_TEMP_ID                 MESSAGE_TEMP_PRESSURE_ID
 #define MESSAGE_TEMP_VALUE(message)     ((message)->value.v16[0])
@@ -118,8 +168,7 @@ typedef struct message {
 #define MESSAGE_PRESSURE_ID             MESSAGE_TEMP_PRESSURE_ID
 #define MESSAGE_PRESSURE_VALUE(message) ((message)->value.v32[1])
 
-// MESSAGE 5
-#define MESSAGE_XYZPOS_ID               5
+// MESSAGE_XYZPOS_ID
 
 #define MESSAGE_XPOS_ID                 MESSAGE_XYZPOS_ID
 #define MESSAGE_XPOS_VALUE(message)     ((message)->value.i16[0])
@@ -130,8 +179,7 @@ typedef struct message {
 #define MESSAGE_ZPOS_ID                 MESSAGE_XYZPOS_ID
 #define MESSAGE_ZPOS_VALUE(message)     ((message)->value.i16[2])
 
-// MESSAGE 6
-#define MESSAGE_PHI_THETA_PSI_ID        6
+// MESSAGE_PHI_THETA_PSI_ID
 
 #define MESSAGE_PHI_ID                  MESSAGE_PHI_THETA_PSI_ID
 #define MESSAGE_PHI_VALUE(message)      ((message)->value.i16[0])
@@ -142,8 +190,7 @@ typedef struct message {
 #define MESSAGE_PSI_ID                  MESSAGE_PHI_THETA_PSI_ID
 #define MESSAGE_PSI_VALUE(message)      ((message)->value.i16[2])
 
-// MESSAGE 7
-#define MESSAGE_XYZFORCE_ID             7
+// MESSAGE_XYZFORCE_ID
 
 #define MESSAGE_XFORCE_ID               MESSAGE_XYZFORCE_ID
 #define MESSAGE_XFORCE_VALUE(message)   ((message)->value.i16[0])
@@ -154,8 +201,7 @@ typedef struct message {
 #define MESSAGE_ZFORCE_ID               MESSAGE_XYZFORCE_ID
 #define MESSAGE_ZFORCE_VALUE(message)   ((message)->value.i16[2])
 
-// MESSAGE 8
-#define MESSAGE_LMN_ID                  8
+// MESSAGE_LMN_ID
 
 #define MESSAGE_L_ID                    MESSAGE_LMN_ID
 #define MESSAGE_L_VALUE(message)        ((message)->value.i16[0])
@@ -166,8 +212,7 @@ typedef struct message {
 #define MESSAGE_N_ID                    MESSAGE_LMN_ID
 #define MESSAGE_N_VALUE(message)        ((message)->value.i16[2])
 
-// MESSAGE 9
-#define MESSAGE_UVW_ID                  9
+// MESSAGE_UVW_ID
 
 #define MESSAGE_U_ID                    MESSAGE_UVW_ID
 #define MESSAGE_U_VALUE(message)        ((message)->value.i16[0])
@@ -178,8 +223,7 @@ typedef struct message {
 #define MESSAGE_W_ID                    MESSAGE_UVW_ID
 #define MESSAGE_W_VALUE(message)        ((message)->value.i16[2])
 
-// MESSAGE 10
-#define MESSAGE_PQR_ID                  10
+// MESSAGE_PQR_ID
 
 #define MESSAGE_P_ID                    MESSAGE_PQR_ID
 #define MESSAGE_P_VALUE(message)        ((message)->value.i16[0])
@@ -190,8 +234,7 @@ typedef struct message {
 #define MESSAGE_R_ID                    MESSAGE_PQR_ID
 #define MESSAGE_R_VALUE(message)        ((message)->value.i16[2])
 
-// MESSAGE 11
-#define MESSAGE_P12_ID                  11
+// MESSAGE_P12_ID
 
 #define MESSAGE_P1_ID                   MESSAGE_P12_ID
 #define MESSAGE_P1_VALUE(message)       ((message)->value.i16[0])
@@ -202,8 +245,7 @@ typedef struct message {
 #define MESSAGE_YAWP_ID                 MESSAGE_P12_ID
 #define MESSAGE_YAWP_VALUE(message)     ((message)->value.i16[2])
 
-// MESSAGE 12
-#define MESSAGE_SETPOINT_ID             12
+// MESSAGE_SETPOINT_ID
 
 #define MESSAGE_SETPOINT_LIFT_ID        MESSAGE_SETPOINT_ID
 #define MESSAGE_SETPOINT_LIFT_VALUE(message) ((message)->value.i16[0])
@@ -217,31 +259,13 @@ typedef struct message {
 #define MESSAGE_SETPOINT_YAW_ID         MESSAGE_SETPOINT_ID
 #define MESSAGE_SETPOINT_YAW_VALUE(message) ((message)->value.i16[3])
 
-
-//MESSAGE 20-29
-#define MESSAGE_PROFILE_0_CURR_ID       20
-#define MESSAGE_PROFILE_1_CURR_ID       21
-#define MESSAGE_PROFILE_2_CURR_ID       22
-#define MESSAGE_PROFILE_3_CURR_ID       23
-#define MESSAGE_PROFILE_4_CURR_ID       24
-
-#define MESSAGE_PROFILE_0_MAX_ID        25
-#define MESSAGE_PROFILE_1_MAX_ID        26
-#define MESSAGE_PROFILE_2_MAX_ID        27
-#define MESSAGE_PROFILE_3_MAX_ID        28
-#define MESSAGE_PROFILE_4_MAX_ID        29
+// MESSAGE_PROFILE_0-4_CURR_ID
+// MESSAGE_PROFILE_0-4_MAX_ID
 
 #define MESSAGE_PROFILE_TIME_VALUE(message) ((message)->value.v32[0])
 #define MESSAGE_PROFILE_TAG_VALUE(message)  ((message)->value.v32[1])
 
-// MESSAGE 32
-#define MESSAGE_LOG_END_ID              32
-
-// MESSAGE 33
-#define MESSAGE_LOG_START_ID            33
-
-// MESSAGE 34
-#define MESSAGE_TEXT_ID                 34
+// MESSAGE_TEXT_ID
 
 #define MESSAGE_TEXT_VALUE(message)     ((message)->value.v8[0])
 

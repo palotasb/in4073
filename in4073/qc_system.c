@@ -217,6 +217,11 @@ static void qc_system_log_data(qc_system_t* system) {
                 MESSAGE_P2_VALUE(&msg) = system->state->trim.p2;
                 MESSAGE_YAWP_VALUE(&msg) = system->state->trim.yaw_p;
                 break;
+            case MESSAGE_S_ATT_ID:
+                MESSAGE_S_PHI_VALUE(&msg)   = FP_CHUNK(system->state->sensor.sphi, 8, 16);
+                MESSAGE_S_THETA_VALUE(&msg) = FP_CHUNK(system->state->sensor.stheta, 8, 16);
+                MESSAGE_S_PSI_VALUE(&msg)   = FP_CHUNK(system->state->sensor.spsi, 8, 16);
+                break;
             case MESSAGE_PROFILE_0_CURR_ID:
             case MESSAGE_PROFILE_1_CURR_ID:
             case MESSAGE_PROFILE_2_CURR_ID:
