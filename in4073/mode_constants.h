@@ -276,9 +276,11 @@
 // Kalman filter constants
 
 #define KALMAN_WEIGHT_FRAC_BITS      12
-#define KALMAN_GYRO_WEIGHT      ((q32_t) FP_FLOAT(.99f, KALMAN_WEIGHT_FRAC_BITS))
+#define KALMAN_GYRO_WEIGHT      ((q32_t) FP_FLOAT(.995f, KALMAN_WEIGHT_FRAC_BITS))
 #define KALMAN_ACC_WEIGHT       (FP_INT(1, KALMAN_WEIGHT_FRAC_BITS) - KALMAN_GYRO_WEIGHT)
+
+// Magic constant 0.6f is needed becaus gyro and accelerometer don't agree on the angle.
 #define KALMAN_M_FRAC_BITS      10
-#define KALMAN_M                (PI_2_Q30 >> 20)
+#define KALMAN_M                ((int32_t) FP_FLOAT(0.6f * 3.141592f / 2, KALMAN_M_FRAC_BITS))
 
 #endif // MODE_CONSTANTS_H

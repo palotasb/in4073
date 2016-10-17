@@ -3,6 +3,7 @@
 #include "mode_constants.h"
 #include "printf.h"
 #include "log.h"
+#include <math.h>
 
 #define SAFE_VOLTAGE 1050
 extern bool is_test_device;
@@ -103,13 +104,13 @@ void qc_kalman_filter(qc_state_t* state) {
     state->sensor.sphi = fp_angle_clip(
         FP_MUL1(FP_MUL1(T_CONST , state->sensor.sp, T_CONST_FRAC_BITS) + state->sensor.sphi,
                 KALMAN_GYRO_WEIGHT, KALMAN_WEIGHT_FRAC_BITS)
-        + FP_MUL1(FP_MUL1( - state->sensor.say, KALMAN_M, KALMAN_M_FRAC_BITS),
+        + FP_MUL1(fp_asin_t1(FP_MUL1( - state->sensor.say, KALMAN_M, KALMAN_M_FRAC_BITS)),
                 KALMAN_ACC_WEIGHT, KALMAN_WEIGHT_FRAC_BITS));
 
     state->sensor.stheta = fp_angle_clip(
         FP_MUL1(FP_MUL1(T_CONST , state->sensor.sq, T_CONST_FRAC_BITS) + state->sensor.stheta,
                 KALMAN_GYRO_WEIGHT, KALMAN_WEIGHT_FRAC_BITS)
-      + FP_MUL1(FP_MUL1(state->sensor.sax, KALMAN_M, KALMAN_M_FRAC_BITS),
+      + FP_MUL1(fp_asin_t1(FP_MUL1(state->sensor.sax, KALMAN_M, KALMAN_M_FRAC_BITS)),
                 KALMAN_ACC_WEIGHT, KALMAN_WEIGHT_FRAC_BITS));
 
     state->sensor.spsi = fp_angle_clip(state->sensor.spsi +
