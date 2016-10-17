@@ -61,6 +61,7 @@ void control_fn(qc_state_t* state) {
 			 state->offset.sax +=	FP_EXTEND(cal_state.sax, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
 			 state->offset.say +=	FP_EXTEND(cal_state.say, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
 			 state->offset.saz +=	FP_EXTEND(cal_state.saz, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.calibrated = true;
 			 printf("Calibration done\n");
 		}		
 	}
