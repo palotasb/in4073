@@ -186,7 +186,9 @@ void control_fn(qc_state_t* state) {
                               FP_MUL3(I_M , spin_q, 0, 3, 5),
                               0, 2, P2_FRAC_BITS - 2);
     // YAW P-value can be zero but we don't want 0 control over here.
-    state->torque.N = FP_MUL3(state->trim.yaw_p + YAWP_DEFAULT , (T_INV_I_N * state->spin.r) >> 8, 0, 0, YAWP_FRAC_BITS);
+    state->torque.N = FP_MUL3(state->trim.yaw_p + YAWP_DEFAULT ,
+                              FP_MUL3(T_INV_I_N , state->spin.r, 4, 4, 0),
+                              0, 0, YAWP_FRAC_BITS);
 
     // See project_dir/control_ae.m MATLAB file for calculations.
     // ae_1^2 = -1/(4b') Z +        0 L +  1/(2b') M + -1/(4d') N
