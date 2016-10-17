@@ -57,13 +57,24 @@ bool trans_fn(qc_state_t* state, qc_mode_t new_mode) {
  *  enter_fn -- Mode enter function.
  *  =======================================================
  *  This function is called upon entering this mode.
+ *  It will reset all options, and some of the state values
  *
  *  Parameters:
  *  - state: The current state of the quadcopter.
  *  - old_mode: The previous mode.
- *  Author: Boldizsar Palotas
+ *  Author: Koos Eerden
 **/
 void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
+    
+    qc_state_clear_option(state);
+    qc_state_clear_motor(state);
+    qc_state_clear_pos(state);
+    qc_state_clear_att(state);
+    qc_state_clear_force(state);
+    qc_state_clear_torque(state);
+    qc_state_clear_velo(state);
+    qc_state_clear_spin(state);
+    printf("motors disabled\n");
 	return;
 }
 
