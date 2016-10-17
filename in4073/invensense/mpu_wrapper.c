@@ -75,7 +75,7 @@ void imu_init(bool dmp, uint16_t freq)
 					     0, 0, 1};
 
 	// we don't need the raw accel, tap feature is there to set freq to 100Hz, a bug provided by invensense :)
-	uint16_t dmp_features = DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL | DMP_FEATURE_TAP;
+	uint16_t dmp_features = DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL | DMP_FEATURE_TAP;
 
 	//mpu	
 	printf("\rmpu init result: %d\n", mpu_init(NULL));
