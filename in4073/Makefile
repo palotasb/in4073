@@ -49,9 +49,7 @@ $(abspath ./qc_hal.c) \
 $(abspath ./fixedpoint.c) \
 $(abspath ./mode_0_safe.c) \
 $(abspath ./mode_1_panic.c) \
-$(abspath ./mode_2_manual.c) \
 $(abspath ./mode_3_calibrate.c) \
-$(abspath ./mode_4_yaw.c) \
 $(abspath ./mode_5_full.c) \
 $(abspath ./drivers/gpio.c) \
 $(abspath ./drivers/timers.c) \

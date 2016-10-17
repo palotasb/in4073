@@ -77,12 +77,41 @@
 
 static void control_fn(qc_state_t* state);
 static bool trans_fn(qc_state_t* state, qc_mode_t new_mode);
-static void enter_fn(qc_state_t* state, qc_mode_t old_mode);
+static void enter(qc_state_t* state, qc_mode_t old_mode);
+static void enter_mode_2_manual_fn(qc_state_t* state, qc_mode_t old_mode);
+static void enter_mode_4_yaw_fn(qc_state_t* state, qc_mode_t old_mode);
+static void enter_mode_5_full_fn(qc_state_t* state, qc_mode_t old_mode);
 static bool motor_on_fn(qc_state_t* state);
 
-// Structs containing the relevant previous-iteration values.
-static qc_state_att_t   prev_att;
-static qc_state_spin_t  prev_spin;
+static qc_mode_t active_mode = MODE_0_SAFE;
+
+/** =======================================================
+ *  mode_5_full_init -- Initialise mode table for FULL.
+ *  =======================================================
+ *  Parameters:
+ *  - mode_table: Pointer to the mode table to initialise.
+ *  Author: Boldizsar Palotas
+**/
+void mode_2_manual_init(qc_mode_table_t* mode_table) {
+    mode_table->control_fn  = &control_fn;
+    mode_table->trans_fn    = &trans_fn;
+    mode_table->enter_fn    = &enter_mode_2_manual_fn;
+    mode_table->motor_on_fn = &motor_on_fn;
+}
+
+/** =======================================================
+ *  mode_5_full_init -- Initialise mode table for FULL.
+ *  =======================================================
+ *  Parameters:
+ *  - mode_table: Pointer to the mode table to initialise.
+ *  Author: Boldizsar Palotas
+**/
+void mode_4_yaw_init(qc_mode_table_t* mode_table) {
+    mode_table->control_fn  = &control_fn;
+    mode_table->trans_fn    = &trans_fn;
+    mode_table->enter_fn    = &enter_mode_4_yaw_fn;
+    mode_table->motor_on_fn = &motor_on_fn;
+}
 
 /** =======================================================
  *  mode_5_full_init -- Initialise mode table for FULL.
@@ -94,7 +123,7 @@ static qc_state_spin_t  prev_spin;
 void mode_5_full_init(qc_mode_table_t* mode_table) {
     mode_table->control_fn  = &control_fn;
     mode_table->trans_fn    = &trans_fn;
-    mode_table->enter_fn    = &enter_fn;
+    mode_table->enter_fn    = &enter_mode_5_full_fn;
     mode_table->motor_on_fn = &motor_on_fn;
 }
 
@@ -126,22 +155,35 @@ void control_fn(qc_state_t* state) {
 
     // Roll and pitch set phi and theta but yaw is handled separately.
     // Q16.16 <-- Q2.14
-    state->att.phi      = FP_EXTEND(state->orient.roll, 16, 14) - state->sensor.sphi;
-    state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14) - state->sensor.stheta;
+    state->att.phi      = FP_EXTEND(state->orient.roll, 16, 14);
+    state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14);
+    if (active_mode == MODE_5_FULL_CONTROL) {
+        state->att.phi -=   state->sensor.sphi;
+        state->att.theta -= state->sensor.stheta;
+    }
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
     state->spin.p   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.phi , 0, 0, P1_FRAC_BITS);
     state->spin.q   = FP_MUL3( (state->trim.p1 + P1_DEFAULT) , state->att.theta , 0, 0, P1_FRAC_BITS);
     // Q16.16 <-- Q6.10
-    state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10) - (state->sensor.sr);
+    state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10);
+    if (active_mode == MODE_4_YAW || active_mode == MODE_5_FULL_CONTROL) {
+        state->spin.r -= state->sensor.sr;
+    }
 
     // Q16.16 = Q24.8 * Q16.16 >> 8
     // Roll/Pitch 2nd P-value (P2) can be zero but we don't want 0 control over here.
+    q32_t spin_p = state->spin.p;
+    q32_t spin_q = state->spin.q;
+    if (active_mode == MODE_5_FULL_CONTROL) {
+        spin_p -= state->sensor.sp;
+        spin_q -= state->sensor.sq;
+    }
     state->torque.L = FP_MUL3(state->trim.p2 + P2_DEFAULT ,
-                              FP_MUL3(I_L , state->spin.p - state->sensor.sp, 0, 3, 5),
+                              FP_MUL3(I_L , spin_p, 0, 3, 5),
                               0, 2, P2_FRAC_BITS - 2);
     state->torque.M = FP_MUL3(state->trim.p2 + P2_DEFAULT ,
-                              FP_MUL3(I_M , state->spin.q - state->sensor.sq, 0, 3, 5),
+                              FP_MUL3(I_M , spin_q, 0, 3, 5),
                               0, 2, P2_FRAC_BITS - 2);
     // YAW P-value can be zero but we don't want 0 control over here.
     state->torque.N = FP_MUL3(state->trim.yaw_p + YAWP_DEFAULT , (T_INV_I_N * state->spin.r) >> 8, 0, 0, YAWP_FRAC_BITS);
@@ -164,31 +206,6 @@ void control_fn(qc_state_t* state) {
     state->motor.ae2 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae2_sq ? MAX_MOTOR_SPEED : ae2_sq < 0 ? 0 : fp_sqrt(ae2_sq);
     state->motor.ae3 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae3_sq ? MAX_MOTOR_SPEED : ae3_sq < 0 ? 0 : fp_sqrt(ae3_sq);
     state->motor.ae4 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae4_sq ? MAX_MOTOR_SPEED : ae4_sq < 0 ? 0 : fp_sqrt(ae4_sq);
-
-    // Debug output, can be removed later
-    // ----------------------------------
-    static uint32_t counter = 0;
-    counter++;
-
-    if ((counter & 0x038) == 0x038) {
-        //printf("LRPY: %"PRId16" %"PRId16" %"PRId16" %"PRId16"\n", state->orient.lift, state->orient.roll, state->orient.pitch, state->orient.yaw);
-        //printf("phi theta: %"PRId32" %"PRId32"\n", state->att.phi, state->att.theta);
-        //printf("pqr: %"PRId32" %"PRId32" %"PRId32"\n", state->spin.p, state->spin.q, state->spin.r);
-        //printf("sr ofsr dr yaw_p: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->sensor.sr, state->offset.sr, (state->spin.r - prev_spin.r), state->trim.yaw_p);
-        //printf("ZLMN: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", state->force.Z, state->torque.L, state->torque.M,state->torque.N);
-        //printf("ae_sq: %"PRId32" %"PRId32" %"PRId32" %"PRId32"\n", ae1_sq, ae2_sq, ae3_sq, ae4_sq);
-        //printf("ae   : %"PRIu16" %"PRIu16" %"PRIu16" %"PRIu16"\n\n", state->motor.ae1, state->motor.ae2, state->motor.ae3, state->motor.ae4);
-    }
-
-    // Save values as prev_state for next iteration.
-    // ---------------------------------------------
-    prev_att.phi = state->att.phi;
-    prev_att.theta = state->att.theta;
-    // Saving psi is unneded
-
-    prev_spin.p = state->spin.p;
-    prev_spin.q = state->spin.q;
-    prev_spin.r = state->spin.r;
 }
 
 /** =======================================================
@@ -208,7 +225,7 @@ bool trans_fn(qc_state_t* state, qc_mode_t new_mode) {
 }
 
 /** =======================================================
- *  enter_fn -- Mode enter function.
+ *  enter -- Mode enter function.
  *  =======================================================
  *  This function is called upon entering this mode.
  *
@@ -217,18 +234,57 @@ bool trans_fn(qc_state_t* state, qc_mode_t new_mode) {
  *  - old_mode: The previous mode.
  *  Author: Boldizsar Palotas
 **/
-void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
+void enter(qc_state_t* state, qc_mode_t old_mode) {
     qc_state_clear_pos(state);
     qc_state_clear_velo(state);
     state->force.X  = 0;
     state->force.Y  = 0;
     state->att.psi = 0;
+}
 
-    prev_att.phi = state->att.phi;
-    prev_att.theta = state->att.theta;
-    prev_spin.p = state->spin.p;
-    prev_spin.q = state->spin.q;
-    prev_spin.r = state->spin.r;
+/** =======================================================
+ *  enter_mode_2_manual_fn -- Mode enter function.
+ *  =======================================================
+ *  This function is called upon entering this mode.
+ *
+ *  Parameters:
+ *  - state: The current state of the quadcopter.
+ *  - old_mode: The previous mode.
+ *  Author: Boldizsar Palotas
+**/
+void enter_mode_2_manual_fn(qc_state_t* state, qc_mode_t old_mode) {
+    enter(state, old_mode);
+    active_mode = MODE_2_MANUAL;
+}
+
+/** =======================================================
+ *  enter_mode_4_yaw_fn -- Mode enter function.
+ *  =======================================================
+ *  This function is called upon entering this mode.
+ *
+ *  Parameters:
+ *  - state: The current state of the quadcopter.
+ *  - old_mode: The previous mode.
+ *  Author: Boldizsar Palotas
+**/
+void enter_mode_4_yaw_fn(qc_state_t* state, qc_mode_t old_mode) {
+    enter(state, old_mode);
+    active_mode = MODE_4_YAW;
+}
+
+/** =======================================================
+ *  enter_mode_5_full_fn -- Mode enter function.
+ *  =======================================================
+ *  This function is called upon entering this mode.
+ *
+ *  Parameters:
+ *  - state: The current state of the quadcopter.
+ *  - old_mode: The previous mode.
+ *  Author: Boldizsar Palotas
+**/
+void enter_mode_5_full_fn(qc_state_t* state, qc_mode_t old_mode) {
+    enter(state, old_mode);
+    active_mode = MODE_5_FULL_CONTROL;
 }
 
 /** =======================================================
