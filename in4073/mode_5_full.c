@@ -79,10 +79,12 @@ static void control_fn(qc_state_t* state);
 static bool trans_fn(qc_state_t* state, qc_mode_t new_mode);
 static void enter_fn(qc_state_t* state, qc_mode_t old_mode);
 static bool motor_on_fn(qc_state_t* state);
+static void height_control(qc_state_t* state);
 
 // Structs containing the relevant previous-iteration values.
 static qc_state_att_t   prev_att;
 static qc_state_spin_t  prev_spin;
+static qc_state_option_t prev_option;
 
 // filtering
 #define FILT_A_CNT  4
@@ -123,14 +125,15 @@ void mode_5_full_init(qc_mode_table_t* mode_table) {
 **/
 void control_fn(qc_state_t* state) {
 
+    height_control(state);
+    
     // Linear quantities
     // -----------------
 
     // Positions are zero.
     // Hence velocities are zero.
-    // Hence forces are zero except for Z to which -lift is added.
-    // Q16.16 <-- Q8.8
-    state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+    // Hence forces are zero except for Z.
+
 
     // Attitude-related quantitites
     // ----------------------------
@@ -189,6 +192,7 @@ void control_fn(qc_state_t* state) {
 
     // Save values as prev_state for next iteration.
     // ---------------------------------------------
+    prev_option = state->option;
     prev_att.phi = state->att.phi;
     prev_att.theta = state->att.theta;
     // Saving psi is unneded
@@ -197,6 +201,55 @@ void control_fn(qc_state_t* state) {
     prev_spin.q = state->spin.q;
     prev_spin.r = state->spin.r;
 }
+
+/** =======================================================
+ *  height_control -- The control function that controls the Z force
+ *  =======================================================
+ *  If the height_control option is set, it will control the Z force
+ *  such that the height is maintained.
+ *  If the height_control option not set it will set the Z force
+ *  to the value of the lift set-point.
+ *  If the lift setpoint changes during height-control, the 
+ *  height_control option will be disabled.
+ *
+ *  Parameters:
+ *  - state: The state containing everything needed for the
+ *      control: inputs, internal state variables and
+ *      output.
+ *  Author: Koos Eerden
+**/
+void height_control(qc_state_t* state) {
+    static f8p8_t current_lift;
+    static f16p16_t pressure_setpoint;
+
+    if(state->option.height_control == true) {
+        if(prev_option.height_control == false) {   //check if height_control is just turned on
+            pressure_setpoint = state->sensor.pressure_avg;
+            current_lift = state->orient.lift;
+        } 
+
+        if(current_lift == state->orient.lift){
+            // state->force.Z = - P * (state.sensor.pressure - pressure_setpoint)   -  MIN_Z_FORCE;
+            /* 
+                pressure is a 11.16 bit value, as long as we use 5.x bit P values, it is impossible to overflow, however if we assume that 
+                the error values are relatively small (since we start the controller when we are around the setpoint)
+                a 8.8fp P value should work.
+                
+            */
+            state->force.Z = - FP_MUL1(P_HEIGHT, (state->sensor.pressure_avg - pressure_setpoint), 8)  -  MIN_Z_FORCE;
+
+        } else {
+            // Q16.16 <-- Q8.8
+            state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+            state->option.height_control = false;
+        }
+
+    }else {
+        // Q16.16 <-- Q8.8
+        state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+    }
+}
+
 
 int32_t filter(int32_t val) {
     int32_t y = 0;
@@ -254,6 +307,9 @@ void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
     state->force.Y  = 0;
     state->att.psi = 0;
 
+    state->option.height_control = false;
+    prev_option = state->option;
+
     prev_att.phi = state->att.phi;
     prev_att.theta = state->att.theta;
     prev_spin.p = state->spin.p;
@@ -266,6 +322,7 @@ void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
     for (int i = 0; i < FILT_B_CNT; i++) {
         filt_y[i] = 0;
     }
+
 }
 
 /** =======================================================

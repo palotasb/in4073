@@ -235,7 +235,7 @@ void pc_log_flush(pc_log_t* log) {
     pc_log_print(log, "%f"  _SEP, PC_LOG_say,   FLOAT_FP(log->state.sensor.say, 16));
     pc_log_print(log, "%f"  _SEP, PC_LOG_saz,   FLOAT_FP(log->state.sensor.saz, 16));
     pc_log_print(log, "%f"  _SEP, PC_LOG_temperature, FLOAT_FP(log->state.sensor.temperature, 8));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_pressure, FLOAT_FP(log->state.sensor.pressure, 8));
+    pc_log_print(log, "%f"  _SEP, PC_LOG_pressure, FLOAT_FP(log->state.sensor.pressure,16));
     pc_log_print(log, "%f"  _SEP, PC_LOG_voltage, (float)(log->state.sensor.voltage) / 100.0f);
     pc_log_print(log, "%d"  _SEP, PC_LOG_x, log->state.pos.x);
     pc_log_print(log, "%d"  _SEP, PC_LOG_y, log->state.pos.y);

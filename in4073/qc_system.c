@@ -162,7 +162,8 @@ static void qc_system_log_data(qc_system_t* system) {
                 break;
             case MESSAGE_TEMP_PRESSURE_ID:
                 MESSAGE_TEMP_VALUE(&msg) = system->state->sensor.temperature;
-                MESSAGE_PRESSURE_VALUE(&msg) = system->state->sensor.pressure;
+               // MESSAGE_PRESSURE_VALUE(&msg) = system->state->sensor.pressure;
+                MESSAGE_PRESSURE_VALUE(&msg) = system->state->sensor.pressure_avg;
                 break;
             case MESSAGE_XYZPOS_ID:
                 MESSAGE_XPOS_VALUE(&msg) = system->state->pos.x;

@@ -1,3 +1,5 @@
 _build/
 pc_terminal/pc_terminal
 simulation/sim
+.vscode/
+pc_terminal/*.txt
