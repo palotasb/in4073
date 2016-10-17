@@ -56,7 +56,7 @@ typedef int8_t          q8_t;
 
 // FP_FRAC(num, den, frac) -- Create generic f_.frac fixedpoint number
 // from the num/den fraction with frac number of bits.
-#define FP_FRAC(num, den, frac)     (((num) * (1 << (frac))) / (den) )
+#define FP_FRAC(num, den, frac)     (((num) * (1 << (frac)) + (den) / 2) / (den) )
 
 // INT_FP(fp, frac) -- Get integer part of f_.frac fixedpoint number
 #define INT_FP(fp, frac)     ((fp) >> (frac))
@@ -98,5 +98,8 @@ typedef int8_t          q8_t;
     // Function to to integer square root
     uint32_t fp_sqrt(uint32_t n);
 #endif // QUADCOPTER
+
+f16p16_t fp_angle_clip(f16p16_t);
+f16p16_t fp_asin_t1(f16p16_t);
 
 #endif // FIXEDPOINT_H

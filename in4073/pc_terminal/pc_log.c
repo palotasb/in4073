@@ -87,6 +87,17 @@ void pc_log_receive(pc_log_t* log, message_t* message) {
             log->set[PC_LOG_say] = true;
             log->set[PC_LOG_saz] = true;
             break;
+        case MESSAGE_S_ATT_ID:
+            if (log->initialised && log->set[PC_LOG_sphi]) {
+                pc_log_flush(log);
+            }
+            log->state.sensor.sphi =    FP_EXTEND(MESSAGE_S_PHI_VALUE(message), 16, 8);
+            log->state.sensor.stheta =  FP_EXTEND(MESSAGE_S_THETA_VALUE(message), 16, 8);
+            log->state.sensor.spsi =    FP_EXTEND(MESSAGE_S_PSI_VALUE(message), 16, 8);
+            log->set[PC_LOG_sphi]   = true;
+            log->set[PC_LOG_stheta] = true;
+            log->set[PC_LOG_spsi]   = true;
+            break;
         case MESSAGE_AE1234_ID:
             if (log->initialised && log->set[PC_LOG_ae1]) {
                 pc_log_flush(log);
@@ -218,50 +229,55 @@ void pc_log_clear(pc_log_t* log) {
 }
 
 void pc_log_flush(pc_log_t* log) {
-    pc_log_print(log, "%u"  _SEP, PC_LOG_time, log->time);
-    pc_log_print(log, "%hhu"_SEP, PC_LOG_mode, log->mode);
-    pc_log_print(log, "%f"  _SEP, PC_LOG_lift,  FLOAT_FP(log->state.orient.lift, 8));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_roll,  FLOAT_FP(log->state.orient.roll, 14));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_pitch, FLOAT_FP(log->state.orient.pitch, 14));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_yaw,   FLOAT_FP(log->state.orient.yaw, 10));
-    pc_log_print(log, "%d"  _SEP, PC_LOG_ae1, log->state.motor.ae1);
-    pc_log_print(log, "%d"  _SEP, PC_LOG_ae2, log->state.motor.ae2);
-    pc_log_print(log, "%d"  _SEP, PC_LOG_ae3, log->state.motor.ae3);
-    pc_log_print(log, "%d"  _SEP, PC_LOG_ae4, log->state.motor.ae3);
-    pc_log_print(log, "%f"  _SEP, PC_LOG_sp,    FLOAT_FP(log->state.sensor.sp, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_sq,    FLOAT_FP(log->state.sensor.sq, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_sr,    FLOAT_FP(log->state.sensor.sr, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_sax,   FLOAT_FP(log->state.sensor.sax, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_say,   FLOAT_FP(log->state.sensor.say, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_saz,   FLOAT_FP(log->state.sensor.saz, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_temperature, FLOAT_FP(log->state.sensor.temperature, 8));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_pressure, FLOAT_FP(log->state.sensor.pressure,16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_voltage, (float)(log->state.sensor.voltage) / 100.0f);
-    pc_log_print(log, "%d"  _SEP, PC_LOG_x, log->state.pos.x);
-    pc_log_print(log, "%d"  _SEP, PC_LOG_y, log->state.pos.y);
-    pc_log_print(log, "%d"  _SEP, PC_LOG_z, log->state.pos.z);
-    pc_log_print(log, "%f"  _SEP, PC_LOG_phi,   FLOAT_FP(log->state.att.phi, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_theta, FLOAT_FP(log->state.att.theta, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_psi,   FLOAT_FP(log->state.att.psi, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_X, FLOAT_FP(log->state.force.X, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_Y, FLOAT_FP(log->state.force.Y, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_Z, FLOAT_FP(log->state.force.Z, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_L, FLOAT_FP(log->state.torque.L, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_M, FLOAT_FP(log->state.torque.M, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_N, FLOAT_FP(log->state.torque.N, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_u, FLOAT_FP(log->state.velo.u, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_v, FLOAT_FP(log->state.velo.v, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_w, FLOAT_FP(log->state.velo.w, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_p, FLOAT_FP(log->state.spin.p, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_q, FLOAT_FP(log->state.spin.q, 16));
-    pc_log_print(log, "%f"  _SEP, PC_LOG_r, FLOAT_FP(log->state.spin.r, 16));
-    pc_log_print(log, "%d"  _SEP, PC_LOG_yaw_p, log->state.trim.yaw_p);
-    pc_log_print(log, "%d"  _SEP, PC_LOG_p1, log->state.trim.p1);
-    pc_log_print(log, "%d"  _SEP, PC_LOG_p2, log->state.trim.p2);
-    for (int i = 0; i < QC_STATE_PROF_CNT; i++) {
-        pc_log_print(log, "%u"_SEP"%u" _SEP, PC_LOG_PR0_CURR+i, log->state.prof.pr[i].last_delta, log->state.prof.pr[i].last_tag);
-        pc_log_print(log, "%u"_SEP"%u" _SEP, PC_LOG_PR0_MAX+i, log->state.prof.pr[i].max_delta, log->state.prof.pr[i].max_tag);
-    }
+
+    /*  1 */    pc_log_print(log, "%u"  _SEP, PC_LOG_time, log->time);
+    /*  2 */    pc_log_print(log, "%hhu"_SEP, PC_LOG_mode, log->mode);
+    /*  3 */    pc_log_print(log, "%f"  _SEP, PC_LOG_lift,  FLOAT_FP(log->state.orient.lift, 8));
+    /*  4 */    pc_log_print(log, "%f"  _SEP, PC_LOG_roll,  FLOAT_FP(log->state.orient.roll, 14));
+    /*  5 */    pc_log_print(log, "%f"  _SEP, PC_LOG_pitch, FLOAT_FP(log->state.orient.pitch, 14));
+    /*  6 */    pc_log_print(log, "%f"  _SEP, PC_LOG_yaw,   FLOAT_FP(log->state.orient.yaw, 10));
+    /*  7 */    pc_log_print(log, "%d"  _SEP, PC_LOG_ae1, log->state.motor.ae1);
+    /*  8 */    pc_log_print(log, "%d"  _SEP, PC_LOG_ae2, log->state.motor.ae2);
+    /*  9 */    pc_log_print(log, "%d"  _SEP, PC_LOG_ae3, log->state.motor.ae3);
+    /* 10 */    pc_log_print(log, "%d"  _SEP, PC_LOG_ae4, log->state.motor.ae4);
+    /* 11 */    pc_log_print(log, "%f"  _SEP, PC_LOG_sp,    FLOAT_FP(log->state.sensor.sp, 16));
+    /* 12 */    pc_log_print(log, "%f"  _SEP, PC_LOG_sq,    FLOAT_FP(log->state.sensor.sq, 16));
+    /* 13 */    pc_log_print(log, "%f"  _SEP, PC_LOG_sr,    FLOAT_FP(log->state.sensor.sr, 16));
+    /* 14 */    pc_log_print(log, "%f"  _SEP, PC_LOG_sax,   FLOAT_FP(log->state.sensor.sax, 16));
+    /* 15 */    pc_log_print(log, "%f"  _SEP, PC_LOG_say,   FLOAT_FP(log->state.sensor.say, 16));
+    /* 16 */    pc_log_print(log, "%f"  _SEP, PC_LOG_saz,   FLOAT_FP(log->state.sensor.saz, 16));
+    /* 17 */    pc_log_print(log, "%f"  _SEP, PC_LOG_temperature, FLOAT_FP(log->state.sensor.temperature, 8));
+    /* 18 */    pc_log_print(log, "%f"  _SEP, PC_LOG_pressure, FLOAT_FP(log->state.sensor.pressure, 16));
+    /* 19 */    pc_log_print(log, "%f"  _SEP, PC_LOG_voltage, (float)(log->state.sensor.voltage) / 100.0f);
+    /* 20 */    pc_log_print(log, "%d"  _SEP, PC_LOG_x, log->state.pos.x);
+    /* 21 */    pc_log_print(log, "%d"  _SEP, PC_LOG_y, log->state.pos.y);
+    /* 22 */    pc_log_print(log, "%d"  _SEP, PC_LOG_z, log->state.pos.z);
+    /* 23 */    pc_log_print(log, "%f"  _SEP, PC_LOG_phi,   FLOAT_FP(log->state.att.phi, 16));
+    /* 24 */    pc_log_print(log, "%f"  _SEP, PC_LOG_theta, FLOAT_FP(log->state.att.theta, 16));
+    /* 25 */    pc_log_print(log, "%f"  _SEP, PC_LOG_psi,   FLOAT_FP(log->state.att.psi, 16));
+    /* 26 */    pc_log_print(log, "%f"  _SEP, PC_LOG_X, FLOAT_FP(log->state.force.X, 16));
+    /* 27 */    pc_log_print(log, "%f"  _SEP, PC_LOG_Y, FLOAT_FP(log->state.force.Y, 16));
+    /* 28 */    pc_log_print(log, "%f"  _SEP, PC_LOG_Z, FLOAT_FP(log->state.force.Z, 16));
+    /* 29 */    pc_log_print(log, "%f"  _SEP, PC_LOG_L, FLOAT_FP(log->state.torque.L, 16));
+    /* 30 */    pc_log_print(log, "%f"  _SEP, PC_LOG_M, FLOAT_FP(log->state.torque.M, 16));
+    /* 31 */    pc_log_print(log, "%f"  _SEP, PC_LOG_N, FLOAT_FP(log->state.torque.N, 16));
+    /* 32 */    pc_log_print(log, "%f"  _SEP, PC_LOG_u, FLOAT_FP(log->state.velo.u, 16));
+    /* 33 */    pc_log_print(log, "%f"  _SEP, PC_LOG_v, FLOAT_FP(log->state.velo.v, 16));
+    /* 34 */    pc_log_print(log, "%f"  _SEP, PC_LOG_w, FLOAT_FP(log->state.velo.w, 16));
+    /* 35 */    pc_log_print(log, "%f"  _SEP, PC_LOG_p, FLOAT_FP(log->state.spin.p, 16));
+    /* 36 */    pc_log_print(log, "%f"  _SEP, PC_LOG_q, FLOAT_FP(log->state.spin.q, 16));
+    /* 37 */    pc_log_print(log, "%f"  _SEP, PC_LOG_r, FLOAT_FP(log->state.spin.r, 16));
+    /* 38 */    pc_log_print(log, "%d"  _SEP, PC_LOG_yaw_p, log->state.trim.yaw_p);
+    /* 39 */    pc_log_print(log, "%d"  _SEP, PC_LOG_p1, log->state.trim.p1);
+    /* 40 */    pc_log_print(log, "%d"  _SEP, PC_LOG_p2, log->state.trim.p2);
+    /* n=0..4 */for (int i = 0; i < QC_STATE_PROF_CNT; i++) {
+      /* 41+4*n, 42+4*n */  pc_log_print(log, "%u"_SEP"%u" _SEP, PC_LOG_PR0_CURR+i, log->state.prof.pr[i].last_delta, log->state.prof.pr[i].last_tag);
+      /* 43+4*n, 44+4*n */  pc_log_print(log, "%u"_SEP"%u" _SEP, PC_LOG_PR0_MAX+i, log->state.prof.pr[i].max_delta, log->state.prof.pr[i].max_tag);
+                }
+    /* 61 */    pc_log_print(log, "%f"  _SEP, PC_LOG_sphi,      FLOAT_FP(log->state.sensor.sphi, 16));
+    /* 62 */    pc_log_print(log, "%f"  _SEP, PC_LOG_stheta,    FLOAT_FP(log->state.sensor.stheta, 16));
+    /* 63 */    pc_log_print(log, "%f"  _SEP, PC_LOG_spsi,      FLOAT_FP(log->state.sensor.spsi, 16));
+
     fprintf(log->file, _END);
     fflush(log->file);
     #ifdef WINDOWS

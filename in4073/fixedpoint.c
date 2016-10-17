@@ -42,3 +42,23 @@ uint32_t fp_sqrt(uint32_t n) {
 
     return res;
 }
+
+// pi in q16.16 format
+#define PI_Q16 205887
+
+f16p16_t fp_angle_clip(f16p16_t angle) {
+    while (PI_Q16 < angle) {
+        angle -= 2 * PI_Q16;
+    }
+    while (angle < - PI_Q16) {
+        angle += 2 * PI_Q16;
+    }
+    return angle;
+}
+
+// Second-order approximation of arcsin(angle) where angle is in 16.16 format
+f16p16_t fp_asin_t1(f16p16_t angle) {
+    int32_t a2 = FP_MUL3(angle, angle, 4, 4, 8);
+    int32_t a3 = FP_MUL3(angle, a2, 4, 4, 8);
+    return (angle) - FP_MUL1((int32_t)FP_FLOAT(1.f/6.f, 8), a3, 8);
+}

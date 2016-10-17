@@ -3,6 +3,7 @@
 #include "mode_constants.h"
 #include "printf.h"
 #include "log.h"
+#include <math.h>
 
 #define SAFE_VOLTAGE 1050
 extern bool is_test_device;
@@ -75,6 +76,7 @@ void qc_system_init(qc_system_t* system,
 **/
 void qc_system_step(qc_system_t* system) {
     system->hal->get_inputs_fn(system->state);
+    qc_kalman_filter(system->state);
     if (!is_test_device && system->state->sensor.voltage_avg < SAFE_VOLTAGE) {
        if(system->mode != MODE_1_PANIC)
            printf("Low voltage (V = %"PRId32" centivolts)\n", system->state->sensor.voltage);
@@ -98,6 +100,23 @@ void qc_system_step(qc_system_t* system) {
     qc_system_log_data(system);
 }
 
+void qc_kalman_filter(qc_state_t* state) {
+    state->sensor.sphi = fp_angle_clip(
+        FP_MUL1(FP_MUL1(T_CONST , state->sensor.sp, T_CONST_FRAC_BITS) + state->sensor.sphi,
+                KALMAN_GYRO_WEIGHT, KALMAN_WEIGHT_FRAC_BITS)
+        + FP_MUL1(fp_asin_t1(FP_MUL1( - state->sensor.say, KALMAN_M, KALMAN_M_FRAC_BITS)),
+                KALMAN_ACC_WEIGHT, KALMAN_WEIGHT_FRAC_BITS));
+
+    state->sensor.stheta = fp_angle_clip(
+        FP_MUL1(FP_MUL1(T_CONST , state->sensor.sq, T_CONST_FRAC_BITS) + state->sensor.stheta,
+                KALMAN_GYRO_WEIGHT, KALMAN_WEIGHT_FRAC_BITS)
+      + FP_MUL1(fp_asin_t1(FP_MUL1(state->sensor.sax, KALMAN_M, KALMAN_M_FRAC_BITS)),
+                KALMAN_ACC_WEIGHT, KALMAN_WEIGHT_FRAC_BITS));
+
+    state->sensor.spsi = fp_angle_clip(state->sensor.spsi +
+        FP_MUL1(T_CONST , state->sensor.sr, T_CONST_FRAC_BITS));
+}
+
 /** =======================================================
  *  qc_system_set_mode -- Set new operating mode.
  *  =======================================================
@@ -113,6 +132,11 @@ void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
         return;
     if (!IS_SAFE_OR_PANIC_MODE(mode) && ZERO_LIFT_THRESHOLD < system->state->orient.lift) {
         printf("Turn motor speed down first!\n");
+        return;
+    }
+    if (!IS_SAFE_OR_PANIC_MODE(mode) && mode != MODE_3_CALIBRATE
+        && mode != MODE_2_MANUAL && !system->state->offset.calibrated) {
+        printf("Calibrate Quadcopter first!\n");
         return;
     }
 
@@ -145,14 +169,14 @@ static void qc_system_log_data(qc_system_t* system) {
                 MESSAGE_SETPOINT_YAW_VALUE(&msg)    = system->state->orient.yaw >> YAW_SHIFT;
                 break;
             case MESSAGE_SPQR_ID:
-                MESSAGE_SP_VALUE(&msg) = FP_CHUNK(system->state->sensor.sp - system->state->offset.sp, 8, 16);
-                MESSAGE_SQ_VALUE(&msg) = FP_CHUNK(system->state->sensor.sq - system->state->offset.sq, 8, 16);
-                MESSAGE_SR_VALUE(&msg) = FP_CHUNK(system->state->sensor.sr - system->state->offset.sr, 8, 16);
+                MESSAGE_SP_VALUE(&msg) = FP_CHUNK(system->state->sensor.sp, 8, 16);
+                MESSAGE_SQ_VALUE(&msg) = FP_CHUNK(system->state->sensor.sq, 8, 16);
+                MESSAGE_SR_VALUE(&msg) = FP_CHUNK(system->state->sensor.sr, 8, 16);
                 break;
             case MESSAGE_SAXYZ_ID:
-                MESSAGE_SAX_VALUE(&msg) = FP_CHUNK(system->state->sensor.sax - system->state->offset.sax, 8, 16);
-                MESSAGE_SAY_VALUE(&msg) = FP_CHUNK(system->state->sensor.say - system->state->offset.say, 8, 16);
-                MESSAGE_SAZ_VALUE(&msg) = FP_CHUNK(system->state->sensor.saz - system->state->offset.saz, 8, 16);
+                MESSAGE_SAX_VALUE(&msg) = FP_CHUNK(system->state->sensor.sax, 8, 16);
+                MESSAGE_SAY_VALUE(&msg) = FP_CHUNK(system->state->sensor.say, 8, 16);
+                MESSAGE_SAZ_VALUE(&msg) = FP_CHUNK(system->state->sensor.saz, 8, 16);
                 break;
             case MESSAGE_AE1234_ID:
                 MESSAGE_AE1_VALUE(&msg) = system->state->motor.ae1;
@@ -199,6 +223,11 @@ static void qc_system_log_data(qc_system_t* system) {
                 MESSAGE_P1_VALUE(&msg) = system->state->trim.p1;
                 MESSAGE_P2_VALUE(&msg) = system->state->trim.p2;
                 MESSAGE_YAWP_VALUE(&msg) = system->state->trim.yaw_p;
+                break;
+            case MESSAGE_S_ATT_ID:
+                MESSAGE_S_PHI_VALUE(&msg)   = FP_CHUNK(system->state->sensor.sphi, 8, 16);
+                MESSAGE_S_THETA_VALUE(&msg) = FP_CHUNK(system->state->sensor.stheta, 8, 16);
+                MESSAGE_S_PSI_VALUE(&msg)   = FP_CHUNK(system->state->sensor.spsi, 8, 16);
                 break;
             case MESSAGE_PROFILE_0_CURR_ID:
             case MESSAGE_PROFILE_1_CURR_ID:

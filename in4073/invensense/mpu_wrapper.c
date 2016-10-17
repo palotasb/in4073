@@ -14,6 +14,7 @@
 #define EPSILON         0.0001f
 #define PI_2            1.57079632679489661923f
 
+__attribute__ ((unused))
 void update_euler_from_quaternions(int32_t *quat) 
 {
 	float q[4];
@@ -37,7 +38,7 @@ void get_dmp_data(void)
 
 	if (!(read_stat = dmp_read_fifo(gyro, accel, quat, NULL, &sensors, &sensor_fifo_count)))
 	{
-		update_euler_from_quaternions(quat);
+		//update_euler_from_quaternions(quat);
 		sax = accel[0];
 		say = accel[1];
 		saz = accel[2];

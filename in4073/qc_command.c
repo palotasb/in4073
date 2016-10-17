@@ -107,8 +107,18 @@ void qc_command_rx_message(qc_command_t* command, message_t* message) {
         case MESSAGE_SET_OPTION_ID:
             switch (MESSAGE_OPTNUM_VALUE(message)) {
                 case 1: // Motor enable
-                    if (MESSAGE_OPTMOD_VALUE(message) == 1) // Set option
-                        command->system->state->option.enable_motors = (bool) MESSAGE_OPTVAL_VALUE(message);
+                    if (MESSAGE_OPTMOD_VALUE(message) == 1) { // Set option
+                        if (MESSAGE_OPTVAL_VALUE(message)) {
+                            if (command->system->state->orient.lift < ZERO_LIFT_THRESHOLD) {
+                                command->system->state->option.enable_motors = true;
+                                printf("Motors enabled!\n");
+                            } else
+                                printf("Motors NOT enabled. Turn down throttle first!\n");
+                        } else {
+                            command->system->state->option.enable_motors = false;
+                            printf("Motors disabled.\n");
+                        }
+                    }
                     break;
                 case 5: // Raw
                     if (MESSAGE_OPTMOD_VALUE(message) == 2) // Toggle option

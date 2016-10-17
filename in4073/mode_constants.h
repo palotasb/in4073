@@ -158,13 +158,18 @@
 #define PITCH_SHIFT    0
 // This could be 10 based on the LAB-4 tests but it seemed too large
 // in offline no-joystick tests.
-#define YAW_SHIFT      5
-
-//minimal (absolute) Z force for which motors are turning. This is used by height-control 
-//its in f16p16_t format
+#define YAW_SHIFT      2
 
 //TODO: tune this
 #define MIN_Z_FORCE  FP_FRAC(1, 100, 16)
+
+// Control loop time constant in seconds
+// 0.01s in Q16.16 format
+#define T_CONST_FRAC_BITS       10
+#define T_CONST                 ((q32_t) FP_FLOAT(0.01, T_CONST_FRAC_BITS))
+
+//minimal (absolute) Z force for which motors are turning. This is used by height-control 
+//its in f16p16_t format
 
 // This determines the amount of pressure samples that are averaged in order to filter the pressure.
 // please note that if this value equals N, the number of samples equals 2^N
@@ -172,22 +177,24 @@
 
 // Inverse of the control loop time constant in seconds
 // 1 / (0.01 [s]) = 1000 / 10 [1/s] in Q24.8 format.
-#define T_INV       ((q32_t)(FP_FRAC(1000, 10, 8)))
+#define T_INV_FRAC_BITS         8
+#define T_INV                   ((q32_t)(FP_FRAC(1000, 10, T_INV_FRAC_BITS)))
 
 // Moment of inertia around the x, y, z axis (for L, M, N torque) [N m]
- // [N m] in Q24.8 format.
+// [N m] in Q24.8 format.
 #define I_L         FP_FRAC(1, 32, 8)
- // [N m] in Q24.8 format.
+// [N m] in Q24.8 format.
 #define I_M         FP_FRAC(1, 32, 8)
- // [N m] in Q24.8 format.
-#define I_N         FP_FRAC(1, 64, 8)
+// [N m] in Q24.8 format.
+#define I_N_FRAC_BITS   8
+#define I_N             ((int32_t)FP_FLOAT(0.25, I_N_FRAC_BITS))
 
 // Inverse of the product of the control loop time constant and the
 // moment of inertia for the L, M, N torque
 // Q24.8
 #define T_INV_I_L   FP_MUL1(T_INV, I_L, 8)
 #define T_INV_I_M   FP_MUL1(T_INV, I_M, 8)
-#define T_INV_I_N   FP_MUL1(T_INV, I_N, 8)
+#define T_INV_I_N   FP_MUL1(T_INV, I_N, I_N_FRAC_BITS)
 // FP_MUL1 is the post-shifted fixp multiplication.
 
 // The b' and d' constants and some commonly-used multiples of them.
@@ -207,6 +214,9 @@
 // Value of pi in a Qx.29 format (highest precision, if 3 <= x).
 #define PI_Q29      1686629713
 //                   \  \  \  \.
+
+// Value of pi/2 in a Qx.30 format (highest precision if 3 <= x)
+#define PI_2_Q30    PI_Q29
 
 // Value of pi/180 in a Qx.36 format (highest precision, x can be -4).
 // The values of the integer and missing fractional part are zero.
@@ -238,9 +248,23 @@
 //Its in F16P16 format, meaning 1 over 16384 (= 0.000061035)
 #define ACC_G_SCALE_INV 4
 
-//gyroscope scale factor: 1 over the amount of bits per G
-//Its in F16P16 format, meaning 1 over 131 (= 0,007633588)
-#define GYRO_G_SCALE_INV 500
+// Gyroscope scale factor:
+// FS_native = +/- 2000 DPS = +/- 34.906 rad/s = 69.813 rad/s
+// precn_native = FS / (2^16 bit) = 0,001065 (rad/s)/bit
+// precn_target = (1 rad/s) / (2^16 bit)
+//
+// repr_native [bits] * precn_native [rad/s/bit] = value [rad/s]
+//
+//                 repr_native [bits] * precn_target [(rad/s)/bit]
+// value [rad/s] = -----------------------------------------------
+//                          precn_native [(rad/s)/bits]
+//
+// repr_target = repr_native * GYRO_CONV_CONST
+// repr_target = repr_native * 69.81317
+
+#define GYRO_CONV_CONST_FRAC_BITS       10
+#define GYRO_CONV_CONST                 ((f16p16_t) FP_FLOAT(69.81317, GYRO_CONV_CONST_FRAC_BITS))
+#define GYRO_CONV_FROM_NATIVE(value)    FP_MUL1((int32_t)(value) , GYRO_CONV_CONST, GYRO_CONV_CONST_FRAC_BITS)
 
 #define ATT_SCALE_INV 3
 
@@ -249,23 +273,35 @@
 #define ZERO_LIFT_THRESHOLD (4 * (LIFT_MULTIPLIER))
 
 
-#define P1_FRAC_BITS    4
-#define P1_MAX          FP_INT(100, P1_FRAC_BITS)
-#define P1_DEFAULT      (FP_FRAC(10, 1,   P1_FRAC_BITS) + 176)
+#define P1_FRAC_BITS    0
+#define P1_MAX          FP_INT(80, P1_FRAC_BITS)
+#define P1_DEFAULT      ((int32_t) FP_FLOAT(40.f, P1_FRAC_BITS))
 #define P1_MIN          (-(P1_DEFAULT) + 1)
 
-#define P2_FRAC_BITS    4
-#define P2_MAX          FP_INT(100, P2_FRAC_BITS)
-#define P2_DEFAULT      (FP_FRAC(1, 2,   P2_FRAC_BITS) + 127)
+#define P2_FRAC_BITS    2
+#define P2_MAX          FP_INT(20, P2_FRAC_BITS)
+#define P2_DEFAULT      ((int32_t) FP_FLOAT(8.0f, P2_FRAC_BITS))
 #define P2_MIN          (-(P2_DEFAULT) + 1)
 
-#define YAWP_FRAC_BITS  7
+#define YAWP_FRAC_BITS  10
 #define YAWP_MAX        FP_INT(10, YAWP_FRAC_BITS)
-#define YAWP_DEFAULT    (FP_FRAC(1, 64,   YAWP_FRAC_BITS) + 4)
+#define YAWP_DEFAULT    ((int32_t) FP_FLOAT(0.035f, YAWP_FRAC_BITS))
 #define YAWP_MIN        (-(YAWP_DEFAULT) + 1)
+
 
 // TODO tune this value
 //Height control P value, its in F8P8 format
 #define P_HEIGHT        FP_FRAC(100, 1, 8)
+
+// Kalman filter constants
+
+#define KALMAN_WEIGHT_FRAC_BITS      12
+#define KALMAN_GYRO_WEIGHT      ((q32_t) FP_FLOAT(.995f, KALMAN_WEIGHT_FRAC_BITS))
+#define KALMAN_ACC_WEIGHT       (FP_INT(1, KALMAN_WEIGHT_FRAC_BITS) - KALMAN_GYRO_WEIGHT)
+
+// Magic constant 0.6f is needed becaus gyro and accelerometer don't agree on the angle.
+#define KALMAN_M_FRAC_BITS      10
+#define KALMAN_M                ((int32_t) FP_FLOAT(0.6f * 3.141592f / 2, KALMAN_M_FRAC_BITS))
+
 
 #endif // MODE_CONSTANTS_H

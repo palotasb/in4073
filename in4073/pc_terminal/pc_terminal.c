@@ -119,7 +119,7 @@ void print_run_help(void) {
 	fprintf(stderr, "Press ESC to PANIC or the number keys to enter modes.\n");
 	fprintf(stderr, "Motors - E: enable R: disable\n\n");
 	fprintf(stderr, "Logging (telemetry) - F (G) to select what to log (enter sum)\n");
-	for (int i = 0; i <= 12; i++) {
+	for (int i = 0; i <= 13; i++) {
 		fprintf(stderr, "%10u = %#10x: %s\n", 1u<<i, 1u<<i, message_id_to_pc_name(i));
 	}
 	for (int i = 0; i < QC_STATE_PROF_CNT; i++) {
@@ -219,18 +219,19 @@ void run_terminal(char* serial, char* js, char* virt_in, char* virt_out) {
 			if (!do_virt) {
 				if ((c = rs232_getchar_nb()) >= 0) {
 					serialcomm_receive_char(&sc, (uint8_t) c);
-				} /*else if (c == -1) {
-					error = true;
-					errormsg = "couldn't read serial device";
-				}*/
+				} else {
+					usleep(500);
+				}
 			} else {
 				if ((c = virt_getchar_nb()) >= 0) {
 					serialcomm_receive_char(&sc, (uint8_t) c);
+				} else {
+					usleep(500);
 				}
 			}
 
 			while (pc_command_get_message(&command, &tx_frame.message)) {
-				while (time_get_ms() - last_msg < 1) { }
+				while (time_get_ms() - last_msg < 1) { usleep(500); }
 				if (tx_frame.message.ID == MESSAGE_SET_P12_ID)
 					fprintf(stderr, "yawp: %d, p1: %d, p2: %d\n",
 						command.trim.yaw_p, command.trim.p1, command.trim.p2);
