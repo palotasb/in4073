@@ -151,7 +151,7 @@ void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
 }
 
 static void qc_system_log_data(qc_system_t* system) {
-    int pr_id;
+    int pr_id, send_cnt = 0;
     uint32_t bit_mask, index;
     for (bit_mask = 0x01, index = 0; bit_mask; bit_mask = bit_mask << 1, index++) {
         message_t msg;
@@ -256,6 +256,12 @@ static void qc_system_log_data(qc_system_t* system) {
         }
 
         if (system->telemetry_mask & bit_mask) {
+            send_cnt++;
+            if (10 < send_cnt) {
+                system->telemetry_mask = system->telemetry_mask & (bit_mask - 1);
+                printf("Too many messages, TELEMETRY MASK automatically reset to %#"PRIx32"!\n", system->telemetry_mask);
+                break;
+            }
             serialcomm_quick_send(system->serialcomm, msg.ID, msg.value.v32[0], msg.value.v32[1]);
         }
     }
