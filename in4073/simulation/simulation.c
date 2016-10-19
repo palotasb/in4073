@@ -235,6 +235,8 @@ void qc_hal_init(qc_hal_t* hal) {
     hal->flash_write_fn = sim_flash_write;
     hal->flash_erase_fn = sim_flash_erase;
 
+    hal->imu_init_fn = (void(*)(bool, uint16_t)) sim_void;
+
     hal->reset_fn = sim_void;
     hal->get_time_us_fn = time_get_us;
 }
@@ -253,6 +255,7 @@ void sim_get_inputs_fn(qc_state_t* state) {
     state->sensor.sp = (int32_t)(model.p * 256 * 256);
     state->sensor.sq = (int32_t)(model.q * 256 * 256);
     state->sensor.sr = (int32_t)(model.r * 256 * 256);
+    qc_kalman_filter(state);
 }
 
 void sim_set_outputs_fn(qc_state_t* state) {

@@ -283,4 +283,7 @@
 #define KALMAN_M_FRAC_BITS      10
 #define KALMAN_M                ((int32_t) FP_FLOAT(0.6f * 3.141592f / 2, KALMAN_M_FRAC_BITS))
 
+// IMU constants
+#define IMU_RAW_FREQ        1000
+
 #endif // MODE_CONSTANTS_H

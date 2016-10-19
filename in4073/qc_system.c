@@ -58,6 +58,7 @@ void qc_system_init(qc_system_t* system,
 
     // Init other members
     qc_state_init(system->state);
+    qc_system_set_raw(system, false);
     if (!log_init(system->hal, system->serialcomm)) {
         qc_system_set_mode(system, MODE_1_PANIC);
         printf("> Log init error, starting in PANIC mode.\n");
@@ -76,7 +77,7 @@ void qc_system_init(qc_system_t* system,
 **/
 void qc_system_step(qc_system_t* system) {
     system->hal->get_inputs_fn(system->state);
-    qc_kalman_filter(system->state);
+
     if (!is_test_device && system->state->sensor.voltage_avg < SAFE_VOLTAGE) {
        if(system->mode != MODE_1_PANIC)
            printf("Low voltage (V = %"PRId32" centivolts)\n", system->state->sensor.voltage);
@@ -101,20 +102,38 @@ void qc_system_step(qc_system_t* system) {
 }
 
 void qc_kalman_filter(qc_state_t* state) {
+    const int t = state->option.raw_control ? T_CONST / 10 : T_CONST;
+
     state->sensor.sphi = fp_angle_clip(
-        FP_MUL1(FP_MUL1(T_CONST , state->sensor.sp, T_CONST_FRAC_BITS) + state->sensor.sphi,
+        FP_MUL1(FP_MUL1(t , state->sensor.sp, T_CONST_FRAC_BITS) + state->sensor.sphi,
                 KALMAN_GYRO_WEIGHT, KALMAN_WEIGHT_FRAC_BITS)
         + FP_MUL1(fp_asin_t1(FP_MUL1( - state->sensor.say, KALMAN_M, KALMAN_M_FRAC_BITS)),
                 KALMAN_ACC_WEIGHT, KALMAN_WEIGHT_FRAC_BITS));
 
     state->sensor.stheta = fp_angle_clip(
-        FP_MUL1(FP_MUL1(T_CONST , state->sensor.sq, T_CONST_FRAC_BITS) + state->sensor.stheta,
+        FP_MUL1(FP_MUL1(t , state->sensor.sq, T_CONST_FRAC_BITS) + state->sensor.stheta,
                 KALMAN_GYRO_WEIGHT, KALMAN_WEIGHT_FRAC_BITS)
       + FP_MUL1(fp_asin_t1(FP_MUL1(state->sensor.sax, KALMAN_M, KALMAN_M_FRAC_BITS)),
                 KALMAN_ACC_WEIGHT, KALMAN_WEIGHT_FRAC_BITS));
 
     state->sensor.spsi = fp_angle_clip(state->sensor.spsi +
-        FP_MUL1(T_CONST , state->sensor.sr, T_CONST_FRAC_BITS));
+        FP_MUL1(t , state->sensor.sr, T_CONST_FRAC_BITS));
+}
+
+void qc_system_set_raw(qc_system_t* system, bool raw) {
+    if (system->mode != MODE_0_SAFE) {
+        printf("Not in safe mode, not changing raw mode!\n");
+        return;
+    }
+
+    system->state->option.raw_control = raw;
+    if (raw) {
+        system->hal->imu_init_fn(false, IMU_RAW_FREQ);
+        printf("IMU reset. \nRAW MODE turned ON.\n");
+    } else {
+        system->hal->imu_init_fn(true, 0);
+        printf("IMU and DMP reset. \nRAW MODE turned OFF.\n");
+    }
 }
 
 /** =======================================================

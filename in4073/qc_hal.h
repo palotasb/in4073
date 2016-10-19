@@ -23,6 +23,7 @@ typedef struct qc_hal {
     bool (*flash_write_fn)(uint32_t, uint8_t*, uint32_t);
     bool (*flash_read_fn)(uint32_t, uint8_t*, uint32_t);
     bool (*flash_erase_fn)(void);
+    void (*imu_init_fn)(bool, uint16_t);
     void (*reset_fn)(void);
     uint32_t (*get_time_us_fn)(void);
 } qc_hal_t;

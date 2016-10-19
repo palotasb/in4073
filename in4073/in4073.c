@@ -60,7 +60,22 @@ int main(void) {
 
         if (check_sensor_int_flag()) {
             profile_end(&qc_state.prof.pr[2], get_time_us());
-            get_raw_sensor_data();
+            if (qc_state.option.raw_control) {
+                sensor_fifo_count = 1;
+                while (sensor_fifo_count) {
+                    get_raw_sensor_data();
+                    qc_state.sensor.sax =  sax * ACC_G_SCALE_INV - qc_state.offset.sax;
+                    qc_state.sensor.say = -say * ACC_G_SCALE_INV - qc_state.offset.say;
+                    qc_state.sensor.saz = -saz * ACC_G_SCALE_INV - qc_state.offset.saz;
+                    qc_state.sensor.sp  = GYRO_CONV_FROM_NATIVE( sp) - qc_state.offset.sp;
+                    qc_state.sensor.sq  = GYRO_CONV_FROM_NATIVE(-sq) - qc_state.offset.sq;
+                    qc_state.sensor.sr  = GYRO_CONV_FROM_NATIVE(-sr) - qc_state.offset.sr; 
+                    qc_kalman_filter(&qc_state);
+                }
+            } else {
+                get_dmp_data();
+                qc_kalman_filter(&qc_state);
+            }
             profile_start_tag(&qc_state.prof.pr[2], get_time_us(), iteration);
             clear_sensor_int_flag();
         }
@@ -83,7 +98,7 @@ void init_all(void) {
     timers_init();
     adc_init();
     twi_init();
-    imu_init(false, 200);    
+    //imu_init(true, 100); <-- initialized in qc_system_init
     baro_init();
     //spi_flash_init(); <-- initialized in log_init
     //ble_init(); 
