@@ -47,6 +47,7 @@ bool is_test_device = false;
 int main(void) {
     init_all();
 
+    profile_start_tag(&qc_state.prof.pr[2], get_time_us(), iteration);
     while (1) {
         if (check_timer_flag()) {
             profile_start_tag(&qc_state.prof.pr[0], get_time_us(), iteration);
@@ -58,7 +59,9 @@ int main(void) {
         }
 
         if (check_sensor_int_flag()) {
-            get_dmp_data();
+            profile_end(&qc_state.prof.pr[2], get_time_us());
+            get_raw_sensor_data();
+            profile_start_tag(&qc_state.prof.pr[2], get_time_us(), iteration);
             clear_sensor_int_flag();
         }
 
@@ -80,7 +83,7 @@ void init_all(void) {
     timers_init();
     adc_init();
     twi_init();
-    imu_init(true, 100);    
+    imu_init(false, 200);    
     baro_init();
     //spi_flash_init(); <-- initialized in log_init
     //ble_init(); 
