@@ -45,6 +45,8 @@ typedef struct mode_3_calibrate_state {
     f24p8_t     sax;
     f24p8_t     say;
     f24p8_t     saz;
+    f24p8_t     sphi;
+    f24p8_t     stheta;
 	 uint8_t	 counter;
 	 bool			busy;
 } mode_3_calibrate_state_t;

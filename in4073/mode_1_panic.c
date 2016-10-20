@@ -11,7 +11,7 @@ static int timer = 0;
 // 5s timer at 10 ms control loop frequency
 #define TIMER               500
 // TODO look into this
-#define SAFE_MOTOR_SPEED    320
+#define SAFE_MOTOR_SPEED    350
 
 /** =======================================================
  *  mode_1_panic_init -- Initialise mode table for PANIC.

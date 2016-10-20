@@ -51,6 +51,8 @@ void control_fn(qc_state_t* state) {
 		 cal_state.sax 		+= FP_CHUNK(state->sensor.sax, 8, 16);
 		 cal_state.say 		+= FP_CHUNK(state->sensor.say, 8, 16);
 		 cal_state.saz 		+= FP_CHUNK(state->sensor.saz, 8, 16);
+		 cal_state.sphi 		+= FP_CHUNK(state->sensor.sphi, 8, 16);
+		 cal_state.stheta 		+= FP_CHUNK(state->sensor.stheta, 8, 16);
 
 		 //update offset
 		 if(cal_state.counter++ == CALIBRATE_SAMPLES - 1){ 
@@ -61,6 +63,8 @@ void control_fn(qc_state_t* state) {
 			 state->offset.sax +=	FP_EXTEND(cal_state.sax, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
 			 state->offset.say +=	FP_EXTEND(cal_state.say, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
 			 state->offset.saz +=	FP_EXTEND(cal_state.saz, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.sphi +=	FP_EXTEND(cal_state.sphi, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
+			 state->offset.stheta +=	FP_EXTEND(cal_state.stheta, 16, 8) >> CALIBRATE_SHIFT_AMOUNT;
 			 state->offset.calibrated = true;
 			 printf("Calibration done\n");
 		}		
@@ -102,6 +106,8 @@ void enter_fn(qc_state_t* state, qc_mode_t old_mode)
     cal_state.sax 		= 0;
     cal_state.say 		= 0;
     cal_state.saz 		= 0;
+    cal_state.sphi 		= 0;
+    cal_state.stheta	= 0;
 	 cal_state.counter	= 0;
 	 cal_state.busy		= true;
 }

@@ -94,6 +94,8 @@ void qc_state_clear_offset(qc_state_t* state) {
     state->offset.sax   = 0;
     state->offset.say   = 0;
     state->offset.saz   = 0;
+    state->offset.sphi  = 0;
+    state->offset.stheta= 0;
     state->offset.calibrated = false;
 }
 

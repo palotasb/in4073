@@ -260,12 +260,12 @@
 
 #define P1_FRAC_BITS    0
 #define P1_MAX          FP_INT(80, P1_FRAC_BITS)
-#define P1_DEFAULT      ((int32_t) FP_FLOAT(40.f, P1_FRAC_BITS))
+#define P1_DEFAULT      ((int32_t) FP_FLOAT(40.f, P1_FRAC_BITS) - 21)
 #define P1_MIN          (-(P1_DEFAULT) + 1)
 
 #define P2_FRAC_BITS    2
 #define P2_MAX          FP_INT(20, P2_FRAC_BITS)
-#define P2_DEFAULT      ((int32_t) FP_FLOAT(8.0f, P2_FRAC_BITS))
+#define P2_DEFAULT      ((int32_t) FP_FLOAT(8.0f, P2_FRAC_BITS) + 23)
 #define P2_MIN          (-(P2_DEFAULT) + 1)
 
 #define YAWP_FRAC_BITS  10

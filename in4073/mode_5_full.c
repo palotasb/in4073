@@ -155,8 +155,8 @@ void control_fn(qc_state_t* state) {
 
     // Roll and pitch set phi and theta but yaw is handled separately.
     // Q16.16 <-- Q2.14
-    state->att.phi      = FP_EXTEND(state->orient.roll, 16, 14);
-    state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 14);
+    state->att.phi      = FP_EXTEND(state->orient.roll, 16, 16);
+    state->att.theta    = FP_EXTEND(state->orient.pitch, 16, 16);
     if (active_mode == MODE_5_FULL_CONTROL) {
         state->att.phi -=   state->sensor.sphi;
         state->att.theta -= state->sensor.stheta;

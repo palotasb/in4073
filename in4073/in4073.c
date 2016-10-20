@@ -52,6 +52,7 @@ int main(void) {
         if (check_timer_flag()) {
             profile_start_tag(&qc_state.prof.pr[0], get_time_us(), iteration);
             qc_system_step(&qc_system);
+            //printf("s: %6d %6d %6d\n", phi, theta, psi);
             profile_end(&qc_state.prof.pr[0], get_time_us());
             led_display();
             clear_timer_flag();
@@ -76,9 +77,10 @@ int main(void) {
                 sensor_fifo_count = 1;
                 while (sensor_fifo_count)
                     get_dmp_data();
-                qc_state.sensor.sphi    = FP_MUL3((int32_t)FP_FLOAT(10.f, 10), phi    , 0, 2, 8);
-                qc_state.sensor.stheta  = FP_MUL3((int32_t)FP_FLOAT(10.f, 10), theta  , 0, 2, 8);
-                qc_state.sensor.spsi    = FP_MUL3((int32_t)FP_FLOAT(10.f, 10), psi    , 0, 2, 8);
+                //printf("s: %6d %6d %6d\n", phi, theta, psi);
+                qc_state.sensor.sphi    = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), phi    , 0, 0, 0) - qc_state.offset.sphi;
+                qc_state.sensor.stheta  = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), theta  , 0, 0, 0) - qc_state.offset.stheta;
+                qc_state.sensor.spsi    = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), psi    , 0, 0, 0);
                 //qc_kalman_filter(&qc_state);
             }
             profile_start_tag(&qc_state.prof.pr[2], get_time_us(), iteration);
