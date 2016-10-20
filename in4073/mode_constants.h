@@ -159,10 +159,20 @@
 // in offline no-joystick tests.
 #define YAW_SHIFT      2
 
+//TODO: tune this
+#define MIN_Z_FORCE  FP_FRAC(1, 100, 16)
+
 // Control loop time constant in seconds
 // 0.01s in Q16.16 format
 #define T_CONST_FRAC_BITS       10
 #define T_CONST                 ((q32_t) FP_FLOAT(0.01, T_CONST_FRAC_BITS))
+
+//minimal (absolute) Z force for which motors are turning. This is used by height-control 
+//its in f16p16_t format
+
+// This determines the amount of pressure samples that are averaged in order to filter the pressure.
+// please note that if this value equals N, the number of samples equals 2^N
+#define PRESSURE_AVERAGE_SHIFT    4 
 
 // Inverse of the control loop time constant in seconds
 // 1 / (0.01 [s]) = 1000 / 10 [1/s] in Q24.8 format.
@@ -229,6 +239,10 @@
 //          = (Qx+y.27)) >> 13
 //          = Qz.14
 
+//barometer scale factor: 1 over 100
+//Its in F16P16 format
+#define BARO_SCALE_INV  FP_FRAC(1, 100, 16)
+
 //accelerometer scale factor: 1 over the amount of bits per G
 //Its in F16P16 format, meaning 1 over 16384 (= 0.000061035)
 #define ACC_G_SCALE_INV 4
@@ -272,6 +286,11 @@
 #define YAWP_MAX        FP_INT(10, YAWP_FRAC_BITS)
 #define YAWP_DEFAULT    ((int32_t) FP_FLOAT(0.035f, YAWP_FRAC_BITS))
 #define YAWP_MIN        (-(YAWP_DEFAULT) + 1)
+
+
+// TODO tune this value
+//Height control P value, its in F8P8 format
+#define P_HEIGHT        FP_FRAC(100, 1, 8)
 
 // Kalman filter constants
 

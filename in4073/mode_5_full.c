@@ -82,6 +82,7 @@ static void enter_mode_2_manual_fn(qc_state_t* state, qc_mode_t old_mode);
 static void enter_mode_4_yaw_fn(qc_state_t* state, qc_mode_t old_mode);
 static void enter_mode_5_full_fn(qc_state_t* state, qc_mode_t old_mode);
 static bool motor_on_fn(qc_state_t* state);
+static void height_control(qc_state_t* state);
 
 static qc_mode_t active_mode = MODE_0_SAFE;
 
@@ -141,6 +142,8 @@ void mode_5_full_init(qc_mode_table_t* mode_table) {
 **/
 void control_fn(qc_state_t* state) {
 
+    height_control(state);
+    
     // Linear quantities
     // -----------------
 
@@ -208,6 +211,54 @@ void control_fn(qc_state_t* state) {
     state->motor.ae2 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae2_sq ? MAX_MOTOR_SPEED : ae2_sq < 0 ? 0 : fp_sqrt(ae2_sq);
     state->motor.ae3 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae3_sq ? MAX_MOTOR_SPEED : ae3_sq < 0 ? 0 : fp_sqrt(ae3_sq);
     state->motor.ae4 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae4_sq ? MAX_MOTOR_SPEED : ae4_sq < 0 ? 0 : fp_sqrt(ae4_sq);
+}
+
+/** =======================================================
+ *  height_control -- The control function that controls the Z force
+ *  =======================================================
+ *  If the height_control option is set, it will control the Z force
+ *  such that the height is maintained.
+ *  If the height_control option not set it will set the Z force
+ *  to the value of the lift set-point.
+ *  If the lift setpoint changes during height-control, the 
+ *  height_control option will be disabled.
+ *
+ *  Parameters:
+ *  - state: The state containing everything needed for the
+ *      control: inputs, internal state variables and
+ *      output.
+ *  Author: Koos Eerden
+**/
+void height_control(qc_state_t* state) {
+    static f8p8_t current_lift;
+    static f16p16_t pressure_setpoint;
+
+    if(state->option.height_control == true) {
+        if(prev_option.height_control == false) {   //check if height_control is just turned on
+            pressure_setpoint = state->sensor.pressure_avg;
+            current_lift = state->orient.lift;
+        } 
+
+        if(current_lift == state->orient.lift){
+            // state->force.Z = - P * (state.sensor.pressure - pressure_setpoint)   -  MIN_Z_FORCE;
+            /* 
+                pressure is a 11.16 bit value, as long as we use 5.x bit P values, it is impossible to overflow, however if we assume that 
+                the error values are relatively small (since we start the controller when we are around the setpoint)
+                a 8.8fp P value should work.
+                
+            */
+            state->force.Z = - FP_MUL1(P_HEIGHT, (state->sensor.pressure_avg - pressure_setpoint), 8)  -  MIN_Z_FORCE;
+
+        } else {
+            // Q16.16 <-- Q8.8
+            state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+            state->option.height_control = false;
+        }
+
+    }else {
+        // Q16.16 <-- Q8.8
+        state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+    }
 }
 
 /** =======================================================
