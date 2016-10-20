@@ -58,14 +58,25 @@ void get_raw_sensor_data(void){
 
 	if (!(read_stat = mpu_read_fifo(gyro, accel, NULL, &sensors, &sensor_fifo_count)))
 	{
-		sax = accel[0];
-		say = accel[1];
-		saz = accel[2];
-		sp = gyro[0];
-		sq = gyro[1];
-		sr = gyro[2];
+		if (sensors & INV_XYZ_ACCEL) {
+			sax = accel[0];
+			say = accel[1];
+			saz = accel[2];
+		} else {
+			printf("raw: no acc\n");
+		}
+		if (sensors & INV_XYZ_GYRO) {
+			sp = gyro[0];
+			sq = gyro[1];
+			sr = gyro[2];
+		} else {
+			printf("raw: no gyro\n");
+		}
 	}
-	else printf("> MPU err %d\n", read_stat);
+	else {
+		sensor_fifo_count = 0;
+		printf("> MPU err %d\n", read_stat);
+	}
 }
 
 void imu_init(bool dmp, uint16_t freq)
@@ -75,7 +86,7 @@ void imu_init(bool dmp, uint16_t freq)
 					     0, 0, 1};
 
 	// we don't need the raw accel, tap feature is there to set freq to 100Hz, a bug provided by invensense :)
-	uint16_t dmp_features = DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL | DMP_FEATURE_TAP;
+	uint16_t dmp_features = DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL | DMP_FEATURE_TAP;
 
 	//mpu	
 	printf("\rmpu init result: %d\n", mpu_init(NULL));

@@ -120,15 +120,15 @@ void qc_command_rx_message(qc_command_t* command, message_t* message) {
                         }
                     }
                     break;
-                case 5: // Raw
+                case 6: // Raw
                     if (MESSAGE_OPTMOD_VALUE(message) == 2) // Toggle option
-                        command->system->state->option.raw_control = !command->system->state->option.raw_control;
+                        qc_system_set_raw(command->system, !command->system->state->option.raw_control);
                     break;
-                case 6: // Height
+                case 7: // Height
                     if (MESSAGE_OPTMOD_VALUE(message) == 2) // Toggle option
                         command->system->state->option.height_control = !command->system->state->option.height_control;
                     break;
-                case 7: // Wireless
+                case 8: // Wireless
                     if (MESSAGE_OPTMOD_VALUE(message) == 2) // Toggle option
                         command->system->state->option.wireless_control = !command->system->state->option.wireless_control;
                     break;

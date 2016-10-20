@@ -21,11 +21,10 @@
 #include "inv_mpu_dmp_motion_driver.h"
 #include "ml.h"
 #include "qc_system.h"
+#include "mode_constants.h"
 #include "mode_0_safe.h"
 #include "mode_1_panic.h"
-#include "mode_2_manual.h"
 #include "mode_3_calibrate.h"
-#include "mode_4_yaw.h"
 #include "mode_5_full.h"
 #include "profile.h"
 

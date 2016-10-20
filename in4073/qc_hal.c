@@ -30,6 +30,7 @@ void qc_hal_init(qc_hal_t* hal) {
     hal->flash_read_fn  = &flash_read_bytes;
     hal->flash_write_fn = &flash_write_bytes;
     hal->flash_erase_fn = &flash_chip_erase;
+    hal->imu_init_fn    = &imu_init;
     hal->reset_fn       = &NVIC_SystemReset;
     hal->get_time_us_fn = &get_time_us;
 }
