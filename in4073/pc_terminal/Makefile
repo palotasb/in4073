@@ -17,7 +17,7 @@ ifdef NS
 PC_FLAGS += -ns
 endif
 ifdef JS
-PC_FLAGS += $(-j)
+PC_FLAGS += -j
 endif
 ifdef VIRT
 PC_FLAGS += -v
