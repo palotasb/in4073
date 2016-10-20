@@ -58,14 +58,25 @@ void get_raw_sensor_data(void){
 
 	if (!(read_stat = mpu_read_fifo(gyro, accel, NULL, &sensors, &sensor_fifo_count)))
 	{
-		sax = accel[0];
-		say = accel[1];
-		saz = accel[2];
-		sp = gyro[0];
-		sq = gyro[1];
-		sr = gyro[2];
+		if (sensors & INV_XYZ_ACCEL) {
+			sax = accel[0];
+			say = accel[1];
+			saz = accel[2];
+		} else {
+			printf("raw: no acc\n");
+		}
+		if (sensors & INV_XYZ_GYRO) {
+			sp = gyro[0];
+			sq = gyro[1];
+			sr = gyro[2];
+		} else {
+			printf("raw: no gyro\n");
+		}
 	}
-	else printf("> MPU err %d\n", read_stat);
+	else {
+		sensor_fifo_count = 0;
+		printf("> MPU err %d\n", read_stat);
+	}
 }
 
 void imu_init(bool dmp, uint16_t freq)

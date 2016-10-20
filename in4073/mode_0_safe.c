@@ -65,8 +65,7 @@ bool trans_fn(qc_state_t* state, qc_mode_t new_mode) {
  *  Author: Koos Eerden
 **/
 void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
-    
-    qc_state_clear_option(state);
+    state->option.enable_motors     = false;
     qc_state_clear_motor(state);
     qc_state_clear_pos(state);
     qc_state_clear_att(state);
@@ -74,7 +73,7 @@ void enter_fn(qc_state_t* state, qc_mode_t old_mode) {
     qc_state_clear_torque(state);
     qc_state_clear_velo(state);
     qc_state_clear_spin(state);
-    printf("motors disabled\n");
+    printf("Safe mode: motors disabled.\n");
 	return;
 }
 
