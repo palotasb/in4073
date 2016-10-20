@@ -159,8 +159,6 @@
 // in offline no-joystick tests.
 #define YAW_SHIFT      2
 
-//TODO: tune this
-#define MIN_Z_FORCE  FP_FRAC(1, 100, 16)
 
 // Control loop time constant in seconds
 // 0.01s in Q16.16 format
@@ -169,6 +167,8 @@
 
 //minimal (absolute) Z force for which motors are turning. This is used by height-control 
 //its in f16p16_t format
+//TODO: tune this
+#define MIN_Z_FORCE  ((q32_t)FP_FLOAT(12, 16))
 
 // This determines the amount of pressure samples that are averaged in order to filter the pressure.
 // please note that if this value equals N, the number of samples equals 2^N
@@ -290,7 +290,7 @@
 
 // TODO tune this value
 //Height control P value, its in F8P8 format
-#define P_HEIGHT        FP_FRAC(100, 1, 8)
+#define P_HEIGHT        ((q32_t)FP_FLOAT(100.0, 8))
 
 // Kalman filter constants
 

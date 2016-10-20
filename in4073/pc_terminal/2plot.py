@@ -131,7 +131,7 @@ class SubplotAnimation(animation.TimedAnimation):
         self.ax_velo.set_ylabel('Velo [m/s]')
         self.ax_velo.set_ylim(-3, 3)
         self.ax_force.set_ylabel('Force [N]')
-        self.ax_force.set_ylim(-5, 5)
+        self.ax_force.set_ylim(-20, 20)
         self.ax_setpoint.set_ylabel('Setpoints [?]')
         self.ax_setpoint.set_ylim(-0.6, 0.6)
         self.ax_motor.set_ylabel('Motor')

@@ -85,6 +85,7 @@ static bool motor_on_fn(qc_state_t* state);
 static void height_control(qc_state_t* state);
 
 static qc_mode_t active_mode = MODE_0_SAFE;
+static bool prev_height_control = false;
 
 /** =======================================================
  *  mode_5_full_init -- Initialise mode table for FULL.
@@ -142,7 +143,6 @@ void mode_5_full_init(qc_mode_table_t* mode_table) {
 **/
 void control_fn(qc_state_t* state) {
 
-    height_control(state);
     
     // Linear quantities
     // -----------------
@@ -151,7 +151,7 @@ void control_fn(qc_state_t* state) {
     // Hence velocities are zero.
     // Hence forces are zero except for Z to which -lift is added.
     // Q16.16 <-- Q8.8
-    state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+    height_control(state);
 
     // Attitude-related quantitites
     // ----------------------------
@@ -234,7 +234,7 @@ void height_control(qc_state_t* state) {
     static f16p16_t pressure_setpoint;
 
     if(state->option.height_control == true) {
-        if(prev_option.height_control == false) {   //check if height_control is just turned on
+        if(prev_height_control == false) {   //check if height_control is just turned on
             pressure_setpoint = state->sensor.pressure_avg;
             current_lift = state->orient.lift;
         } 
@@ -255,10 +255,12 @@ void height_control(qc_state_t* state) {
             state->option.height_control = false;
         }
 
-    }else {
+    } else {
         // Q16.16 <-- Q8.8
         state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
     }
+
+    prev_height_control = state->option.height_control;
 }
 
 /** =======================================================
