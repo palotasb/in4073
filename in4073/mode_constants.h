@@ -270,7 +270,7 @@
 
 #define YAWP_FRAC_BITS  10
 #define YAWP_MAX        FP_INT(10, YAWP_FRAC_BITS)
-#define YAWP_DEFAULT    ((int32_t) FP_FLOAT(0.035f, YAWP_FRAC_BITS))
+#define YAWP_DEFAULT    ((int32_t) FP_FLOAT(0.035f, YAWP_FRAC_BITS) + 15)
 #define YAWP_MIN        (-(YAWP_DEFAULT) + 1)
 
 // Kalman filter constants
