@@ -49,15 +49,6 @@ int main(void) {
 
     profile_start_tag(&qc_state.prof.pr[2], get_time_us(), iteration);
     while (1) {
-        if (check_timer_flag()) {
-            profile_start_tag(&qc_state.prof.pr[0], get_time_us(), iteration);
-            qc_system_step(&qc_system);
-            //printf("s: %6d %6d %6d\n", phi, theta, psi);
-            profile_end(&qc_state.prof.pr[0], get_time_us());
-            led_display();
-            clear_timer_flag();
-            control_iteration++;
-        }
 
         if (check_sensor_int_flag()) {
             profile_end(&qc_state.prof.pr[2], get_time_us());
@@ -84,6 +75,17 @@ int main(void) {
                 //qc_kalman_filter(&qc_state);
             }
             profile_start_tag(&qc_state.prof.pr[2], get_time_us(), iteration);
+
+            if (1 || check_timer_flag()) {
+                profile_start_tag(&qc_state.prof.pr[0], get_time_us(), iteration);
+                qc_system_step(&qc_system);
+                //printf("s: %6d %6d %6d\n", phi, theta, psi);
+                profile_end(&qc_state.prof.pr[0], get_time_us());
+                led_display();
+                clear_timer_flag();
+                control_iteration++;
+            }
+
             clear_sensor_int_flag();
         }
 
