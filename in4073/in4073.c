@@ -73,8 +73,13 @@ int main(void) {
                     qc_kalman_filter(&qc_state);
                 }
             } else {
-                get_dmp_data();
-                qc_kalman_filter(&qc_state);
+                sensor_fifo_count = 1;
+                while (sensor_fifo_count)
+                    get_dmp_data();
+                qc_state.sensor.sphi    = FP_MUL3((int32_t)FP_FLOAT(10.f, 10), phi    , 0, 2, 8);
+                qc_state.sensor.stheta  = FP_MUL3((int32_t)FP_FLOAT(10.f, 10), theta  , 0, 2, 8);
+                qc_state.sensor.spsi    = FP_MUL3((int32_t)FP_FLOAT(10.f, 10), psi    , 0, 2, 8);
+                //qc_kalman_filter(&qc_state);
             }
             profile_start_tag(&qc_state.prof.pr[2], get_time_us(), iteration);
             clear_sensor_int_flag();

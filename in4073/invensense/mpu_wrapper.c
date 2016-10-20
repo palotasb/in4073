@@ -38,7 +38,7 @@ void get_dmp_data(void)
 
 	if (!(read_stat = dmp_read_fifo(gyro, accel, quat, NULL, &sensors, &sensor_fifo_count)))
 	{
-		//update_euler_from_quaternions(quat);
+		update_euler_from_quaternions(quat);
 		sax = accel[0];
 		say = accel[1];
 		saz = accel[2];
