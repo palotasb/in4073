@@ -66,8 +66,15 @@ int main(void) {
                 }
             } else {
                 sensor_fifo_count = 1;
-                while (sensor_fifo_count)
+                while (sensor_fifo_count) {
                     get_dmp_data();
+                    qc_state.sensor.sax =  sax * ACC_G_SCALE_INV - qc_state.offset.sax;
+                    qc_state.sensor.say = -say * ACC_G_SCALE_INV - qc_state.offset.say;
+                    qc_state.sensor.saz = -saz * ACC_G_SCALE_INV - qc_state.offset.saz;
+                    qc_state.sensor.sp  = GYRO_CONV_FROM_NATIVE( sp) - qc_state.offset.sp;
+                    qc_state.sensor.sq  = GYRO_CONV_FROM_NATIVE(-sq) - qc_state.offset.sq;
+                    qc_state.sensor.sr  = GYRO_CONV_FROM_NATIVE(-sr) - qc_state.offset.sr; 
+                }
                 //printf("s: %6d %6d %6d\n", phi, theta, psi);
                 qc_state.sensor.sphi    = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), phi    , 0, 0, 0) - qc_state.offset.sphi;
                 qc_state.sensor.stheta  = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), theta  , 0, 0, 0) - qc_state.offset.stheta;
@@ -76,15 +83,16 @@ int main(void) {
             }
             profile_start_tag(&qc_state.prof.pr[2], get_time_us(), iteration);
 
-            if (1 || check_timer_flag()) {
-                profile_start_tag(&qc_state.prof.pr[0], get_time_us(), iteration);
-                qc_system_step(&qc_system);
-                //printf("s: %6d %6d %6d\n", phi, theta, psi);
-                profile_end(&qc_state.prof.pr[0], get_time_us());
+            profile_start_tag(&qc_state.prof.pr[0], get_time_us(), iteration);
+            qc_system_step(&qc_system);
+            profile_end(&qc_state.prof.pr[0], get_time_us());
+
+            if (check_timer_flag()) {
+                qc_hal.get_inputs_fn(&qc_state);
                 led_display();
                 clear_timer_flag();
-                control_iteration++;
             }
+            control_iteration++;
 
             clear_sensor_int_flag();
         }

@@ -154,7 +154,7 @@ void qc_command_rx_message(qc_command_t* command, message_t* message) {
 void qc_command_set_mode(qc_command_t* command, qc_mode_t mode) {
     if (!IS_VALID_MODE(mode))
         return;
-    printf("Set mode by command.\n");
+    //printf("Set mode by command.\n");
     qc_system_set_mode(command->system, mode);
 }
 

@@ -76,7 +76,7 @@ void qc_system_init(qc_system_t* system,
  *  Author: Boldizsar Palotas
 **/
 void qc_system_step(qc_system_t* system) {
-    system->hal->get_inputs_fn(system->state);
+    //system->hal->get_inputs_fn(system->state);
 
     if (!is_test_device && system->state->sensor.voltage_avg < SAFE_VOLTAGE) {
        if(system->mode != MODE_1_PANIC)

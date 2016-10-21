@@ -4,9 +4,9 @@
 #include "mode_constants.h"
 
 static void qc_hal_tx_byte(uint8_t byte);
-static void qc_hal_get_inputs(qc_state_t* state);
 static void qc_hal_set_outputs(qc_state_t* state);
 static void qc_hal_enable_motors(bool);
+static void qc_hal_get_inputs(qc_state_t* state);
 
 static bool motors_enabled = false;
 static bool enable_uart_output = true;
