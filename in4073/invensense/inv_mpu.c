@@ -1402,8 +1402,20 @@ int mpu_read_fifo_stream(unsigned short length, unsigned char *data,
         return -1;
     fifo_count = (tmp[0] << 8) | tmp[1];
     if (fifo_count < length) {
-        more[0] = 0;
-        return -1;
+        // We do not believe the FIFO count reading because it sometimes
+        // return zero when a reread proves that the actual count is
+        // non-zero.
+        //unsigned short fifo_count_1st = fifo_count;
+        if (i2c_read(st.hw->addr, st.reg->fifo_count_h, 2, tmp))
+            return -1;
+        fifo_count = (tmp[0] << 8) | tmp[1];
+        if (fifo_count < length) {
+            printf("FIFO empty err, cnt=%d\n", fifo_count);
+            more[0] = 0;
+            return -1;
+        } else {
+            //printf("Warn: FIFO cnt 1st:%d 2nd:%d\n", fifo_count_1st, fifo_count);
+        }
     }
     if (fifo_count > (st.hw->max_fifo >> 1)) {
         /* FIFO is 50% full, better check overflow bit. */

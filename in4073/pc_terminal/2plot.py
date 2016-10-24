@@ -123,7 +123,8 @@ class SubplotAnimation(animation.TimedAnimation):
         self.ax_temp.set_ylabel('Temp [C]')
         self.ax_temp.set_ylim(-5, 35)
         self.ax_prof.set_ylabel('Time [us]')
-        self.ax_prof.set_ylim(0, 10000)
+        self.ax_prof.set_ylim(2, 20000)
+        self.ax_prof.set_yscale('log')
 
         self.ax_pos.set_ylabel('Pos [m]')
         self.axes_autoscale = self.axes_autoscale + [self.ax_pos]
@@ -254,7 +255,7 @@ class SubplotAnimation(animation.TimedAnimation):
             a.set_xlim(0, self.x_len)
             a.legend(fontsize='xx-small', loc='upper left')
 
-        animation.TimedAnimation.__init__(self, fig, interval=50, blit=True)
+        animation.TimedAnimation.__init__(self, fig, interval=100, blit=True)
 
     def _draw_frame(self, framedata):
         self._drawn_artists = []

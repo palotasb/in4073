@@ -98,6 +98,8 @@ void qc_system_set_mode(qc_system_t* system, qc_mode_t mode);
 
 void qc_kalman_filter(qc_state_t* state);
 
+void qc_system_log_data(qc_system_t* system);
+
 void qc_system_set_raw(qc_system_t* system, bool raw);
 
 #endif // QC_SYSTEM_H
