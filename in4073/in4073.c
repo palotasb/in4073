@@ -39,6 +39,11 @@ static void init_modes(void);
 static void led_display(void);
 static void init_all(void);
 static void transmit_text(void);
+static bool process_and_control(void);
+static void receive_commands(void);
+static void process_dmp_data(void);
+static bool process_raw_data(void);
+static void idle_task(bool);
 
 uint32_t iteration = 0;
 uint32_t control_iteration = 0;
@@ -47,64 +52,134 @@ bool is_test_device = false;
 int main(void) {
     init_all();
 
-    profile_start_tag(&qc_state.prof.pr[2], get_time_us(), iteration);
     while (1) {
 
-        if (check_sensor_int_flag()) {
-            profile_end(&qc_state.prof.pr[2], get_time_us());
-            if (qc_state.option.raw_control) {
-                sensor_fifo_count = 1;
-                while (sensor_fifo_count) {
-                    get_raw_sensor_data();
-                    qc_state.sensor.sax =  sax * ACC_G_SCALE_INV - qc_state.offset.sax;
-                    qc_state.sensor.say = -say * ACC_G_SCALE_INV - qc_state.offset.say;
-                    qc_state.sensor.saz = -saz * ACC_G_SCALE_INV - qc_state.offset.saz;
-                    qc_state.sensor.sp  = GYRO_CONV_FROM_NATIVE( sp) - qc_state.offset.sp;
-                    qc_state.sensor.sq  = GYRO_CONV_FROM_NATIVE(-sq) - qc_state.offset.sq;
-                    qc_state.sensor.sr  = GYRO_CONV_FROM_NATIVE(-sr) - qc_state.offset.sr; 
-                    qc_kalman_filter(&qc_state);
-                }
-            } else {
-                sensor_fifo_count = 1;
-                while (sensor_fifo_count) {
-                    get_dmp_data();
-                    qc_state.sensor.sax =  sax * ACC_G_SCALE_INV - qc_state.offset.sax;
-                    qc_state.sensor.say = -say * ACC_G_SCALE_INV - qc_state.offset.say;
-                    qc_state.sensor.saz = -saz * ACC_G_SCALE_INV - qc_state.offset.saz;
-                    qc_state.sensor.sp  = GYRO_CONV_FROM_NATIVE( sp) - qc_state.offset.sp;
-                    qc_state.sensor.sq  = GYRO_CONV_FROM_NATIVE(-sq) - qc_state.offset.sq;
-                    qc_state.sensor.sr  = GYRO_CONV_FROM_NATIVE(-sr) - qc_state.offset.sr; 
-                }
-                //printf("s: %6d %6d %6d\n", phi, theta, psi);
-                qc_state.sensor.sphi    = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), phi    , 0, 0, 0) - qc_state.offset.sphi;
-                qc_state.sensor.stheta  = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), theta  , 0, 0, 0) - qc_state.offset.stheta;
-                qc_state.sensor.spsi    = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), psi    , 0, 0, 0);
-                //qc_kalman_filter(&qc_state);
-            }
-            profile_start_tag(&qc_state.prof.pr[2], get_time_us(), iteration);
-
-            profile_start_tag(&qc_state.prof.pr[0], get_time_us(), iteration);
-            qc_system_step(&qc_system);
-            profile_end(&qc_state.prof.pr[0], get_time_us());
-
-            if (check_timer_flag()) {
-                qc_hal.get_inputs_fn(&qc_state);
-                led_display();
-                clear_timer_flag();
-            }
-            control_iteration++;
-
+        // This is priority round robin scheduling.
+        // The higher priority task is the first in the chain of
+        // if (...) else if (...) sequences. This guarantees that then
+        // latency for the highest priority task is the time needed to
+        // complete a single other task.
+        bool finished = true;
+        if (check_sensor_int_flag() || !finished) {
+            idle_task(false);
             clear_sensor_int_flag();
+            // Processing the data might happen before all data is read.
+            // In this case we want to enter this branch again, that is
+            // what the "finished" flag is for.
+            finished = process_and_control();
         }
-
-        if (text_queue.count) {
+        else if (rx_queue.count) {
+            idle_task(false);
+            receive_commands();
+        }
+        else if (check_timer_flag()) {
+            clear_timer_flag();
+            idle_task(false);
+            qc_hal.get_inputs_fn(&qc_state);
+            led_display();
+            qc_system_log_data(&qc_system);
+        }
+        else if (text_queue.count) {
+            idle_task(false);
             transmit_text();
         }
+        else {
+            idle_task(true);
+        }
 
-        while (rx_queue.count)
-            serialcomm_receive_char(&serialcomm, dequeue(&rx_queue));
         iteration++;
     }
+}
+
+bool process_and_control(void) {
+    // Start measuring pr0: Time from sensor interrupt until outputs are applied to the motor.
+    profile_start_tag(&qc_state.prof.pr[0], get_time_us(), control_iteration);
+    // End measuring pr2: Time from applying outputs to new data from sensor.
+    profile_end(&qc_state.prof.pr[2], get_time_us());
+
+    // Calculate outputs for the control system according to current mode.
+    // ========================
+    bool finished;
+    if (qc_state.option.raw_control) {
+        finished = process_raw_data();
+    } else {
+        process_dmp_data();
+        finished = true;
+    }
+    qc_system_step(&qc_system);
+    // ========================
+
+    // Start measuring pr0: Time from applying outputs until new sensor interrupt arrives.
+    profile_start_tag(&qc_state.prof.pr[2], get_time_us(), control_iteration);
+    profile_end(&qc_state.prof.pr[0], get_time_us());
+
+    control_iteration++;
+    return finished;
+}
+
+bool process_raw_data(void) {
+    static int iter_count = 0;
+    do {
+        sensor_fifo_count = 0;
+        // Start measuring pr3: Time of one data read
+        profile_start_tag(&qc_state.prof.pr[3], get_time_us(), control_iteration);
+        get_raw_sensor_data();
+        qc_state.sensor.sax =  sax * ACC_G_SCALE_INV - qc_state.offset.sax;
+        qc_state.sensor.say = -say * ACC_G_SCALE_INV - qc_state.offset.say;
+        qc_state.sensor.saz = -saz * ACC_G_SCALE_INV - qc_state.offset.saz;
+        qc_state.sensor.sp  = GYRO_CONV_FROM_NATIVE( sp) - qc_state.offset.sp;
+        qc_state.sensor.sq  = GYRO_CONV_FROM_NATIVE(-sq) - qc_state.offset.sq;
+        qc_state.sensor.sr  = GYRO_CONV_FROM_NATIVE(-sr) - qc_state.offset.sr; 
+        qc_kalman_filter(&qc_state);
+        iter_count = iter_count + 1;
+        if (iter_count == 4) iter_count = 0;
+        profile_end(&qc_state.prof.pr[3], get_time_us());
+    } while (sensor_fifo_count && (iter_count != 3));
+    //if ((control_iteration & (0x1F << 3)) == 0)
+    //    printf("iter:%d fifo:%d\n", iter_count, sensor_fifo_count);
+    return (sensor_fifo_count == 0);
+}
+
+void process_dmp_data(void) {
+    int iter_count = 0;
+    do {
+        sensor_fifo_count = 0;
+        // Start measuring pr3: Time of one data read
+        profile_start_tag(&qc_state.prof.pr[3], get_time_us(), control_iteration);
+        get_dmp_data();
+        profile_end(&qc_state.prof.pr[3], get_time_us());
+        iter_count++;
+    } while (sensor_fifo_count);
+    //if ((control_iteration & (0x1F << 3)) == 0)
+    //    printf("iter:%d fifo:%d\n", iter_count, sensor_fifo_count);
+
+    qc_state.sensor.sax =  sax * ACC_G_SCALE_INV - qc_state.offset.sax;
+    qc_state.sensor.say = -say * ACC_G_SCALE_INV - qc_state.offset.say;
+    qc_state.sensor.saz = -saz * ACC_G_SCALE_INV - qc_state.offset.saz;
+    qc_state.sensor.sp  = GYRO_CONV_FROM_NATIVE( sp) - qc_state.offset.sp;
+    qc_state.sensor.sq  = GYRO_CONV_FROM_NATIVE(-sq) - qc_state.offset.sq;
+    qc_state.sensor.sr  = GYRO_CONV_FROM_NATIVE(-sr) - qc_state.offset.sr; 
+    qc_state.sensor.sphi    = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), phi    , 0, 0, 0) - qc_state.offset.sphi;
+    qc_state.sensor.stheta  = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), theta  , 0, 0, 0) - qc_state.offset.stheta;
+    qc_state.sensor.spsi    = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), psi    , 0, 0, 0);
+}
+
+void receive_commands(void) {
+    while (rx_queue.count)
+        serialcomm_receive_char(&serialcomm, dequeue(&rx_queue));
+}
+
+void idle_task(bool is_idle) {
+    // This is used only to measure the time when the processor is
+    // idle. If this time is very low or especially zero then we have
+    // problems because higher priority tasks don't have time to run.
+    static bool was_idle = true;
+    if (was_idle && !is_idle) {
+        profile_end(&qc_state.prof.pr[4], get_time_us()); // End measuring idle time
+    } else if (!was_idle && is_idle) {
+        profile_start(&qc_state.prof.pr[4], get_time_us()); // Start measuring idle time
+    }
+    was_idle = is_idle;
 }
 
 void init_all(void) {
@@ -132,6 +207,9 @@ void init_all(void) {
         &qc_rx_complete,
         &qc_hal
     );
+    profile_start_tag(&qc_state.prof.pr[2], get_time_us(), control_iteration);
+    profile_start_tag(&qc_state.prof.pr[4], get_time_us(), control_iteration);
+    qc_command.timer = qc_hal.get_time_us_fn();
 }
 
 void init_modes(void) {
@@ -187,6 +265,17 @@ void led_display(void) {
             break;
     }
     led_patterns[0] = 0xFF00FF00;
+    if (qc_state.prof.pr[4].last_delta < 10) {
+        led_patterns[2] = ~0x00000000;
+    } else if (qc_state.prof.pr[4].last_delta < 20) {
+        led_patterns[2] = ~0x11111111;
+    } else if (qc_state.prof.pr[4].last_delta < 50) {
+        led_patterns[2] = ~0x33333333;
+    } else if (qc_state.prof.pr[4].last_delta < 100) {
+        led_patterns[2] = ~0x77777777;
+    } else {
+        led_patterns[2] = ~0xFFFFFFFF;
+    }
 
     counter++;
     for (int i = 0; i < 4; i++) {

@@ -9,7 +9,7 @@ static void qc_command_set_lift_roll_pitch_yaw(qc_command_t* command,
     f8p8_t lift, f8p8_t roll, f8p8_t pitch, f8p8_t yaw);
 
 // 0.5s timeout
-#define COMMAND_TIMEOUT 50
+#define COMMAND_TIMEOUT (500*1000)
 
 /** =======================================================
  *  qc_command_init -- Initialise quadcopter command module
@@ -33,8 +33,8 @@ void qc_command_init(qc_command_t* command,
     qc_system_t* system
 ) {
     command->serialcomm = serialcomm;
-    command->timer = 0;
     command->system = system;
+    command->timer = command->system->hal->get_time_us_fn();
 
     serialcomm_init(serialcomm);
     serialcomm->rx_frame                = &command->rx_frame;
@@ -55,7 +55,7 @@ void qc_command_init(qc_command_t* command,
  *  Author: Boldizsar Palotas
 **/
 void qc_command_rx_message(qc_command_t* command, message_t* message) {
-    command->timer = 0;
+    command->timer = command->system->hal->get_time_us_fn();
     switch (message->ID) {
         case MESSAGE_SET_MODE_ID:
             qc_command_set_mode(command,
@@ -183,11 +183,9 @@ void qc_command_set_lift_roll_pitch_yaw(qc_command_t* command,
 }
 
 void qc_command_tick(qc_command_t* command) {
-    if (command->timer < COMMAND_TIMEOUT) {
-        command->timer++;
-    } else {
+    if (COMMAND_TIMEOUT < command->system->hal->get_time_us_fn() - command->timer) {
         printf("Panic because of comm timeout.\n");
         qc_system_set_mode(command->system, MODE_1_PANIC);
-        command->timer = 0;
+        command->timer = command->system->hal->get_time_us_fn();
     }
 }

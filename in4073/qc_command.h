@@ -19,7 +19,7 @@ typedef struct qc_command {
     serialcomm_t*           serialcomm;
     frame_t                 rx_frame;
     struct qc_system*       system;
-    int                     timer;
+    uint32_t                timer;
 } qc_command_t;
 
 void qc_command_init(qc_command_t* command,

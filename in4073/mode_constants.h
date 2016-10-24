@@ -166,7 +166,7 @@
 
 // Inverse of the control loop time constant in seconds
 // 1 / (0.01 [s]) = 1000 / 10 [1/s] in Q24.8 format.
-#define T_INV_FRAC_BITS         8
+#define T_INV_FRAC_BITS         0
 #define T_INV                   ((q32_t)(FP_FRAC(1000, 10, T_INV_FRAC_BITS)))
 
 // Moment of inertia around the x, y, z axis (for L, M, N torque) [N m]
@@ -285,5 +285,6 @@
 
 // IMU constants
 #define IMU_RAW_FREQ        1000
+#define T_CONST_RAW         FP_MUL1(T_CONST , FP_FRAC(T_INV >> T_INV_FRAC_BITS, IMU_RAW_FREQ, 8), 8)
 
 #endif // MODE_CONSTANTS_H
