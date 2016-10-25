@@ -131,20 +131,26 @@ void qc_kalman_filter(qc_state_t* state) {
     // [1] In4073 QR Controller Theory (Arjan J.C. van Gemund, 2012)
     // http://www.st.ewi.tudelft.nl/~koen/in4073/Resources/kalman_control.pdf
 
+    q32_t phi_state_est = state->sensor.sphi +
+        FP_MUL1(T_CONST_RAW, state->sensor.sp, T_CONST_FRAC_BITS);
+    q32_t phi_meas_est = fp_asin_t1(FP_MUL1( - state->sensor.say, KALMAN_M, KALMAN_M_FRAC_BITS));
     state->sensor.sphi = fp_angle_clip(
-        FP_MUL1(FP_MUL1(T_CONST_RAW , state->sensor.sp, T_CONST_FRAC_BITS) + state->sensor.sphi,
-                KALMAN_GYRO_WEIGHT, KALMAN_WEIGHT_FRAC_BITS)
-        + FP_MUL1(fp_asin_t1(FP_MUL1( - state->sensor.say, KALMAN_M, KALMAN_M_FRAC_BITS)),
-                KALMAN_ACC_WEIGHT, KALMAN_WEIGHT_FRAC_BITS));
+        FP_MUL1(phi_state_est, KALMAN_GYRO_WEIGHT, KALMAN_WEIGHT_FRAC_BITS) +
+        FP_MUL1(phi_meas_est, KALMAN_ACC_WEIGHT, KALMAN_WEIGHT_FRAC_BITS));
 
+    q32_t theta_state_est = state->sensor.stheta +
+        FP_MUL1(T_CONST_RAW, state->sensor.sq, T_CONST_FRAC_BITS);
+    q32_t theta_meas_est = fp_asin_t1(FP_MUL1(state->sensor.sax, KALMAN_M, KALMAN_M_FRAC_BITS));
     state->sensor.stheta = fp_angle_clip(
-        FP_MUL1(FP_MUL1(T_CONST_RAW , state->sensor.sq, T_CONST_FRAC_BITS) + state->sensor.stheta,
-                KALMAN_GYRO_WEIGHT, KALMAN_WEIGHT_FRAC_BITS)
-      + FP_MUL1(fp_asin_t1(FP_MUL1(state->sensor.sax, KALMAN_M, KALMAN_M_FRAC_BITS)),
-                KALMAN_ACC_WEIGHT, KALMAN_WEIGHT_FRAC_BITS));
+        FP_MUL1(theta_state_est, KALMAN_GYRO_WEIGHT, KALMAN_WEIGHT_FRAC_BITS) +
+        FP_MUL1(theta_meas_est, KALMAN_ACC_WEIGHT, KALMAN_WEIGHT_FRAC_BITS));
 
     state->sensor.spsi = fp_angle_clip(state->sensor.spsi +
         FP_MUL1(T_CONST_RAW , state->sensor.sr, T_CONST_FRAC_BITS));
+
+    // Task 2: Updating offset terms.
+    state->offset.sp += FP_MUL1(KALMAN_OFFSET_WEIGHT, phi_state_est - phi_meas_est, KALMAN_OFFSET_FRAC_BITS);
+    state->offset.sr += FP_MUL1(KALMAN_OFFSET_WEIGHT, theta_state_est - theta_meas_est, KALMAN_OFFSET_FRAC_BITS);
 }
 
 void qc_system_set_raw(qc_system_t* system, bool raw) {
