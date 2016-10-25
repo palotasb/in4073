@@ -104,22 +104,47 @@ void qc_system_step(qc_system_t* system) {
 }
 
 void qc_kalman_filter(qc_state_t* state) {
-    const int t = state->option.raw_control ? T_CONST_RAW : T_CONST;
+    // Task 1: Estimate attitude angles phi and theta
+    // ----------------------------------------------
+    //
+    // The estimate is a wighted average of sphi_prev + t * sp and
+    // sphi_acc, where sphi_prev is the previous estimate, t is the
+    // time constant (T_CONST_RAW) and sphi_acc is the estimated value
+    // based on only the accelerometer reading. Same for stheta. The
+    // weights are the KALMAN_GYRO_WEIGHT and KALMAN_ACC_WEIGHT.
+    // 
+    // Note that this isn't real Kalman filtering because we don't
+    // estimate the state covariance and apply a constant gain intead
+    // of a calculated optimal Kalman gain. The gain corresponds to
+    // KALMAN_ACC_WEIGHT. This reduces the drift of sphi and stheta to
+    // zero but the reduction might not be at an optimal level.
+    //
+    // Relation to the In4073 QR Controller Theory paper [1]
+    // -----------------------------------------------------
+    //
+    // The state estimation technique presented there is the same as
+    // basic technique as the one used here (which also isn't full
+    // Kalman filtering). Our KALMAN_ACC_WEIGHT constant corresponds
+    // to 1/C1. The bias term corresponds to our state.offset values
+    // which are calculated at calibration and left as a constant.
+    //
+    // [1] In4073 QR Controller Theory (Arjan J.C. van Gemund, 2012)
+    // http://www.st.ewi.tudelft.nl/~koen/in4073/Resources/kalman_control.pdf
 
     state->sensor.sphi = fp_angle_clip(
-        FP_MUL1(FP_MUL1(t , state->sensor.sp, T_CONST_FRAC_BITS) + state->sensor.sphi,
+        FP_MUL1(FP_MUL1(T_CONST_RAW , state->sensor.sp, T_CONST_FRAC_BITS) + state->sensor.sphi,
                 KALMAN_GYRO_WEIGHT, KALMAN_WEIGHT_FRAC_BITS)
         + FP_MUL1(fp_asin_t1(FP_MUL1( - state->sensor.say, KALMAN_M, KALMAN_M_FRAC_BITS)),
                 KALMAN_ACC_WEIGHT, KALMAN_WEIGHT_FRAC_BITS));
 
     state->sensor.stheta = fp_angle_clip(
-        FP_MUL1(FP_MUL1(t , state->sensor.sq, T_CONST_FRAC_BITS) + state->sensor.stheta,
+        FP_MUL1(FP_MUL1(T_CONST_RAW , state->sensor.sq, T_CONST_FRAC_BITS) + state->sensor.stheta,
                 KALMAN_GYRO_WEIGHT, KALMAN_WEIGHT_FRAC_BITS)
       + FP_MUL1(fp_asin_t1(FP_MUL1(state->sensor.sax, KALMAN_M, KALMAN_M_FRAC_BITS)),
                 KALMAN_ACC_WEIGHT, KALMAN_WEIGHT_FRAC_BITS));
 
     state->sensor.spsi = fp_angle_clip(state->sensor.spsi +
-        FP_MUL1(t , state->sensor.sr, T_CONST_FRAC_BITS));
+        FP_MUL1(T_CONST_RAW , state->sensor.sr, T_CONST_FRAC_BITS));
 }
 
 void qc_system_set_raw(qc_system_t* system, bool raw) {
