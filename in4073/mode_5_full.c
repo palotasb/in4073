@@ -232,18 +232,18 @@ void control_fn(qc_state_t* state) {
 void height_control(qc_state_t* state) {
     static f8p8_t current_lift;
     static f16p16_t height_setpoint;
-    f16p16_t velo_w;
-    
+    static f16p16_t err_i;
+    f16p16_t Z_noclip, err_p;
+    const q32_t t = state->option.raw_control ? T_CONST_RAW : T_CONST;
 
     if(state->option.height_control == true) {
         if(prev_height_control == false) {   //check if height_control is just turned on
             height_setpoint = state->pos.z;
             current_lift = state->orient.lift;
+            err_i = state->force.Z;
         } 
         
         if(current_lift == state->orient.lift){
-
-            //use kalman filter on the (filtered) barometer and saz
 
 /*                pressure is a 11.16 bit value, as long as we use 5.x bit P values, it is impossible to overflow, however if we assume that 
                 the error values are relatively small (since we start the controller when we are around the setpoint)
@@ -285,16 +285,11 @@ void height_control(qc_state_t* state) {
                 P1_HEIGHT has P1_HEIGHT_FRAC_BITS bits for the fraction part, so result needs to be shifted by that amount of bits
             */
 
-            velo_w = FP_MUL1(P1_HEIGHT, (height_setpoint - state->pos.z), P1_HEIGHT_FRAC_BITS);
-
-            /*   outputof the controller is calculated as:
-                 state->force.Z = - (P2_HEIGHT *  (vspeed - vspeed_sp)
-                                = (P2_HEIGHT *  (vspeed_sp - vspeed)
-
-                P2_HEIGHT has P2_HEIGHT_FRAC_BITS bits for the fraction part, so result needs to be shifted by that amount of bits
-            */
-
-            state->force.Z = FP_MUL1(P2_HEIGHT, (state->velo.w - velo_w), P2_HEIGHT_FRAC_BITS);
+            err_p       = height_setpoint - state->pos.z;
+            err_i       = err_i + FP_MUL1(err_p, t * P1_HEIGHT, P1_HEIGHT_FRAC_BITS + T_CONST_FRAC_BITS);
+            Z_noclip    = FP_MUL1(P2_HEIGHT, err_p, P2_HEIGHT_FRAC_BITS) + err_i;
+            state->force.Z = HC_Z_MAX < Z_noclip ? HC_Z_MAX : Z_noclip < HC_Z_MIN ? HC_Z_MIN : Z_noclip; 
+            err_i       = err_i + state->force.Z - Z_noclip;
 
         } else {
             // Q16.16 <-- Q8.8
