@@ -124,12 +124,23 @@ void pc_log_receive(pc_log_t* log, message_t* message) {
             if (log->initialised && log->set[PC_LOG_x]) {
                 pc_log_flush(log);
             }
-            log->state.pos.x = MESSAGE_XPOS_VALUE(message);
-            log->state.pos.y = MESSAGE_YPOS_VALUE(message);
-            log->state.pos.z = MESSAGE_ZPOS_VALUE(message);
+            log->state.pos.x = FP_EXTEND(MESSAGE_XPOS_VALUE(message), 16, 8);
+            log->state.pos.y = FP_EXTEND(MESSAGE_YPOS_VALUE(message), 16, 8);
+            log->state.pos.z = FP_EXTEND(MESSAGE_ZPOS_VALUE(message), 16, 8);
             log->set[PC_LOG_x] = true;
             log->set[PC_LOG_y] = true;
             log->set[PC_LOG_z] = true;
+            break;
+        case MESSAGE_UVW_ID:
+            if (log->initialised && log->set[PC_LOG_u]) {
+                pc_log_flush(log);
+            }
+            log->state.velo.u = FP_EXTEND(MESSAGE_U_VALUE(message), 16, 8);
+            log->state.velo.v = FP_EXTEND(MESSAGE_V_VALUE(message), 16, 8);
+            log->state.velo.w = FP_EXTEND(MESSAGE_W_VALUE(message), 16, 8);
+            log->set[PC_LOG_u] = true;
+            log->set[PC_LOG_v] = true;
+            log->set[PC_LOG_w] = true;
             break;
         case MESSAGE_PHI_THETA_PSI_ID:
             if (log->initialised && log->set[PC_LOG_phi]) {
@@ -249,9 +260,9 @@ void pc_log_flush(pc_log_t* log) {
     /* 17 */    pc_log_print(log, "%f"  _SEP, PC_LOG_temperature, FLOAT_FP(log->state.sensor.temperature, 8));
     /* 18 */    pc_log_print(log, "%f"  _SEP, PC_LOG_pressure, FLOAT_FP(log->state.sensor.pressure, 16));
     /* 19 */    pc_log_print(log, "%f"  _SEP, PC_LOG_voltage, (float)(log->state.sensor.voltage) / 100.0f);
-    /* 20 */    pc_log_print(log, "%d"  _SEP, PC_LOG_x, log->state.pos.x);
-    /* 21 */    pc_log_print(log, "%d"  _SEP, PC_LOG_y, log->state.pos.y);
-    /* 22 */    pc_log_print(log, "%d"  _SEP, PC_LOG_z, log->state.pos.z);
+    /* 20 */    pc_log_print(log, "%f"  _SEP, PC_LOG_x, FLOAT_FP(log->state.pos.x, 16));
+    /* 21 */    pc_log_print(log, "%f"  _SEP, PC_LOG_y, FLOAT_FP(log->state.pos.y, 16));
+    /* 22 */    pc_log_print(log, "%f"  _SEP, PC_LOG_z, FLOAT_FP(log->state.pos.z, 16));
     /* 23 */    pc_log_print(log, "%f"  _SEP, PC_LOG_phi,   FLOAT_FP(log->state.att.phi, 16));
     /* 24 */    pc_log_print(log, "%f"  _SEP, PC_LOG_theta, FLOAT_FP(log->state.att.theta, 16));
     /* 25 */    pc_log_print(log, "%f"  _SEP, PC_LOG_psi,   FLOAT_FP(log->state.att.psi, 16));

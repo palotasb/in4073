@@ -172,7 +172,7 @@
 
 // This determines the amount of pressure samples that are averaged in order to filter the pressure.
 // please note that if this value equals N, the number of samples equals 2^N
-#define PRESSURE_AVERAGE_SHIFT    4 
+#define PRESSURE_AVERAGE_SHIFT    4
 
 // Inverse of the control loop time constant in seconds
 // 1 / (0.01 [s]) = 1000 / 10 [1/s] in Q24.8 format.
@@ -322,11 +322,11 @@
 #define KALMAN_Z_MAX            FP_INT(10, KALMAN_Z_FRAC_BITS)
 #define KALMAN_Z_MIN            ( - KALMAN_Z_MAX)
 
-#define KALMAN_PRES_FRAC_BITS       16
-#define KALMAN_PRES                 ((int32_t)FP_FLOAT(0.125, KALMAN_PRES_FRAC_BITS))
+#define KALMAN_PRES_FRAC_BITS       2
+#define KALMAN_PRES                 ((int32_t)FP_FLOAT(25 * 0.125, KALMAN_PRES_FRAC_BITS))
 
 #define KALMAN_PRES_WEIGHT_FRAC_BITS    12
-#define KALMAN_PRES_ACC_WEIGHT          ((q32_t) FP_FLOAT(.99f, KALMAN_PRES_WEIGHT_FRAC_BITS))
+#define KALMAN_PRES_ACC_WEIGHT          ((q32_t) FP_FLOAT(0.1f, KALMAN_PRES_WEIGHT_FRAC_BITS))
 #define KALMAN_PRES_PRS_WEIGHT          (FP_INT(1, KALMAN_PRES_WEIGHT_FRAC_BITS) - KALMAN_PRES_ACC_WEIGHT)
 
 // IMU constants

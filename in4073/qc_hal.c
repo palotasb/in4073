@@ -77,16 +77,10 @@ void qc_hal_get_inputs(qc_state_t* state) {
        result of multiplying with 0.01 in F16P16 format will fit in F16P16
     */
     state->sensor.pressure      = pressure * BARO_SCALE_INV  - state->offset.pressure;
-    if(state->sensor.pressure_avg == 0) {
-        state->sensor.pressure_avg = state->sensor.pressure;
-        state->sensor.prev_pressure_avg = state->sensor.pressure_avg;
-    }else{
-        state->sensor.prev_pressure_avg = state->sensor.pressure_avg;
-        state->sensor.pressure_avg -= state->sensor.pressure_avg >> PRESSURE_AVERAGE_SHIFT;
-        state->sensor.pressure_avg += state->sensor.pressure >> PRESSURE_AVERAGE_SHIFT;
-    }
 
-
+    state->sensor.prev_pressure_avg = state->sensor.pressure_avg;
+    state->sensor.pressure_avg -= state->sensor.pressure_avg >> PRESSURE_AVERAGE_SHIFT;
+    state->sensor.pressure_avg += state->sensor.pressure >> PRESSURE_AVERAGE_SHIFT;
 
     state->sensor.voltage       = bat_volt;
 	 if(state->sensor.voltage_avg == -1) {

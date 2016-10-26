@@ -119,8 +119,8 @@ class SubplotAnimation(animation.TimedAnimation):
         self.ax_voltage.set_ylabel('Voltage [V]')
         self.ax_voltage.set_ylim(0, 15)
         self.ax_pressure.set_ylabel('Pressure [kPa]')
-        #self.ax_pressure.set_ylim(380, 420)
-        self.axes_autoscale = self.axes_autoscale + [self.ax_pressure]
+        self.ax_pressure.set_ylim(-0.5, 0.5)
+        #self.axes_autoscale = self.axes_autoscale + [self.ax_pressure]
         self.ax_temp.set_ylabel('Temp [C]')
         self.ax_temp.set_ylim(-5, 35)
         self.ax_prof.set_ylabel('Time [us]')
@@ -128,9 +128,11 @@ class SubplotAnimation(animation.TimedAnimation):
         self.ax_prof.set_yscale('log')
 
         self.ax_pos.set_ylabel('Pos [m]')
-        self.axes_autoscale = self.axes_autoscale + [self.ax_pos]
+        #self.axes_autoscale = self.axes_autoscale + [self.ax_pos]
+        self.ax_pos.set_ylim(-1, 0.5)
         self.ax_velo.set_ylabel('Velo [m/s]')
-        self.ax_velo.set_ylim(-3, 3)
+        #self.axes_autoscale = self.axes_autoscale + [self.ax_velo]
+        self.ax_velo.set_ylim(-5, 5)
         self.ax_force.set_ylabel('Force [N]')
         self.ax_force.set_ylim(-20, 20)
         self.ax_setpoint.set_ylabel('Setpoints [?]')

@@ -75,8 +75,8 @@ void qc_state_clear_sensor(qc_state_t* state) {
     state->sensor.saz   = 0;
     state->sensor.temperature   = 0;
     state->sensor.pressure      = 0;
+    state->sensor.pressure_avg      = 0;
     state->sensor.prev_pressure_avg = 0;
-    state->sensor.zero_pressure = 0;
     state->sensor.voltage       = 0;
     state->sensor.voltage_avg   = -1;
 }
