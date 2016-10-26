@@ -9,8 +9,6 @@
 extern bool is_test_device;
 extern uint32_t iteration;
 
-static void qc_system_log_data(qc_system_t* system);
-
 /** =======================================================
  *  qc_system_init -- Initialise a model of the quadcopter
  *  =======================================================
@@ -76,7 +74,6 @@ void qc_system_init(qc_system_t* system,
  *  Author: Boldizsar Palotas
 **/
 void qc_system_step(qc_system_t* system) {
-    system->hal->get_inputs_fn(system->state);
 
     if (!is_test_device && system->state->sensor.voltage_avg < SAFE_VOLTAGE) {
        if(system->mode != MODE_1_PANIC)
@@ -87,22 +84,27 @@ void qc_system_step(qc_system_t* system) {
 
     qc_command_tick(system->command);
 
+    // Profile 1: Time needed to calculate everything in the control function.
     profile_start_tag(&system->state->prof.pr[1], system->hal->get_time_us_fn(), iteration);
+
+    // The main control function of the current mode.
     system->current_mode_table->control_fn(system->state);
+
+    // End profile 1.
     profile_end(&system->state->prof.pr[1], system->hal->get_time_us_fn());
 
+    // Enable motors after various safety checks.
     system->hal->enable_motors_fn(
         system->current_mode_table->motor_on_fn(system->state)
         && system->state->option.enable_motors
         && ZERO_LIFT_THRESHOLD < system->state->orient.lift);
 
+    // Set motor outputs.
     system->hal->set_outputs_fn(system->state);
-
-    qc_system_log_data(system);
 }
 
 void qc_kalman_filter(qc_state_t* state) {
-    const int t = state->option.raw_control ? T_CONST / 10 : T_CONST;
+    const int t = state->option.raw_control ? T_CONST_RAW : T_CONST;
 
     state->sensor.sphi = fp_angle_clip(
         FP_MUL1(FP_MUL1(t , state->sensor.sp, T_CONST_FRAC_BITS) + state->sensor.sphi,
@@ -169,7 +171,7 @@ void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
         system->mode | (system->state->sensor.voltage << 16) );
 }
 
-static void qc_system_log_data(qc_system_t* system) {
+void qc_system_log_data(qc_system_t* system) {
     int pr_id, send_cnt = 0;
     uint32_t bit_mask, index;
     for (bit_mask = 0x01, index = 0; bit_mask; bit_mask = bit_mask << 1, index++) {
