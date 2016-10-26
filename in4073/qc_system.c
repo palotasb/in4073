@@ -120,7 +120,44 @@ void qc_kalman_filter(qc_state_t* state) {
 
     state->sensor.spsi = fp_angle_clip(state->sensor.spsi +
         FP_MUL1(t , state->sensor.sr, T_CONST_FRAC_BITS));
+
+    qc_kalman_height(state);
 }
+
+void qc_kalman_height(qc_state_t* state) {
+    const int t = state->option.raw_control ? T_CONST_RAW : T_CONST;
+
+    // Task 1: estimate w velocity (based on accelerometer integration + pressure sensor derivation)
+
+    q32_t w_int_est = state->velo.w + FP_MUL1(t , state->sensor.saz, T_CONST_FRAC_BITS);
+    q32_t w_deriv_est = FP_MUL1(_1_T_PRES,
+        FP_MUL1(KALMAN_PRES , state->sensor.pressure_avg - state->sensor.prev_pressure_avg,
+        KALMAN_PRES_FRAC_BITS), _1_T_PRES_FRAC_BITS);
+    q32_t w_est = FP_MUL1(KALMAN_PRES_ACC_WEIGHT, w_int_est, KALMAN_PRES_WEIGHT_FRAC_BITS) +
+        FP_MUL1(KALMAN_PRES_PRS_WEIGHT, w_deriv_est, KALMAN_PRES_WEIGHT_FRAC_BITS);
+
+    if (w_est < KALMAN_W_MIN) {
+        w_est = KALMAN_W_MIN;
+    } else if (KALMAN_W_MAX < w_est) {
+        w_est = KALMAN_W_MIN;
+    }
+    state->velo.w = w_est;
+
+    // Task 2: estimate z coordinate (based on speed + pressure sensor)
+
+    q32_t z_state_est = state->pos.z + FP_MUL1(t , state->velo.w, T_CONST_FRAC_BITS);
+    q32_t z_meas_est = FP_MUL1(KALMAN_PRES , state->sensor.pressure_avg, KALMAN_PRES_FRAC_BITS);
+    q32_t z_est = FP_MUL1(KALMAN_PRES_ACC_WEIGHT, z_state_est, KALMAN_PRES_WEIGHT_FRAC_BITS) +
+        FP_MUL1(KALMAN_PRES_PRS_WEIGHT, z_meas_est, KALMAN_PRES_WEIGHT_FRAC_BITS);
+
+    if (z_est < KALMAN_Z_MIN) {
+        z_est = KALMAN_Z_MIN;
+    } else if (KALMAN_Z_MAX < z_est) {
+        z_est = KALMAN_Z_MAX;
+    }
+    state->pos.z = z_est;
+
+} 
 
 void qc_system_set_raw(qc_system_t* system, bool raw) {
     if (system->mode != MODE_0_SAFE) {
