@@ -69,6 +69,7 @@ typedef struct qc_state_sensor {
     f8p8_t      temperature;
     f16p16_t    pressure;
     f16p16_t    pressure_avg;
+    f16p16_t    prev_pressure_avg;
     f16p16_t    voltage;
     f16p16_t    voltage_avg;
 } qc_state_sensor_t;

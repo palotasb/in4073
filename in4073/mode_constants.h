@@ -179,6 +179,9 @@
 #define T_INV_FRAC_BITS         0
 #define T_INV                   ((q32_t)(FP_FRAC(1000, 10, T_INV_FRAC_BITS)))
 
+#define _1_T_PRES_FRAC_BITS     T_INV_FRAC_BITS
+#define _1_T_PRES               T_INV
+
 // Moment of inertia around the x, y, z axis (for L, M, N torque) [N m]
 // [N m] in Q24.8 format.
 #define I_L         FP_FRAC(1, 32, 8)
@@ -308,6 +311,22 @@
 // Magic constant 0.6f is needed becaus gyro and accelerometer don't agree on the angle.
 #define KALMAN_M_FRAC_BITS      10
 #define KALMAN_M                ((int32_t) FP_FLOAT(0.6f * 3.141592f / 2, KALMAN_M_FRAC_BITS))
+
+// Height-estimator part of the KALMAN filter
+#define KALMAN_W_FRAC_BITS      16
+#define KALMAN_W_MAX            FP_INT(10, KALMAN_W_FRAC_BITS)
+#define KALMAN_W_MIN            ( - KALMAN_W_MAX)
+
+#define KALMAN_Z_FRAC_BITS      16
+#define KALMAN_Z_MAX            FP_INT(10, KALMAN_Z_FRAC_BITS)
+#define KALMAN_Z_MIN            ( - KALMAN_Z_MAX)
+
+#define KALMAN_PRES_FRAC_BITS       16
+#define KALMAN_PRES                 ((int32_t)FP_FLOAT(0.125, KALMAN_PRES_FRAC_BITS))
+
+#define KALMAN_PRES_WEIGHT_FRAC_BITS    12
+#define KALMAN_PRES_ACC_WEIGHT          ((q32_t) FP_FLOAT(.99f, KALMAN_PRES_WEIGHT_FRAC_BITS))
+#define KALMAN_PRES_PRS_WEIGHT          (FP_INT(1, KALMAN_PRES_WEIGHT_FRAC_BITS) - KALMAN_PRES_ACC_WEIGHT)
 
 // IMU constants
 #define IMU_RAW_FREQ        1000
