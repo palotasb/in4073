@@ -288,9 +288,16 @@
 #define YAWP_MIN        (-(YAWP_DEFAULT) + 1)
 
 
-// TODO tune this value
-//Height control P value, its in F8P8 format
-#define P_HEIGHT        ((q32_t)FP_FLOAT(100.0, 8))
+// TODO tune this values and set them to the right size
+//Height control P values
+#define P1_HEIGHT_FRAC_BITS    0
+#define P1_HEIGHT              ((int32_t) FP_FLOAT(40.f, P1_HEIGHT_FRAC_BITS) - 28)
+
+#define P2_HEIGHT_FRAC_BITS    2
+#define P2_HEIGHT             ((int32_t) FP_FLOAT(8.0f, P2_HEIGHT_FRAC_BITS) + 100)
+
+#define VSPEED_INTEGRATOR_CONST FP_MUL1(T_CONST , FP_FRAC(1, 100, 8),8)
+
 
 // Kalman filter constants
 

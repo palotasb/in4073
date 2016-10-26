@@ -232,22 +232,65 @@ void control_fn(qc_state_t* state) {
 void height_control(qc_state_t* state) {
     static f8p8_t current_lift;
     static f16p16_t pressure_setpoint;
+    static f16p16_t vspeed;
+    static f16p16_t vspeed_prev;
+    static f16p16_t saz_prev;
+
+    f16p16_t    vspeed_sp;
+    
 
     if(state->option.height_control == true) {
         if(prev_height_control == false) {   //check if height_control is just turned on
             pressure_setpoint = state->sensor.pressure_avg;
             current_lift = state->orient.lift;
         } 
-
+        
         if(current_lift == state->orient.lift){
-            // state->force.Z = - P * (state.sensor.pressure - pressure_setpoint)   -  MIN_Z_FORCE;
-            /* 
+
+            //use kalman filter on the (filtered) barometer and saz
+
+
+
+            
+            /* execute a inner rate controller that keeps saz zero and a outer controller that keeps the pressure constant 
+
+                baro_setpoint -->( + ) --> |HEIGHT_P1> ---> ( + ) ---> | HEIGHT_P2 >------------> Force_z -> QR
+                                   ^                          ^                                              | |
+                                   |                          |---vspeed-------[ INT ]---saz---------------- | |
+                                   |---------barometer---------------------------------------------------------|
+            
+            
                 pressure is a 11.16 bit value, as long as we use 5.x bit P values, it is impossible to overflow, however if we assume that 
                 the error values are relatively small (since we start the controller when we are around the setpoint)
                 a 8.8fp P value should work.
+
+
+                integrator:  Y[n] = (T/(2ti) + 1) X[n] + (T/(2ti) - 1) X[n-1]) + Y[n-1]
+
+                TVSPEED_INTEGRATOR_CONST = T / (2 ti)     means the time constant of the integrator.
+                when ti is low, there is a lot of integration, when ti is very high the integrator is not doing much    
                 
             */
-            state->force.Z = - FP_MUL1(P_HEIGHT, (state->sensor.pressure_avg - pressure_setpoint), 8)  -  MIN_Z_FORCE;
+
+            //TODO calculate variable sizes and add constants
+            //TODO place integration outside this if statement
+
+            vspeed = (VSPEED_INTEGRATOR_CONST + 1) * - state->sensor.saz + (VSPEED_INTEGRATOR_CONST - 1)  * -saz_prev + vspeed_prev;
+           
+           
+            vspeed_prev = vspeed;
+            saz_prev = state->sensor.saz;
+
+
+           // rate = P1_HEIGHT * (state->sensor.pressure_avg - pressure_setpoint);
+           // state->force.Z = - (P2_HEIGHT * (rate + vspeed - vspeed_sp))  -  MIN_Z_FORCE;
+
+            //TODO calculate variable sizes and add constants
+
+            vspeed_sp = FP_MUL1(P1_HEIGHT, (state->sensor.pressure_avg - pressure_setpoint), 8);
+            state->force.Z = - FP_MUL1(P2_HEIGHT, (vspeed - vspeed_sp), 8)  -  MIN_Z_FORCE;
+
+           //state->force.Z = - FP_MUL1(P_HEIGHT, (state->sensor.pressure_avg - pressure_setpoint), 8)  -  MIN_Z_FORCE;
 
         } else {
             // Q16.16 <-- Q8.8
