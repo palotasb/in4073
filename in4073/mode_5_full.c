@@ -231,17 +231,13 @@ void control_fn(qc_state_t* state) {
 **/
 void height_control(qc_state_t* state) {
     static f8p8_t current_lift;
-    static f16p16_t pressure_setpoint;
-    static f16p16_t vspeed;
-    static f16p16_t vspeed_prev;
-    static f16p16_t saz_prev;
-
-    f16p16_t    vspeed_sp;
+    static f16p16_t height_setpoint;
+    f16p16_t velo_w;
     
 
     if(state->option.height_control == true) {
         if(prev_height_control == false) {   //check if height_control is just turned on
-            pressure_setpoint = state->sensor.pressure_avg;
+            height_setpoint = state->pos.z;
             current_lift = state->orient.lift;
         } 
         
@@ -249,48 +245,56 @@ void height_control(qc_state_t* state) {
 
             //use kalman filter on the (filtered) barometer and saz
 
-
+/*                pressure is a 11.16 bit value, as long as we use 5.x bit P values, it is impossible to overflow, however if we assume that 
+                the error values are relatively small (since we start the controller when we are around the setpoint)
+                a 8.8fp P value should work.*/
 
             
             /* execute a inner rate controller that keeps saz zero and a outer controller that keeps the pressure constant 
 
-                baro_setpoint -->( + ) --> |HEIGHT_P1> ---> ( + ) ---> | HEIGHT_P2 >------------> Force_z -> QR
-                                   ^                          ^                                              | |
-                                   |                          |---vspeed-------[ INT ]---saz---------------- | |
-                                   |---------barometer---------------------------------------------------------|
+                height_setpoint -->( + ) -Z-> |HEIGHT_P1> ---> ( + ) ---> | HEIGHT_P2 >------------> Force_z -> QR
+                                     ^                           ^                                              | |
+                                     |                           |---vspeed-------[ INT ]---saz---------------- | |
+                                     |----------heigth------------------------------------------------------------|
             
-            
-                pressure is a 11.16 bit value, as long as we use 5.x bit P values, it is impossible to overflow, however if we assume that 
-                the error values are relatively small (since we start the controller when we are around the setpoint)
-                a 8.8fp P value should work.
+            */
 
 
+
+/************** place this outside this function
                 integrator:  Y[n] = (T/(2ti) + 1) X[n] + (T/(2ti) - 1) X[n-1]) + Y[n-1]
 
                 TVSPEED_INTEGRATOR_CONST = T / (2 ti)     means the time constant of the integrator.
                 when ti is low, there is a lot of integration, when ti is very high the integrator is not doing much    
                 
-            */
+                VSPEED_INTEGRATOR_CONST is in 16.16 format, saz is in 16.16 format so after multiplication 16 bit shift is needed.
 
-            //TODO calculate variable sizes and add constants
-            //TODO place integration outside this if statement
-
-            vspeed = (VSPEED_INTEGRATOR_CONST + 1) * - state->sensor.saz + (VSPEED_INTEGRATOR_CONST - 1)  * -saz_prev + vspeed_prev;
-           
+            velo_w  = FPMUL1(VSPEED_INTEGRATOR_CONST + 1 , -state->sensor.saz,16)   // (T/(2ti) + 1) X[n]
+                    + FPMUL1(VSPEED_INTEGRATOR_CONST - 1,  -saz_prev, 16)           // (T/(2ti) - 1) X[n-1])
+                    + vspeed_prev;                                                  //  Y[n-1]
            
             vspeed_prev = vspeed;
             saz_prev = state->sensor.saz;
+*/
 
+            // state->force.Z = - (P2_HEIGHT * (rate + vspeed - vspeed_sp))  -  MIN_Z_FORCE;
 
-           // rate = P1_HEIGHT * (state->sensor.pressure_avg - pressure_setpoint);
-           // state->force.Z = - (P2_HEIGHT * (rate + vspeed - vspeed_sp))  -  MIN_Z_FORCE;
+            /*   setpoint for the inner vspeed controller is calculated as:
+                 vspeed_sp = P1_HEIGHT *  (state->sensor.pressure_avg - pressure_setpoint)
 
-            //TODO calculate variable sizes and add constants
+                P1_HEIGHT has P1_HEIGHT_FRAC_BITS bits for the fraction part, so result needs to be shifted by that amount of bits
+            */
 
-            vspeed_sp = FP_MUL1(P1_HEIGHT, (state->sensor.pressure_avg - pressure_setpoint), 8);
-            state->force.Z = - FP_MUL1(P2_HEIGHT, (vspeed - vspeed_sp), 8)  -  MIN_Z_FORCE;
+            velo_w = FP_MUL1(P1_HEIGHT, (height_setpoint - state->pos.z), P1_HEIGHT_FRAC_BITS);
 
-           //state->force.Z = - FP_MUL1(P_HEIGHT, (state->sensor.pressure_avg - pressure_setpoint), 8)  -  MIN_Z_FORCE;
+            /*   outputof the controller is calculated as:
+                 state->force.Z = - (P2_HEIGHT *  (vspeed - vspeed_sp)
+                                = (P2_HEIGHT *  (vspeed_sp - vspeed)
+
+                P2_HEIGHT has P2_HEIGHT_FRAC_BITS bits for the fraction part, so result needs to be shifted by that amount of bits
+            */
+
+            state->force.Z = FP_MUL1(P2_HEIGHT, (state->velo.w - velo_w), P2_HEIGHT_FRAC_BITS);
 
         } else {
             // Q16.16 <-- Q8.8

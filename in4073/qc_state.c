@@ -96,6 +96,7 @@ void qc_state_clear_offset(qc_state_t* state) {
     state->offset.saz   = 0;
     state->offset.sphi  = 0;
     state->offset.stheta= 0;
+    state->offset.pressure = 0;
     state->offset.calibrated = false;
 }
 

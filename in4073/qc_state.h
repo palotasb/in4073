@@ -94,6 +94,7 @@ typedef struct qc_state_offset {
     f16p16_t    saz;
     f16p16_t    sphi;
     f16p16_t    stheta;
+    f16p16_t    pressure;
     bool        calibrated;
 } qc_state_offset_t;
 

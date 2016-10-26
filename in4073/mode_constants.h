@@ -296,7 +296,8 @@
 #define P2_HEIGHT_FRAC_BITS    2
 #define P2_HEIGHT             ((int32_t) FP_FLOAT(8.0f, P2_HEIGHT_FRAC_BITS) + 100)
 
-#define VSPEED_INTEGRATOR_CONST FP_MUL1(T_CONST , FP_FRAC(1, 100, 8),8)
+//16.16
+#define VSPEED_INTEGRATOR_CONST FP_MUL1(T_CONST , FP_FRAC(1, 100, 16),T_CONST_FRAC_BITS)
 
 
 // Kalman filter constants

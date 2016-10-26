@@ -76,7 +76,7 @@ void qc_hal_get_inputs(qc_state_t* state) {
     /* pressure is will fit in 17 bits since it shouldn't exceed 1310.72 mbar
        result of multiplying with 0.01 in F16P16 format will fit in F16P16
     */
-    state->sensor.pressure      = pressure * BARO_SCALE_INV;
+    state->sensor.pressure      = pressure * BARO_SCALE_INV  - state->offset.pressure;
     if(state->sensor.pressure_avg == 0) {
         state->sensor.pressure_avg = state->sensor.pressure;
     }else{
