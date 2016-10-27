@@ -129,7 +129,8 @@ bool process_raw_data(void) {
         qc_state.sensor.saz = -saz * ACC_G_SCALE_INV - qc_state.offset.saz;
         qc_state.sensor.sp  = GYRO_CONV_FROM_NATIVE( sp) - qc_state.offset.sp;
         qc_state.sensor.sq  = GYRO_CONV_FROM_NATIVE(-sq) - qc_state.offset.sq;
-        qc_state.sensor.sr  = GYRO_CONV_FROM_NATIVE(-sr) - qc_state.offset.sr; 
+        qc_state.sensor.sr  = GYRO_CONV_FROM_NATIVE(-sr) - qc_state.offset.sr;
+        acc_filter(&qc_state);
         qc_kalman_filter(&qc_state);
         iter_count = iter_count + 1;
         if (iter_count == 4) iter_count = 0;

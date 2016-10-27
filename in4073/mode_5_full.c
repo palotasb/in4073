@@ -313,7 +313,7 @@ void height_control(qc_state_t* state) {
 
 void acc_filter(qc_state_t* state) {
 
-    #define ACC_FILTER_CONST_A  ((f16p16_t) FP_FLOAT(0.239067, 16))
+    #define ACC_FILTER_CONST_A  ((f16p16_t) FP_FLOAT(0.3858, 16))
     #define ACC_FILTER_CONST_B  1
 
     static f16p16_t    sax_p = 0;
@@ -323,17 +323,20 @@ void acc_filter(qc_state_t* state) {
     f16p16_t    say_n;
     f16p16_t    saz_n;
 
-    sax_n = FP_MUL1(ACC_FILTER_CONST_A, state->sensor.sax, 16)  + ACC_FILTER_CONST_B * sax_p;
-    sax_p = state->sensor.sax;
-    state->sensor.sax = sax_n;
+    sax_n = state->sensor.sax;
+    sax_p -= sax_p >> 3;
+    sax_p += sax_n >> 3;
+    state->sensor.sax = sax_p;
 
-    say_n = FP_MUL1(ACC_FILTER_CONST_A, state->sensor.say, 16)  + ACC_FILTER_CONST_B * say_p;
-    say_p = state->sensor.say;
-    state->sensor.say = say_n;
-    
-    saz_n = FP_MUL1(ACC_FILTER_CONST_A, state->sensor.saz, 16)  + ACC_FILTER_CONST_B * saz_p;
-    saz_p = state->sensor.saz;
-    state->sensor.saz = saz_n;
+    say_n = state->sensor.say;
+    say_p -= say_p >> 3;
+    say_p += say_n >> 3;
+    state->sensor.say = say_p;
+
+    saz_n = state->sensor.saz;
+    saz_p -= saz_p >> 3;
+    saz_p += saz_n >> 3;
+    state->sensor.saz = saz_p;
 
 
 }
