@@ -293,19 +293,19 @@
 
 // TODO tune this values and set them to the right size
 //Height control P values
-#define P1_HEIGHT_FRAC_BITS    4
-#define P1_HEIGHT              ((int32_t) FP_FLOAT(2.f, P1_HEIGHT_FRAC_BITS))
+#define P1_HEIGHT_FRAC_BITS    0
+#define P1_HEIGHT              ((int32_t) FP_FLOAT(10.f, P1_HEIGHT_FRAC_BITS))
 
-#define P2_HEIGHT_FRAC_BITS    2
-#define P2_HEIGHT             ((int32_t) FP_FLOAT(8.0f, P2_HEIGHT_FRAC_BITS))
+#define P2_HEIGHT_FRAC_BITS    0
+#define P2_HEIGHT             ((int32_t) FP_FLOAT(15.f, P2_HEIGHT_FRAC_BITS))
 
 #define HC_AE_MIN       (350)
 #define HC_AE_MAX       (750)
 #define HC_AESQ_MIN     (HC_AE_MIN * HC_AE_MIN)
 #define HC_AESQ_MAX     (HC_AE_MAX * HC_AE_MAX)
 // Min and max are swapped because M1_4B is negative
-#define HC_Z_MIN        (HC_AESQ_MAX * FP_FRAC(1, M1_4B, 4))
-#define HC_Z_MAX        (HC_AESQ_MIN * FP_FRAC(1, M1_4B, 4))
+#define HC_Z_MIN        ((HC_AESQ_MAX * FP_FRAC(1, M1_4B, 8)))
+#define HC_Z_MAX        ((HC_AESQ_MIN * FP_FRAC(1, M1_4B, 8)))
 
 //16.16
 #define VSPEED_INTEGRATOR_CONST FP_MUL1(T_CONST , FP_FRAC(1, 100, 16),T_CONST_FRAC_BITS)

@@ -241,6 +241,7 @@ void height_control(qc_state_t* state) {
             height_setpoint = state->pos.z;
             current_lift = state->orient.lift;
             err_i = state->force.Z;
+            printf("Height control turned on.\n");
         } 
         
         if(current_lift == state->orient.lift){
@@ -286,8 +287,8 @@ void height_control(qc_state_t* state) {
             */
 
             err_p       = height_setpoint - state->pos.z;
-            err_i       = err_i + FP_MUL1(err_p, t * P1_HEIGHT, P1_HEIGHT_FRAC_BITS + T_CONST_FRAC_BITS);
-            Z_noclip    = FP_MUL1(P2_HEIGHT, err_p, P2_HEIGHT_FRAC_BITS) + err_i;
+            err_i       = err_i + FP_MUL1(err_p, t * (P1_HEIGHT), P1_HEIGHT_FRAC_BITS + T_CONST_FRAC_BITS);
+            Z_noclip    = FP_MUL1(err_p, P2_HEIGHT, P2_HEIGHT_FRAC_BITS) + err_i;
             state->force.Z = HC_Z_MAX < Z_noclip ? HC_Z_MAX : Z_noclip < HC_Z_MIN ? HC_Z_MIN : Z_noclip; 
             err_i       = err_i + state->force.Z - Z_noclip;
 
@@ -295,11 +296,14 @@ void height_control(qc_state_t* state) {
             // Q16.16 <-- Q8.8
             state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
             state->option.height_control = false;
+            printf("Height control turned off! (Throttle was touched.)\n");
         }
 
     } else {
         // Q16.16 <-- Q8.8
         state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+        if (prev_height_control == true)
+            printf("Height control turned off.\n");
     }
 
     prev_height_control = state->option.height_control;
