@@ -150,7 +150,7 @@ void qc_kalman_filter(qc_state_t* state) {
 
     // Task 2: Updating offset terms.
     state->offset.sp += FP_MUL1(KALMAN_OFFSET_WEIGHT, phi_state_est - phi_meas_est, KALMAN_OFFSET_FRAC_BITS);
-    state->offset.sr += FP_MUL1(KALMAN_OFFSET_WEIGHT, theta_state_est - theta_meas_est, KALMAN_OFFSET_FRAC_BITS);
+    state->offset.sq += FP_MUL1(KALMAN_OFFSET_WEIGHT, theta_state_est - theta_meas_est, KALMAN_OFFSET_FRAC_BITS);
 
     qc_kalman_height(state);
 }

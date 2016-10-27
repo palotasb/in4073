@@ -269,7 +269,7 @@ void run_terminal(char* serial, char* js, char* virt_in, char* virt_out) {
 					lmsk = tx_frame.message.value.v32[0];
 			}
 
-			if (250 < time_get_ms() - last_msg) {
+			if (150 < time_get_ms() - last_msg) {
 				serialcomm_quick_send(&sc, MESSAGE_KEEP_ALIVE_ID, 0, 0);
 				last_msg = time_get_ms();
 			}

@@ -285,9 +285,9 @@
 #define P2_DEFAULT      ((int32_t) FP_FLOAT(8.0f, P2_FRAC_BITS) + 100)
 #define P2_MIN          (-(P2_DEFAULT) + 1)
 
-#define YAWP_FRAC_BITS  10
-#define YAWP_MAX        FP_INT(10, YAWP_FRAC_BITS)
-#define YAWP_DEFAULT    ((int32_t) FP_FLOAT(0.035f, YAWP_FRAC_BITS) + 24)
+#define YAWP_FRAC_BITS  0
+#define YAWP_MAX        FP_INT(150, YAWP_FRAC_BITS)
+#define YAWP_DEFAULT    ((int32_t) FP_FLOAT(50.f, YAWP_FRAC_BITS))
 #define YAWP_MIN        (-(YAWP_DEFAULT) + 1)
 
 
