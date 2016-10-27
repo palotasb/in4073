@@ -297,7 +297,7 @@
 #define P1_HEIGHT              ((int32_t) FP_FLOAT(10.f, P1_HEIGHT_FRAC_BITS))
 
 #define P2_HEIGHT_FRAC_BITS    0
-#define P2_HEIGHT             ((int32_t) FP_FLOAT(15.f, P2_HEIGHT_FRAC_BITS))
+#define P2_HEIGHT             ((int32_t) FP_FLOAT(8.f, P2_HEIGHT_FRAC_BITS))
 
 #define HC_AE_MIN       (350)
 #define HC_AE_MAX       (750)

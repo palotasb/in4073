@@ -218,7 +218,7 @@ void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
 }
 
 void qc_system_log_data(qc_system_t* system) {
-    int pr_id, send_cnt = 0;
+    int send_cnt = 0;
     uint32_t bit_mask, index;
     for (bit_mask = 0x01, index = 0; bit_mask; bit_mask = bit_mask << 1, index++) {
         message_t msg;
@@ -251,68 +251,39 @@ void qc_system_log_data(qc_system_t* system) {
                 MESSAGE_AE3_VALUE(&msg) = system->state->motor.ae3;
                 MESSAGE_AE4_VALUE(&msg) = system->state->motor.ae4;
                 break;
-            case MESSAGE_TEMP_PRESSURE_ID:
-                MESSAGE_TEMP_VALUE(&msg) = system->state->sensor.temperature;
-               // MESSAGE_PRESSURE_VALUE(&msg) = system->state->sensor.pressure;
-                MESSAGE_PRESSURE_VALUE(&msg) = system->state->sensor.pressure_avg;
-                break;
-            case MESSAGE_XYZPOS_ID:
-                MESSAGE_XPOS_VALUE(&msg) = FP_CHUNK(system->state->pos.x, 8, 16);
-                MESSAGE_YPOS_VALUE(&msg) = FP_CHUNK(system->state->pos.y, 8, 16);
+            case MESSAGE_Z_Z_PRES_ID:
                 MESSAGE_ZPOS_VALUE(&msg) = FP_CHUNK(system->state->pos.z, 8, 16);
+                MESSAGE_ZFORCE_VALUE(&msg) = FP_CHUNK(system->state->force.Z, 8, 16);
+                MESSAGE_PRES_VALUE(&msg) = system->state->sensor.pressure;
                 break;
             case MESSAGE_PHI_THETA_PSI_ID:
                 MESSAGE_PHI_VALUE(&msg)     = FP_CHUNK(system->state->att.phi, 8, 16);
                 MESSAGE_THETA_VALUE(&msg)   = FP_CHUNK(system->state->att.theta, 8, 16);
                 MESSAGE_PSI_VALUE(&msg)     = FP_CHUNK(system->state->att.psi, 8, 16);
                 break;
-            case MESSAGE_XYZFORCE_ID:
-                MESSAGE_XFORCE_VALUE(&msg) = FP_CHUNK(system->state->force.X, 8, 16);
-                MESSAGE_YFORCE_VALUE(&msg) = FP_CHUNK(system->state->force.Y, 8, 16);
-                MESSAGE_ZFORCE_VALUE(&msg) = FP_CHUNK(system->state->force.Z, 8, 16);
-                break;
             case MESSAGE_LMN_ID:
                 MESSAGE_L_VALUE(&msg) = FP_CHUNK(system->state->torque.L, 8, 16);
                 MESSAGE_M_VALUE(&msg) = FP_CHUNK(system->state->torque.M, 8, 16);
                 MESSAGE_N_VALUE(&msg) = FP_CHUNK(system->state->torque.N, 8, 16);
-                break;
-            case MESSAGE_UVW_ID:
-                MESSAGE_U_VALUE(&msg) = FP_CHUNK(system->state->velo.u, 8, 16);
-                MESSAGE_V_VALUE(&msg) = FP_CHUNK(system->state->velo.v, 8, 16);
-                MESSAGE_W_VALUE(&msg) = FP_CHUNK(system->state->velo.w, 8, 16);
                 break;
             case MESSAGE_PQR_ID:
                 MESSAGE_P_VALUE(&msg) = FP_CHUNK(system->state->spin.p, 8, 16);
                 MESSAGE_Q_VALUE(&msg) = FP_CHUNK(system->state->spin.q, 8, 16);
                 MESSAGE_R_VALUE(&msg) = FP_CHUNK(system->state->spin.r, 8, 16);
                 break;
-            case MESSAGE_P12_ID:
-                MESSAGE_P1_VALUE(&msg) = system->state->trim.p1;
-                MESSAGE_P2_VALUE(&msg) = system->state->trim.p2;
-                MESSAGE_YAWP_VALUE(&msg) = system->state->trim.yaw_p;
-                break;
             case MESSAGE_S_ATT_ID:
                 MESSAGE_S_PHI_VALUE(&msg)   = FP_CHUNK(system->state->sensor.sphi, 8, 16);
                 MESSAGE_S_THETA_VALUE(&msg) = FP_CHUNK(system->state->sensor.stheta, 8, 16);
                 MESSAGE_S_PSI_VALUE(&msg)   = FP_CHUNK(system->state->sensor.spsi, 8, 16);
                 break;
-            case MESSAGE_PROFILE_0_CURR_ID:
-            case MESSAGE_PROFILE_1_CURR_ID:
-            case MESSAGE_PROFILE_2_CURR_ID:
-            case MESSAGE_PROFILE_3_CURR_ID:
-            case MESSAGE_PROFILE_4_CURR_ID:
-                pr_id = index - MESSAGE_PROFILE_0_CURR_ID;
-                MESSAGE_PROFILE_TIME_VALUE(&msg) = system->state->prof.pr[pr_id].last_delta;
-                MESSAGE_PROFILE_TAG_VALUE(&msg) = system->state->prof.pr[pr_id].last_tag;
+            case MESSAGE_PROFILE_ID:
+                MESSAGE_PROFILE_0_VALUE(&msg) = system->state->prof.pr[0].last_delta;
+                MESSAGE_PROFILE_1_VALUE(&msg) = system->state->prof.pr[1].last_delta;
+                MESSAGE_PROFILE_2_VALUE(&msg) = system->state->prof.pr[2].last_delta;
+                MESSAGE_PROFILE_3_VALUE(&msg) = system->state->prof.pr[3].last_delta;
                 break;
-            case MESSAGE_PROFILE_0_MAX_ID:
-            case MESSAGE_PROFILE_1_MAX_ID:
-            case MESSAGE_PROFILE_2_MAX_ID:
-            case MESSAGE_PROFILE_3_MAX_ID:
-            case MESSAGE_PROFILE_4_MAX_ID:
-                pr_id = index - MESSAGE_PROFILE_0_MAX_ID;
-                MESSAGE_PROFILE_TIME_VALUE(&msg) = system->state->prof.pr[pr_id].max_delta;
-                MESSAGE_PROFILE_TAG_VALUE(&msg) = system->state->prof.pr[pr_id].max_tag;
+            case MESSAGE_PROFILE_4_ID:
+                MESSAGE_PROFILE_4_VALUE(&msg) = system->state->prof.pr[4].last_delta;
                 break;
             default:
                 continue;
