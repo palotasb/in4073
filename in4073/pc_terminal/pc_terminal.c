@@ -33,6 +33,19 @@ pc_command_t	command;
 pc_log_t		pc_log;
 pc_log_t		pc_telemetry;
 
+
+
+/******************************
+print_help()
+*******************************
+Description:
+	Prints a message about the usage of this program
+
+
+Author:
+	 Koos Eerden
+*******************************/
+
 void print_help(void) {
 	term_puts("\nUsage: pc-terminal [SERIAL] [JOYSTICK] \n");
 	term_puts("\n\tSERIAL:\n\t\t-s <path to serial device>\n\t\t-ns for no serial communication.\n");
@@ -112,6 +125,18 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+
+/******************************
+print_run_help()
+*******************************
+Description:
+	Prints a help message during runtime
+
+
+Author:
+	  Boldizsar Palotas
+*******************************/
+
 void print_run_help(void) {
 	fprintf(stderr, "========================================================\n");
 	fprintf(stderr, "Terminal program - Embedded Real-Time Systems\n");
@@ -126,6 +151,28 @@ void print_run_help(void) {
 	fprintf(stderr, "Press X to REBOOT Quadcopter and EXIT terminal program.\n");
 	fprintf(stderr, "========================================================\n\n");
 }
+
+
+/******************************
+run_terminal()
+*******************************
+Description:
+	Runs the terminal program on the pc. 
+
+Parameters
+	char* serial
+		-	path to the serial device, NULL if no serial device is used
+	char* js
+		-	path to the joystick device, NULL if no joystick is used
+	char* virt_in
+		-	Path to a input pipe in order to simulate the quadcopter, NULL when not used
+	char* virt_out
+		-	Path to a out pipe in order to simulate the quadcopter, NULL when not used
+
+Author:
+	 Koos Eerden
+*******************************/
+
 
 void run_terminal(char* serial, char* js, char* virt_in, char* virt_out) {
 
@@ -349,6 +396,8 @@ void pc_rx_complete(message_t* message) {
         	break;
     }
 }
+
+
 
 inline int min(int a, int b) {
     return (a < b) ? a : b;

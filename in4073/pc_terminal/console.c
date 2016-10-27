@@ -1,6 +1,12 @@
 #include "console.h"
 #include <stdio.h>
 
+
+/*******************
+terminal functions taken from the example file
+*******************/
+
+
 int	term_getchar() 
 { 
         int    c;

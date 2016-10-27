@@ -9,6 +9,22 @@
 
 #include "../mode_constants.h"
 
+
+
+/******************************
+pc_command_init()
+*******************************
+Description:
+	Initializes a pc_command_t struct; 
+
+Outputs:
+	-	pc_command_t* command:
+			Pointer to the structure that is initialized
+
+Author:
+	 Boldizsar Palotas
+*******************************/
+
 void pc_command_init(pc_command_t* command) {
     command->mode                   = 0;
     command->mode_updated           = false;
@@ -42,7 +58,26 @@ void pc_command_init(pc_command_t* command) {
     command->option_toggle          = false;
 }
 
-// Returns the highest-priority message that should be sent to the Quadcopter
+
+/******************************
+pc_command_get_message()
+*******************************
+Description:
+	Returns the highest-priority message that should be sent to the Quadcopter
+
+ Returns 
+    false if no messages should be send   
+
+Parameters:
+	-	pc_command_t* command:
+			Pointer to the command structure. 
+ 	-	message_t* message_out:
+			Pointer to the highest-priority message.           
+
+Author:
+	 Boldizsar Palotas
+*******************************/
+
 bool pc_command_get_message(pc_command_t* command, message_t* message_out) {
     if (command->mode_updated && command->mode == MODE_1_PANIC) {
         switch (command->mode_panic_status) {

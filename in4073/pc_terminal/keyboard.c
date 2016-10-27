@@ -304,6 +304,22 @@ static void handle_keypress(pc_command_t* command) {
 	}
 }
 
+/******************************
+read_hex()
+*******************************
+Description:
+	Reads a hexadecimal number from the keyboard
+
+Outputs:
+	-	uint32_t* hex_number:
+			Pointer to where the number esult will be stored
+Returns:
+	True on success, false on failure 
+
+Author:
+	 Boldizsar Palotas
+*******************************/
+
 static bool read_hex(uint32_t* hex_number) {
 	char c = term_getchar_nb();
 	int8_t digit = -1;
@@ -356,12 +372,44 @@ static bool read_hex(uint32_t* hex_number) {
 	return false;
 }
 
+/******************************
+void read_log_mask()
+*******************************
+Description:
+	Reads a hexadecimal logmask from the keyboard 
+	and stores it in the command struct.
+	log_mask_updated is set after the call.
+	
+
+Outputs:
+-	pc_command_t *command:
+			pointer to the current state structure
+			structure is updated after the call
+Author:
+	 Boldizsar Palotas
+*******************************/
+
 static void read_log_mask(pc_command_t* command) {
 	if (read_hex(&command->log_mask)) {
 		command->log_mask_updated = true;
 	}
 }
+/******************************
+void read_tele_mask()
+*******************************
+Description:
+	Reads a hexadecimal telemetry mask from the keyboard 
+	and stores it in the command struct.
+	log_mask_updated is set after the call.
+	
 
+Outputs:
+-	pc_command_t *command:
+			pointer to the current state structure
+			structure is updated after the call
+Author:
+	 Boldizsar Palotas
+*******************************/
 static void read_tele_mask(pc_command_t* command) {
 	if (read_hex(&command->telemetry_mask)) {
 		command->telemetry_mask_updated = true;

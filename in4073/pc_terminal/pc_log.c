@@ -21,6 +21,26 @@ static void pc_log_flush(pc_log_t* log);
 static void pc_log_clear(pc_log_t* log);
 static void pc_log_print(pc_log_t* log, const char * fmt, pc_log_item_t item, ...);
 
+/******************************
+pc_log_init()
+*******************************
+Description:
+	Initialize the log structure and sets the filedescriptor
+
+parameters:
+	-	pc_log_t* log:
+			Pointer to the log structure that is initialised
+	-	FILE* file:
+			File descriptor to use with the log
+
+Returns:
+	always true
+
+Author:
+	 Boldizsar Palotas
+*******************************/
+
+
 bool pc_log_init(pc_log_t* log, FILE* file) {
     log->file = file;
     qc_state_init(&log->state);
@@ -30,6 +50,22 @@ bool pc_log_init(pc_log_t* log, FILE* file) {
     pc_log_clear(log);
     return true;
 }
+
+/******************************
+pc_log_receive()
+*******************************
+Description:
+	Handles a log message
+
+parameters:
+	-	pc_log_t* log:
+			Pointer to the log structure
+	-	message_t* message:
+			pointer to the message
+
+Author:
+	 Boldizsar Palotas
+*******************************/
 
 void pc_log_receive(pc_log_t* log, message_t* message) {
     switch (message->ID) {
@@ -178,10 +214,37 @@ void pc_log_receive(pc_log_t* log, message_t* message) {
             break;
     }
 }
+/******************************
+pc_log_close()
+*******************************
+Description:
+	Closes the log file
 
+parameters:
+	-	pc_log_t* log:
+			Pointer to the log structure
+
+
+Author:
+	 Boldizsar Palotas
+*******************************/
 void pc_log_close(pc_log_t* log) {
     fclose(log->file);
 }
+
+/******************************
+pc_log_clear()
+*******************************
+Description:
+	Closes the log file
+
+parameters:
+	-	pc_log_t* log:
+			Pointer to the log structure
+
+Author:
+	 Boldizsar Palotas
+*******************************/
 
 void pc_log_clear(pc_log_t* log) {
 	int i;
@@ -189,6 +252,20 @@ void pc_log_clear(pc_log_t* log) {
         log->set[i] = false;
     }
 }
+
+/******************************
+pc_log_flush()
+*******************************
+Description:
+	Reads values from the log structure and prints them to the file
+
+parameters:
+	-	pc_log_t* log:
+			Pointer to the log structure
+
+Author:
+	 Boldizsar Palotas
+*******************************/
 
 void pc_log_flush(pc_log_t* log) {
 
@@ -247,6 +324,28 @@ void pc_log_flush(pc_log_t* log) {
     #endif
 
 }
+
+/******************************
+pc_log_print()
+*******************************
+Description:
+	Formats the input values and prints them to the log file.
+    If the value is not set in te log structure, a NAN will be printed 
+
+parameters:
+	-	pc_log_t* log:
+			Pointer to the log structure
+    -   const char * fmt
+            Format string to be used with fprintf
+    - pc_log_item_t item
+            A constant representing which item is beeing printed
+    - ...
+        The value(s) of the items that corespond to the items in the format string
+
+
+Author:
+	 Boldizsar Palotas
+*******************************/
 
 void pc_log_print(pc_log_t* log, const char * fmt, pc_log_item_t item, ...) {
     if (log->set[item]) {

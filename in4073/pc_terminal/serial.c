@@ -1,5 +1,8 @@
 #include "serial.h"
 
+//Taken from the example file
+
+
 int 	rs232_getchar()
 {
 	int 	c;

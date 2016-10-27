@@ -230,6 +230,8 @@ void control_fn(qc_state_t* state) {
  *  If the lift setpoint changes during height-control, the 
  *  height_control option will be disabled.
  *
+ *  When controlling the height, thisfunction will use a PI controller
+ *
  *  Parameters:
  *  - state: The state containing everything needed for the
  *      control: inputs, internal state variables and
@@ -258,46 +260,6 @@ void height_control(qc_state_t* state) {
         
         if(current_lift == state->orient.lift){
 
-/*                pressure is a 11.16 bit value, as long as we use 5.x bit P values, it is impossible to overflow, however if we assume that 
-                the error values are relatively small (since we start the controller when we are around the setpoint)
-                a 8.8fp P value should work.*/
-
-            
-            /* execute a inner rate controller that keeps saz zero and a outer controller that keeps the pressure constant 
-
-                height_setpoint -->( + ) -Z-> |HEIGHT_P1> ---> ( + ) ---> | HEIGHT_P2 >------------> Force_z -> QR
-                                     ^                           ^                                              | |
-                                     |                           |---vspeed-------[ INT ]---saz---------------- | |
-                                     |----------heigth------------------------------------------------------------|
-            
-            */
-
-
-
-/************** place this outside this function
-                integrator:  Y[n] = (T/(2ti) + 1) X[n] + (T/(2ti) - 1) X[n-1]) + Y[n-1]
-
-                TVSPEED_INTEGRATOR_CONST = T / (2 ti)     means the time constant of the integrator.
-                when ti is low, there is a lot of integration, when ti is very high the integrator is not doing much    
-                
-                VSPEED_INTEGRATOR_CONST is in 16.16 format, saz is in 16.16 format so after multiplication 16 bit shift is needed.
-
-            velo_w  = FPMUL1(VSPEED_INTEGRATOR_CONST + 1 , -state->sensor.saz,16)   // (T/(2ti) + 1) X[n]
-                    + FPMUL1(VSPEED_INTEGRATOR_CONST - 1,  -saz_prev, 16)           // (T/(2ti) - 1) X[n-1])
-                    + vspeed_prev;                                                  //  Y[n-1]
-           
-            vspeed_prev = vspeed;
-            saz_prev = state->sensor.saz;
-*/
-
-            // state->force.Z = - (P2_HEIGHT * (rate + vspeed - vspeed_sp))  -  MIN_Z_FORCE;
-
-            /*   setpoint for the inner vspeed controller is calculated as:
-                 vspeed_sp = P1_HEIGHT *  (state->sensor.pressure_avg - pressure_setpoint)
-
-                P1_HEIGHT has P1_HEIGHT_FRAC_BITS bits for the fraction part, so result needs to be shifted by that amount of bits
-            */
-
             err_p       = height_setpoint - state->pos.z;
             err_i       = err_i + FP_MUL1(err_p, t * (P1_HEIGHT), P1_HEIGHT_FRAC_BITS + T_CONST_FRAC_BITS);
             Z_noclip    = FP_MUL1(err_p, P2_HEIGHT, P2_HEIGHT_FRAC_BITS) + err_i;
@@ -321,7 +283,18 @@ void height_control(qc_state_t* state) {
     prev_height_control = state->option.height_control;
 }
 
-
+/** =======================================================
+ *  acc_filter -- Filters the accellerometer data while in raw mode
+ *  =======================================================
+ *  An moving average is used as filter function.
+ *
+ *
+ *  Parameters:
+ *  - state: The state containing everything needed for the
+ *      control: inputs, internal state variables and
+ *      output.
+ *  Author: Koos Eerden
+**/
 
 void acc_filter(qc_state_t* state) {
 
