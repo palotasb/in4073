@@ -172,6 +172,10 @@ void control_fn(qc_state_t* state) {
     state->spin.r   = FP_EXTEND(state->orient.yaw, 16, 10);
     if (active_mode == MODE_4_YAW || active_mode == MODE_5_FULL_CONTROL) {
         state->spin.r -= state->sensor.sr;
+        if (state->spin.r < SPIN_R_MIN)
+            state->spin.r = SPIN_R_MIN;
+        if (state->spin.r > SPIN_R_MAX)
+            state->spin.r = SPIN_R_MAX;
     }
 
     // Q16.16 = Q24.8 * Q16.16 >> 8

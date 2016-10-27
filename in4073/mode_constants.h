@@ -287,9 +287,11 @@
 
 #define YAWP_FRAC_BITS  0
 #define YAWP_MAX        FP_INT(150, YAWP_FRAC_BITS)
-#define YAWP_DEFAULT    ((int32_t) FP_FLOAT(50.f, YAWP_FRAC_BITS))
+#define YAWP_DEFAULT    ((int32_t) FP_FLOAT(35.f, YAWP_FRAC_BITS))
 #define YAWP_MIN        (-(YAWP_DEFAULT) + 1)
 
+#define SPIN_R_MIN      (-((int32_t) FP_FLOAT(1.f, 16)))
+#define SPIN_R_MAX      ((int32_t) FP_FLOAT(1.f, 16))
 
 // TODO tune this values and set them to the right size
 //Height control P values
