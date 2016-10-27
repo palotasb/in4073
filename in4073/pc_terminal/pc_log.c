@@ -32,7 +32,6 @@ bool pc_log_init(pc_log_t* log, FILE* file) {
 }
 
 void pc_log_receive(pc_log_t* log, message_t* message) {
-    int pr_id;
     switch (message->ID) {
         case MESSAGE_LOG_END_ID:
             if (log->initialised) {
@@ -111,25 +110,16 @@ void pc_log_receive(pc_log_t* log, message_t* message) {
             log->set[PC_LOG_ae3] = true;
             log->set[PC_LOG_ae4] = true;
             break;
-        case MESSAGE_TEMP_PRESSURE_ID:
-            if (log->initialised && log->set[PC_LOG_temperature]) {
+        case MESSAGE_Z_Z_PRES_ID:
+            if (log->initialised && log->set[PC_LOG_z]) {
                 pc_log_flush(log);
             }
-            log->state.sensor.temperature = MESSAGE_TEMP_VALUE(message);
-            log->state.sensor.pressure =    MESSAGE_PRESSURE_VALUE(message);
-            log->set[PC_LOG_temperature] =  true;
+            log->state.pos.z            =   FP_EXTEND(MESSAGE_ZPOS_VALUE(message), 16, 8);
+            log->state.force.Z          =   FP_EXTEND(MESSAGE_ZFORCE_VALUE(message), 16, 8);
+            log->state.sensor.pressure  =   MESSAGE_PRES_VALUE(message);
+            log->set[PC_LOG_z] =     true;
+            log->set[PC_LOG_Z] =     true;
             log->set[PC_LOG_pressure] =     true;
-            break;
-        case MESSAGE_XYZPOS_ID:
-            if (log->initialised && log->set[PC_LOG_x]) {
-                pc_log_flush(log);
-            }
-            log->state.pos.x = MESSAGE_XPOS_VALUE(message);
-            log->state.pos.y = MESSAGE_YPOS_VALUE(message);
-            log->state.pos.z = MESSAGE_ZPOS_VALUE(message);
-            log->set[PC_LOG_x] = true;
-            log->set[PC_LOG_y] = true;
-            log->set[PC_LOG_z] = true;
             break;
         case MESSAGE_PHI_THETA_PSI_ID:
             if (log->initialised && log->set[PC_LOG_phi]) {
@@ -141,17 +131,6 @@ void pc_log_receive(pc_log_t* log, message_t* message) {
             log->set[PC_LOG_phi] =      true;
             log->set[PC_LOG_theta] =    true;
             log->set[PC_LOG_psi] =      true;
-            break;
-        case MESSAGE_XYZFORCE_ID:
-            if (log->initialised && log->set[PC_LOG_X]) {
-                pc_log_flush(log);
-            }
-            log->state.force.X = FP_EXTEND(MESSAGE_XFORCE_VALUE(message), 16, 8);
-            log->state.force.Y = FP_EXTEND(MESSAGE_YFORCE_VALUE(message), 16, 8);
-            log->state.force.Z = FP_EXTEND(MESSAGE_ZFORCE_VALUE(message), 16, 8);
-            log->set[PC_LOG_X] = true;
-            log->set[PC_LOG_Y] = true;
-            log->set[PC_LOG_Z] = true;
             break;
         case MESSAGE_LMN_ID:
             if (log->initialised && log->set[PC_LOG_L]) {
@@ -175,42 +154,25 @@ void pc_log_receive(pc_log_t* log, message_t* message) {
             log->set[PC_LOG_q] = true;
             log->set[PC_LOG_r] = true;
             break;
-        case MESSAGE_P12_ID:
-            if (log->initialised && log->set[PC_LOG_p1]) {
+        case MESSAGE_PROFILE_ID:
+            if (log->initialised && log->set[PC_LOG_PR0_CURR]) {
                 pc_log_flush(log);
             }
-            log->state.trim.p1 = MESSAGE_P1_VALUE(message);
-            log->state.trim.p2 = MESSAGE_P2_VALUE(message);
-            log->state.trim.yaw_p = MESSAGE_YAWP_VALUE(message);
-            log->set[PC_LOG_p1] = true;
-            log->set[PC_LOG_p2] = true;
-            log->set[PC_LOG_yaw_p] = true;
+            log->state.prof.pr[0].last_delta = MESSAGE_PROFILE_0_VALUE(message);
+            log->state.prof.pr[1].last_delta = MESSAGE_PROFILE_1_VALUE(message);
+            log->state.prof.pr[2].last_delta = MESSAGE_PROFILE_2_VALUE(message);
+            log->state.prof.pr[3].last_delta = MESSAGE_PROFILE_3_VALUE(message);
+            log->set[PC_LOG_PR0_CURR] = true;
+            log->set[PC_LOG_PR1_CURR] = true;
+            log->set[PC_LOG_PR2_CURR] = true;
+            log->set[PC_LOG_PR3_CURR] = true;
             break;
-        case MESSAGE_PROFILE_0_CURR_ID:
-        case MESSAGE_PROFILE_1_CURR_ID:
-        case MESSAGE_PROFILE_2_CURR_ID:
-        case MESSAGE_PROFILE_3_CURR_ID:
-        case MESSAGE_PROFILE_4_CURR_ID:
-            pr_id = message->ID - (int)MESSAGE_PROFILE_0_CURR_ID;
-            if (log->initialised && log->set[PC_LOG_PR0_CURR + pr_id]) {
+        case MESSAGE_PROFILE_4_ID:
+            if (log->initialised && log->set[PC_LOG_PR4_CURR]) {
                 pc_log_flush(log);
             }
-            log->state.prof.pr[pr_id].last_delta = MESSAGE_PROFILE_TIME_VALUE(message);
-            log->state.prof.pr[pr_id].last_tag = MESSAGE_PROFILE_TAG_VALUE(message);
-            log->set[PC_LOG_PR0_CURR + pr_id] = true;
-            break;
-        case MESSAGE_PROFILE_0_MAX_ID:
-        case MESSAGE_PROFILE_1_MAX_ID:
-        case MESSAGE_PROFILE_2_MAX_ID:
-        case MESSAGE_PROFILE_3_MAX_ID:
-        case MESSAGE_PROFILE_4_MAX_ID:
-            pr_id = message->ID - (int)MESSAGE_PROFILE_0_MAX_ID;
-            if (log->initialised && log->set[PC_LOG_PR0_MAX + pr_id]) {
-                pc_log_flush(log);
-            }
-            log->state.prof.pr[pr_id].max_delta = MESSAGE_PROFILE_TIME_VALUE(message);
-            log->state.prof.pr[pr_id].max_tag = MESSAGE_PROFILE_TAG_VALUE(message);
-            log->set[PC_LOG_PR0_MAX + pr_id] = true;
+            log->state.prof.pr[4].last_delta = MESSAGE_PROFILE_4_VALUE(message);
+            log->set[PC_LOG_PR4_CURR] = true;
             break;
         default:
             break;
@@ -229,6 +191,7 @@ void pc_log_clear(pc_log_t* log) {
 }
 
 void pc_log_flush(pc_log_t* log) {
+
     /*  1 */    pc_log_print(log, "%u"  _SEP, PC_LOG_time, log->time);
     /*  2 */    pc_log_print(log, "%hhu"_SEP, PC_LOG_mode, log->mode);
     /*  3 */    pc_log_print(log, "%f"  _SEP, PC_LOG_lift,  FLOAT_FP(log->state.orient.lift, 8));
@@ -246,11 +209,11 @@ void pc_log_flush(pc_log_t* log) {
     /* 15 */    pc_log_print(log, "%f"  _SEP, PC_LOG_say,   FLOAT_FP(log->state.sensor.say, 16));
     /* 16 */    pc_log_print(log, "%f"  _SEP, PC_LOG_saz,   FLOAT_FP(log->state.sensor.saz, 16));
     /* 17 */    pc_log_print(log, "%f"  _SEP, PC_LOG_temperature, FLOAT_FP(log->state.sensor.temperature, 8));
-    /* 18 */    pc_log_print(log, "%f"  _SEP, PC_LOG_pressure, FLOAT_FP(log->state.sensor.pressure, 8));
+    /* 18 */    pc_log_print(log, "%f"  _SEP, PC_LOG_pressure, FLOAT_FP(log->state.sensor.pressure, 16));
     /* 19 */    pc_log_print(log, "%f"  _SEP, PC_LOG_voltage, (float)(log->state.sensor.voltage) / 100.0f);
-    /* 20 */    pc_log_print(log, "%d"  _SEP, PC_LOG_x, log->state.pos.x);
-    /* 21 */    pc_log_print(log, "%d"  _SEP, PC_LOG_y, log->state.pos.y);
-    /* 22 */    pc_log_print(log, "%d"  _SEP, PC_LOG_z, log->state.pos.z);
+    /* 20 */    pc_log_print(log, "%f"  _SEP, PC_LOG_x, FLOAT_FP(log->state.pos.x, 16));
+    /* 21 */    pc_log_print(log, "%f"  _SEP, PC_LOG_y, FLOAT_FP(log->state.pos.y, 16));
+    /* 22 */    pc_log_print(log, "%f"  _SEP, PC_LOG_z, FLOAT_FP(log->state.pos.z, 16));
     /* 23 */    pc_log_print(log, "%f"  _SEP, PC_LOG_phi,   FLOAT_FP(log->state.att.phi, 16));
     /* 24 */    pc_log_print(log, "%f"  _SEP, PC_LOG_theta, FLOAT_FP(log->state.att.theta, 16));
     /* 25 */    pc_log_print(log, "%f"  _SEP, PC_LOG_psi,   FLOAT_FP(log->state.att.psi, 16));
@@ -276,6 +239,7 @@ void pc_log_flush(pc_log_t* log) {
     /* 61 */    pc_log_print(log, "%f"  _SEP, PC_LOG_sphi,      FLOAT_FP(log->state.sensor.sphi, 16));
     /* 62 */    pc_log_print(log, "%f"  _SEP, PC_LOG_stheta,    FLOAT_FP(log->state.sensor.stheta, 16));
     /* 63 */    pc_log_print(log, "%f"  _SEP, PC_LOG_spsi,      FLOAT_FP(log->state.sensor.spsi, 16));
+
     fprintf(log->file, _END);
     fflush(log->file);
     #ifdef WINDOWS

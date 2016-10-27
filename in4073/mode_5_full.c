@@ -82,8 +82,10 @@ static void enter_mode_2_manual_fn(qc_state_t* state, qc_mode_t old_mode);
 static void enter_mode_4_yaw_fn(qc_state_t* state, qc_mode_t old_mode);
 static void enter_mode_5_full_fn(qc_state_t* state, qc_mode_t old_mode);
 static bool motor_on_fn(qc_state_t* state);
+static void height_control(qc_state_t* state);
 
 static qc_mode_t active_mode = MODE_0_SAFE;
+static bool prev_height_control = false;
 
 /** =======================================================
  *  mode_5_full_init -- Initialise mode table for FULL.
@@ -141,6 +143,7 @@ void mode_5_full_init(qc_mode_table_t* mode_table) {
 **/
 void control_fn(qc_state_t* state) {
 
+    
     // Linear quantities
     // -----------------
 
@@ -148,7 +151,7 @@ void control_fn(qc_state_t* state) {
     // Hence velocities are zero.
     // Hence forces are zero except for Z to which -lift is added.
     // Q16.16 <-- Q8.8
-    state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+    height_control(state);
 
     // Attitude-related quantitites
     // ----------------------------
@@ -208,6 +211,102 @@ void control_fn(qc_state_t* state) {
     state->motor.ae2 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae2_sq ? MAX_MOTOR_SPEED : ae2_sq < 0 ? 0 : fp_sqrt(ae2_sq);
     state->motor.ae3 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae3_sq ? MAX_MOTOR_SPEED : ae3_sq < 0 ? 0 : fp_sqrt(ae3_sq);
     state->motor.ae4 = MAX_MOTOR_SPEED * MAX_MOTOR_SPEED < ae4_sq ? MAX_MOTOR_SPEED : ae4_sq < 0 ? 0 : fp_sqrt(ae4_sq);
+}
+
+/** =======================================================
+ *  height_control -- The control function that controls the Z force
+ *  =======================================================
+ *  If the height_control option is set, it will control the Z force
+ *  such that the height is maintained.
+ *  If the height_control option not set it will set the Z force
+ *  to the value of the lift set-point.
+ *  If the lift setpoint changes during height-control, the 
+ *  height_control option will be disabled.
+ *
+ *  Parameters:
+ *  - state: The state containing everything needed for the
+ *      control: inputs, internal state variables and
+ *      output.
+ *  Author: Koos Eerden
+**/
+void height_control(qc_state_t* state) {
+    static f8p8_t current_lift;
+    static f16p16_t height_setpoint;
+    static f16p16_t err_i;
+    f16p16_t Z_noclip, err_p;
+    const q32_t t = state->option.raw_control ? T_CONST_RAW : T_CONST;
+
+    if(state->option.height_control == true) {
+        if(prev_height_control == false) {   //check if height_control is just turned on
+            height_setpoint = state->pos.z;
+            current_lift = state->orient.lift;
+            err_i = state->force.Z;
+            printf("Height control turned on.\n");
+        } 
+        
+        if(current_lift == state->orient.lift){
+
+/*                pressure is a 11.16 bit value, as long as we use 5.x bit P values, it is impossible to overflow, however if we assume that 
+                the error values are relatively small (since we start the controller when we are around the setpoint)
+                a 8.8fp P value should work.*/
+
+            
+            /* execute a inner rate controller that keeps saz zero and a outer controller that keeps the pressure constant 
+
+                height_setpoint -->( + ) -Z-> |HEIGHT_P1> ---> ( + ) ---> | HEIGHT_P2 >------------> Force_z -> QR
+                                     ^                           ^                                              | |
+                                     |                           |---vspeed-------[ INT ]---saz---------------- | |
+                                     |----------heigth------------------------------------------------------------|
+            
+            */
+
+
+
+/************** place this outside this function
+                integrator:  Y[n] = (T/(2ti) + 1) X[n] + (T/(2ti) - 1) X[n-1]) + Y[n-1]
+
+                TVSPEED_INTEGRATOR_CONST = T / (2 ti)     means the time constant of the integrator.
+                when ti is low, there is a lot of integration, when ti is very high the integrator is not doing much    
+                
+                VSPEED_INTEGRATOR_CONST is in 16.16 format, saz is in 16.16 format so after multiplication 16 bit shift is needed.
+
+            velo_w  = FPMUL1(VSPEED_INTEGRATOR_CONST + 1 , -state->sensor.saz,16)   // (T/(2ti) + 1) X[n]
+                    + FPMUL1(VSPEED_INTEGRATOR_CONST - 1,  -saz_prev, 16)           // (T/(2ti) - 1) X[n-1])
+                    + vspeed_prev;                                                  //  Y[n-1]
+           
+            vspeed_prev = vspeed;
+            saz_prev = state->sensor.saz;
+*/
+
+            // state->force.Z = - (P2_HEIGHT * (rate + vspeed - vspeed_sp))  -  MIN_Z_FORCE;
+
+            /*   setpoint for the inner vspeed controller is calculated as:
+                 vspeed_sp = P1_HEIGHT *  (state->sensor.pressure_avg - pressure_setpoint)
+
+                P1_HEIGHT has P1_HEIGHT_FRAC_BITS bits for the fraction part, so result needs to be shifted by that amount of bits
+            */
+
+            err_p       = height_setpoint - state->pos.z;
+            err_i       = err_i + FP_MUL1(err_p, t * (P1_HEIGHT), P1_HEIGHT_FRAC_BITS + T_CONST_FRAC_BITS);
+            Z_noclip    = FP_MUL1(err_p, P2_HEIGHT, P2_HEIGHT_FRAC_BITS) + err_i;
+            state->force.Z = HC_Z_MAX < Z_noclip ? HC_Z_MAX : Z_noclip < HC_Z_MIN ? HC_Z_MIN : Z_noclip; 
+            err_i       = err_i + state->force.Z - Z_noclip;
+
+        } else {
+            // Q16.16 <-- Q8.8
+            state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+            state->option.height_control = false;
+            printf("Height control turned off! (Throttle was touched.)\n");
+        }
+
+    } else {
+        // Q16.16 <-- Q8.8
+        state->force.Z      = - FP_EXTEND(state->orient.lift, 16, 8);
+        if (prev_height_control == true)
+            printf("Height control turned off.\n");
+    }
+
+    prev_height_control = state->option.height_control;
 }
 
 /** =======================================================

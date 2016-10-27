@@ -151,7 +151,53 @@ void qc_kalman_filter(qc_state_t* state) {
     // Task 2: Updating offset terms.
     state->offset.sp += FP_MUL1(KALMAN_OFFSET_WEIGHT, phi_state_est - phi_meas_est, KALMAN_OFFSET_FRAC_BITS);
     state->offset.sr += FP_MUL1(KALMAN_OFFSET_WEIGHT, theta_state_est - theta_meas_est, KALMAN_OFFSET_FRAC_BITS);
+
+    qc_kalman_height(state);
 }
+
+void qc_kalman_height(qc_state_t* state) {
+    const int t = state->option.raw_control ? T_CONST_RAW : T_CONST;
+
+    // Task 1: estimate w velocity (based on accelerometer integration + pressure sensor derivation)
+
+    q32_t w_int_est = state->velo.w + FP_MUL1(t , 10 * state->sensor.saz, T_CONST_FRAC_BITS);
+    q32_t w_deriv_est = FP_MUL1(_1_T_PRES,
+        FP_MUL1(KALMAN_PRES , state->sensor.pressure_avg - state->sensor.prev_pressure_avg,
+        KALMAN_PRES_FRAC_BITS), _1_T_PRES_FRAC_BITS);
+    q32_t w_est = FP_MUL1(KALMAN_PRES_ACC_WEIGHT, w_int_est, KALMAN_PRES_WEIGHT_FRAC_BITS) +
+        FP_MUL1(KALMAN_PRES_PRS_WEIGHT, w_deriv_est, KALMAN_PRES_WEIGHT_FRAC_BITS);
+
+    static uint32_t counter = 0;
+    counter++;
+    if ((counter & 0xf) == 0)
+        ;//printf("w_int:%8"PRId32" w_der:%8"PRId32" w_avg:%8"PRId32"\n", w_int_est, w_deriv_est, w_est);
+
+    if (w_est < KALMAN_W_MIN) {
+        w_est = KALMAN_W_MIN;
+    } else if (KALMAN_W_MAX < w_est) {
+        w_est = KALMAN_W_MAX;
+    }
+    state->velo.w = w_est;
+
+    // Task 2: estimate z coordinate (based on speed + pressure sensor)
+
+    q32_t z_state_est = state->pos.z + FP_MUL1(t , state->velo.w, T_CONST_FRAC_BITS);
+    q32_t z_meas_est = FP_MUL3(KALMAN_PRES , state->sensor.pressure_avg, 0, KALMAN_PRES_FRAC_BITS, 0);
+    q32_t z_est = FP_MUL1(KALMAN_PRES_ACC_WEIGHT, z_state_est, KALMAN_PRES_WEIGHT_FRAC_BITS) +
+        FP_MUL1(KALMAN_PRES_PRS_WEIGHT, z_meas_est, KALMAN_PRES_WEIGHT_FRAC_BITS);
+
+    if ((counter & 0xf) == 0){
+        //printf("z_state:%8"PRId32" pravg:%"PRId32" z_meas:%9"PRId32" z_avg:%9"PRId32"\n", z_state_est, state->sensor.pressure_avg, z_meas_est, z_est);
+        //printf("pres:%9"PRId32" offset:%"PRId32"\n", state->sensor.pressure, state->offset.pressure);
+    }
+    if (z_est < KALMAN_Z_MIN) {
+        z_est = KALMAN_Z_MIN;
+    } else if (KALMAN_Z_MAX < z_est) {
+        z_est = KALMAN_Z_MAX;
+    }
+    state->pos.z = z_est;
+
+} 
 
 void qc_system_set_raw(qc_system_t* system, bool raw) {
     if (system->mode != MODE_0_SAFE) {
@@ -203,7 +249,7 @@ void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
 }
 
 void qc_system_log_data(qc_system_t* system) {
-    int pr_id, send_cnt = 0;
+    int send_cnt = 0;
     uint32_t bit_mask, index;
     for (bit_mask = 0x01, index = 0; bit_mask; bit_mask = bit_mask << 1, index++) {
         message_t msg;
@@ -236,67 +282,39 @@ void qc_system_log_data(qc_system_t* system) {
                 MESSAGE_AE3_VALUE(&msg) = system->state->motor.ae3;
                 MESSAGE_AE4_VALUE(&msg) = system->state->motor.ae4;
                 break;
-            case MESSAGE_TEMP_PRESSURE_ID:
-                MESSAGE_TEMP_VALUE(&msg) = system->state->sensor.temperature;
-                MESSAGE_PRESSURE_VALUE(&msg) = system->state->sensor.pressure;
-                break;
-            case MESSAGE_XYZPOS_ID:
-                MESSAGE_XPOS_VALUE(&msg) = system->state->pos.x;
-                MESSAGE_YPOS_VALUE(&msg) = system->state->pos.y;
-                MESSAGE_ZPOS_VALUE(&msg) = system->state->pos.z;
+            case MESSAGE_Z_Z_PRES_ID:
+                MESSAGE_ZPOS_VALUE(&msg) = FP_CHUNK(system->state->pos.z, 8, 16);
+                MESSAGE_ZFORCE_VALUE(&msg) = FP_CHUNK(system->state->force.Z, 8, 16);
+                MESSAGE_PRES_VALUE(&msg) = system->state->sensor.pressure;
                 break;
             case MESSAGE_PHI_THETA_PSI_ID:
                 MESSAGE_PHI_VALUE(&msg)     = FP_CHUNK(system->state->att.phi, 8, 16);
                 MESSAGE_THETA_VALUE(&msg)   = FP_CHUNK(system->state->att.theta, 8, 16);
                 MESSAGE_PSI_VALUE(&msg)     = FP_CHUNK(system->state->att.psi, 8, 16);
                 break;
-            case MESSAGE_XYZFORCE_ID:
-                MESSAGE_XFORCE_VALUE(&msg) = FP_CHUNK(system->state->force.X, 8, 16);
-                MESSAGE_YFORCE_VALUE(&msg) = FP_CHUNK(system->state->force.Y, 8, 16);
-                MESSAGE_ZFORCE_VALUE(&msg) = FP_CHUNK(system->state->force.Z, 8, 16);
-                break;
             case MESSAGE_LMN_ID:
                 MESSAGE_L_VALUE(&msg) = FP_CHUNK(system->state->torque.L, 8, 16);
                 MESSAGE_M_VALUE(&msg) = FP_CHUNK(system->state->torque.M, 8, 16);
                 MESSAGE_N_VALUE(&msg) = FP_CHUNK(system->state->torque.N, 8, 16);
-                break;
-            case MESSAGE_UVW_ID:
-                MESSAGE_U_VALUE(&msg) = FP_CHUNK(system->state->velo.u, 8, 16);
-                MESSAGE_V_VALUE(&msg) = FP_CHUNK(system->state->velo.v, 8, 16);
-                MESSAGE_W_VALUE(&msg) = FP_CHUNK(system->state->velo.w, 8, 16);
                 break;
             case MESSAGE_PQR_ID:
                 MESSAGE_P_VALUE(&msg) = FP_CHUNK(system->state->spin.p, 8, 16);
                 MESSAGE_Q_VALUE(&msg) = FP_CHUNK(system->state->spin.q, 8, 16);
                 MESSAGE_R_VALUE(&msg) = FP_CHUNK(system->state->spin.r, 8, 16);
                 break;
-            case MESSAGE_P12_ID:
-                MESSAGE_P1_VALUE(&msg) = system->state->trim.p1;
-                MESSAGE_P2_VALUE(&msg) = system->state->trim.p2;
-                MESSAGE_YAWP_VALUE(&msg) = system->state->trim.yaw_p;
-                break;
             case MESSAGE_S_ATT_ID:
                 MESSAGE_S_PHI_VALUE(&msg)   = FP_CHUNK(system->state->sensor.sphi, 8, 16);
                 MESSAGE_S_THETA_VALUE(&msg) = FP_CHUNK(system->state->sensor.stheta, 8, 16);
                 MESSAGE_S_PSI_VALUE(&msg)   = FP_CHUNK(system->state->sensor.spsi, 8, 16);
                 break;
-            case MESSAGE_PROFILE_0_CURR_ID:
-            case MESSAGE_PROFILE_1_CURR_ID:
-            case MESSAGE_PROFILE_2_CURR_ID:
-            case MESSAGE_PROFILE_3_CURR_ID:
-            case MESSAGE_PROFILE_4_CURR_ID:
-                pr_id = index - MESSAGE_PROFILE_0_CURR_ID;
-                MESSAGE_PROFILE_TIME_VALUE(&msg) = system->state->prof.pr[pr_id].last_delta;
-                MESSAGE_PROFILE_TAG_VALUE(&msg) = system->state->prof.pr[pr_id].last_tag;
+            case MESSAGE_PROFILE_ID:
+                MESSAGE_PROFILE_0_VALUE(&msg) = system->state->prof.pr[0].last_delta;
+                MESSAGE_PROFILE_1_VALUE(&msg) = system->state->prof.pr[1].last_delta;
+                MESSAGE_PROFILE_2_VALUE(&msg) = system->state->prof.pr[2].last_delta;
+                MESSAGE_PROFILE_3_VALUE(&msg) = system->state->prof.pr[3].last_delta;
                 break;
-            case MESSAGE_PROFILE_0_MAX_ID:
-            case MESSAGE_PROFILE_1_MAX_ID:
-            case MESSAGE_PROFILE_2_MAX_ID:
-            case MESSAGE_PROFILE_3_MAX_ID:
-            case MESSAGE_PROFILE_4_MAX_ID:
-                pr_id = index - MESSAGE_PROFILE_0_MAX_ID;
-                MESSAGE_PROFILE_TIME_VALUE(&msg) = system->state->prof.pr[pr_id].max_delta;
-                MESSAGE_PROFILE_TAG_VALUE(&msg) = system->state->prof.pr[pr_id].max_tag;
+            case MESSAGE_PROFILE_4_ID:
+                MESSAGE_PROFILE_4_VALUE(&msg) = system->state->prof.pr[4].last_delta;
                 break;
             default:
                 continue;

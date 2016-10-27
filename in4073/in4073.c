@@ -162,6 +162,7 @@ void process_dmp_data(void) {
     qc_state.sensor.sphi    = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), phi    , 0, 0, 0) - qc_state.offset.sphi;
     qc_state.sensor.stheta  = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), theta  , 0, 0, 0) - qc_state.offset.stheta;
     qc_state.sensor.spsi    = FP_MUL3((int32_t)FP_FLOAT(5.f, 0), psi    , 0, 0, 0);
+    qc_kalman_height(&qc_state);
 }
 
 void receive_commands(void) {

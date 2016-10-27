@@ -159,15 +159,28 @@
 // in offline no-joystick tests.
 #define YAW_SHIFT      2
 
+
 // Control loop time constant in seconds
 // 0.01s in Q16.16 format
 #define T_CONST_FRAC_BITS       10
 #define T_CONST                 ((q32_t) FP_FLOAT(0.01, T_CONST_FRAC_BITS))
 
+//minimal (absolute) Z force for which motors are turning. This is used by height-control 
+//its in f16p16_t format
+//TODO: tune this
+#define MIN_Z_FORCE  ((q32_t)FP_FLOAT(12, 16))
+
+// This determines the amount of pressure samples that are averaged in order to filter the pressure.
+// please note that if this value equals N, the number of samples equals 2^N
+#define PRESSURE_AVERAGE_SHIFT    4
+
 // Inverse of the control loop time constant in seconds
 // 1 / (0.01 [s]) = 1000 / 10 [1/s] in Q24.8 format.
 #define T_INV_FRAC_BITS         0
 #define T_INV                   ((q32_t)(FP_FRAC(1000, 10, T_INV_FRAC_BITS)))
+
+#define _1_T_PRES_FRAC_BITS     T_INV_FRAC_BITS
+#define _1_T_PRES               T_INV
 
 // Moment of inertia around the x, y, z axis (for L, M, N torque) [N m]
 // [N m] in Q24.8 format.
@@ -229,6 +242,10 @@
 //          = (Qx+y.27)) >> 13
 //          = Qz.14
 
+//barometer scale factor: 1 over 100
+//Its in F16P16 format
+#define BARO_SCALE_INV  FP_FRAC(1, 100, 16)
+
 //accelerometer scale factor: 1 over the amount of bits per G
 //Its in F16P16 format, meaning 1 over 16384 (= 0.000061035)
 #define ACC_G_SCALE_INV 4
@@ -273,6 +290,27 @@
 #define YAWP_DEFAULT    ((int32_t) FP_FLOAT(0.035f, YAWP_FRAC_BITS) + 24)
 #define YAWP_MIN        (-(YAWP_DEFAULT) + 1)
 
+
+// TODO tune this values and set them to the right size
+//Height control P values
+#define P1_HEIGHT_FRAC_BITS    0
+#define P1_HEIGHT              ((int32_t) FP_FLOAT(10.f, P1_HEIGHT_FRAC_BITS))
+
+#define P2_HEIGHT_FRAC_BITS    0
+#define P2_HEIGHT             ((int32_t) FP_FLOAT(8.f, P2_HEIGHT_FRAC_BITS))
+
+#define HC_AE_MIN       (350)
+#define HC_AE_MAX       (750)
+#define HC_AESQ_MIN     (HC_AE_MIN * HC_AE_MIN)
+#define HC_AESQ_MAX     (HC_AE_MAX * HC_AE_MAX)
+// Min and max are swapped because M1_4B is negative
+#define HC_Z_MIN        ((HC_AESQ_MAX * FP_FRAC(1, M1_4B, 8)))
+#define HC_Z_MAX        ((HC_AESQ_MIN * FP_FRAC(1, M1_4B, 8)))
+
+//16.16
+#define VSPEED_INTEGRATOR_CONST FP_MUL1(T_CONST , FP_FRAC(1, 100, 16),T_CONST_FRAC_BITS)
+
+
 // Kalman filter constants
 
 #define KALMAN_WEIGHT_FRAC_BITS      12
@@ -285,6 +323,22 @@
 
 #define KALMAN_OFFSET_FRAC_BITS 22
 #define KALMAN_OFFSET_WEIGHT    FP_MUL1((int32_t) FP_FLOAT(0.001, KALMAN_OFFSET_FRAC_BITS - KALMAN_WEIGHT_FRAC_BITS), KALMAN_ACC_WEIGHT, 0)
+
+// Height-estimator part of the KALMAN filter
+#define KALMAN_W_FRAC_BITS      16
+#define KALMAN_W_MAX            FP_INT(10, KALMAN_W_FRAC_BITS)
+#define KALMAN_W_MIN            ( - KALMAN_W_MAX)
+
+#define KALMAN_Z_FRAC_BITS      16
+#define KALMAN_Z_MAX            FP_INT(10, KALMAN_Z_FRAC_BITS)
+#define KALMAN_Z_MIN            ( - KALMAN_Z_MAX)
+
+#define KALMAN_PRES_FRAC_BITS       2
+#define KALMAN_PRES                 ((int32_t)FP_FLOAT(75 * 0.125, KALMAN_PRES_FRAC_BITS))
+
+#define KALMAN_PRES_WEIGHT_FRAC_BITS    12
+#define KALMAN_PRES_ACC_WEIGHT          ((q32_t) FP_FLOAT(0.1f, KALMAN_PRES_WEIGHT_FRAC_BITS))
+#define KALMAN_PRES_PRS_WEIGHT          (FP_INT(1, KALMAN_PRES_WEIGHT_FRAC_BITS) - KALMAN_PRES_ACC_WEIGHT)
 
 // IMU constants
 #define IMU_RAW_FREQ        1000

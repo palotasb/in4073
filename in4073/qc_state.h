@@ -67,7 +67,9 @@ typedef struct qc_state_sensor {
     f16p16_t    say;
     f16p16_t    saz;
     f8p8_t      temperature;
-    uint32_t    pressure;
+    f16p16_t    pressure;
+    f16p16_t    pressure_avg;
+    f16p16_t    prev_pressure_avg;
     f16p16_t    voltage;
     f16p16_t    voltage_avg;
 } qc_state_sensor_t;
@@ -93,6 +95,7 @@ typedef struct qc_state_offset {
     f16p16_t    saz;
     f16p16_t    sphi;
     f16p16_t    stheta;
+    f16p16_t    pressure;
     bool        calibrated;
 } qc_state_offset_t;
 
