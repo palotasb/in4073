@@ -197,6 +197,21 @@ void run_terminal(char* serial, char* js, char* virt_in, char* virt_out) {
 	 */
 
 	term_initio();
+
+	FILE* masks_file;
+	uint32_t tmsk=0, lmsk=0;
+	if(do_serial) {
+		masks_file = fopen(".masks-log.txt", "r+");
+		int result1;
+		if ((result1 = fscanf(masks_file, "%"SCNx32" %"SCNx32, &tmsk, &lmsk)) == 2)
+		{
+			fprintf(stderr, "Setting TELEMETRY MASK to 0x%"PRIx32" and LOG MASK to 0x%"PRIx32".\n", tmsk, lmsk);
+			serialcomm_quick_send(&sc, MESSAGE_SET_TELEMSK_ID, tmsk, 0);
+			serialcomm_quick_send(&sc, MESSAGE_SET_LOGMSK_ID, lmsk, 0);
+		} else {
+			fprintf(stderr, "Couldn't read saved masks, error = %d\n", result1);
+		}
+	}
 	
 	unsigned long long last_msg;
 
@@ -256,6 +271,10 @@ void run_terminal(char* serial, char* js, char* virt_in, char* virt_out) {
 						serialcomm_receive_char(&sc, (uint8_t) c);
 				}
 				read_keyboard(&command);
+				if (tx_frame.message.ID == MESSAGE_SET_TELEMSK_ID)
+					tmsk = tx_frame.message.value.v32[0];
+				if (tx_frame.message.ID == MESSAGE_SET_LOGMSK_ID)
+					lmsk = tx_frame.message.value.v32[0];
 			}
 
 			if (250 < time_get_ms() - last_msg) {
@@ -275,6 +294,11 @@ void run_terminal(char* serial, char* js, char* virt_in, char* virt_out) {
 
 	if(do_serial && !do_virt)
 		rs232_close();
+	if (do_serial) {
+		rewind(masks_file);
+		fprintf(masks_file, "%08"PRIx32" %08"PRIx32"\n", tmsk, lmsk);
+		fclose(masks_file);
+	}
 	if(do_virt)
 		virt_close();
 	if(do_js)
