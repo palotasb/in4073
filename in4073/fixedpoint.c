@@ -46,6 +46,10 @@ uint32_t fp_sqrt(uint32_t n) {
 // pi in q16.16 format
 #define PI_Q16 205887
 
+// Clip an angle in 16.16 format radians between -pi and +pi
+// Param in: angle: the angle
+// Returns the clipped angle in the same format
+// Author: Boldizsar Palotas
 f16p16_t fp_angle_clip(f16p16_t angle) {
     while (PI_Q16 < angle) {
         angle -= 2 * PI_Q16;
@@ -57,6 +61,10 @@ f16p16_t fp_angle_clip(f16p16_t angle) {
 }
 
 // Second-order approximation of arcsin(angle) where angle is in 16.16 format
+// Param in: angle: the NON-angle result actually of sin(something)
+// Returns: The approximation of asin(angle) = something
+// The approximation is good between -1 and 1.
+// asin(x) ~= x - x^3 / 3! + x^5/5! - ...
 f16p16_t fp_asin_t1(f16p16_t angle) {
     int32_t a2 = FP_MUL3(angle, angle, 4, 4, 8);
     int32_t a3 = FP_MUL3(angle, a2, 4, 4, 8);

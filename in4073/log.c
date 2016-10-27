@@ -64,15 +64,29 @@ static serialcomm_t* sc = 0;
 static qc_hal_t*     hal = 0;
 
 // Return address of ID of item No. i
+// ---
+// Parameters: i: index of item in the log.
+// Returns: The address
+// Author: Boldizsar Palotas
 uint32_t log_id(uint32_t i) {
 	return (i & ~0x03ul) * 36 + (i & 0x03ul);
 }
 
 // Return address of value of item No. i
+// ---
+// Parameters: i: index of item in the log.
+// Returns: The address
+// Author: Boldizsar Palotas
 uint32_t log_item(uint32_t i) {
 	return (i & ~0x03ul) * 36 + (i & 0x03ul) * 8 + 4;
 }
 
+// Initialize the log structure
+// ---
+// Parameters: h: The hal object to use to access the physical storage
+//	serialcomm: the comm object to use for log readback
+// Returns: true if there was an error
+// Author: Boldizsar Palotas
 bool log_init(qc_hal_t* h, serialcomm_t* serialcomm) {	
 	logsize = 0;
 	hal = h;
@@ -85,6 +99,11 @@ bool log_init(qc_hal_t* h, serialcomm_t* serialcomm) {
 	return result;
 }
 
+// Write a few values (one item) to the log
+// ---
+// Parameters: item: The items to write
+// Returns: True if there was an error
+// Author: Boldizsar Palotas
 bool log_write(message_t* item) {
 	if (LOG_MAX_ITEMS < logsize) {
 		printf("> Log full!\n");
@@ -102,6 +121,12 @@ bool log_write(message_t* item) {
 	}
 }
 
+// Read a few values (one item) from the log
+// ---
+// Parameters: item: The items to write
+// (out) item: The message object containing the values if no error
+// Returns: True if there was an error
+// Author: Boldizsar Palotas
 bool log_read(uint32_t index, message_t* item) {
 	if (LOG_MAX_ITEMS < index)
 		return false;
@@ -115,6 +140,11 @@ bool log_read(uint32_t index, message_t* item) {
 	}
 }
 
+// Read all values (all items) from the log and transmit to PC
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void log_readback(void) {
 	message_t msg;
 	printf("> Log read (sum %"PRIu32")\n", logsize);
@@ -134,6 +164,11 @@ void log_readback(void) {
 	log_reset();
 }
 
+// Reset the log
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Koos Eerden
 void log_reset(void) {
 	printf("> Log reset\n");
 	logsize = 0;

@@ -1,6 +1,7 @@
 #include "model.h"
 #include <math.h>
 
+// BP
 void model_step(model_t* m) {
     m->X = - sin(m->theta) * MODEL_G;
     m->Y = sin(m->phi) * MODEL_G;
@@ -31,6 +32,7 @@ void model_step(model_t* m) {
     m->psi = MODEL_T * m->r + m->psi;
 }
 
+// BP
 void model_init(model_t* m) {
     m->X = 0;
     m->Y = 0;

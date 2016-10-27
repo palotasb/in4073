@@ -62,6 +62,9 @@ static uint32_t time_get_us(void);
 bool timer_tick = false;
 unsigned long long timer_last_tick;
 
+
+// Simulation entry point
+// B Palotas
 int main(void) {
     int i;
     if ((i = init_all())) {
@@ -86,7 +89,8 @@ int main(void) {
     }
 }
 
-// Simulation-specific functions
+// Simulation-specific init functions
+// B Palotas
 int init_all(void) {
     is_test_device = true;
     qc_hal_init(&sim_hal);
@@ -113,6 +117,7 @@ int init_all(void) {
     return 0;
 }
 
+// B Palotas
 void init_modes(void) {
     mode_0_safe_init(&qc_mode_tables[MODE_0_SAFE]);
     mode_1_panic_init(&qc_mode_tables[MODE_1_PANIC]);
@@ -123,6 +128,7 @@ void init_modes(void) {
 }
 
 // Timing
+// BP
 bool sim_check_timer_flag(void) {
     unsigned long long t_us = time_get_us();
     if (10000 <= t_us - timer_last_tick) {
@@ -134,16 +140,19 @@ bool sim_check_timer_flag(void) {
     }
 }
 
+// BP
 void sim_clear_timer_flag(void) {
     timer_tick = false;
 }
 
 // Debug output
+// BP
 void sim_display(void) {
     // TODO display debug information
 }
 
 // Communication
+// BP
 int init_fifos(void) {
     errno = 0;
     if (mkfifo("/tmp/fifo_to_term", S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) {
@@ -173,6 +182,7 @@ int init_fifos(void) {
     return 0;
 }
 
+// BP
 int simulation_printf(const char* fmt, ...) {
     int i;
     va_list argptr;
@@ -187,6 +197,7 @@ int simulation_printf(const char* fmt, ...) {
     return i;
 }
 
+// BP
 void sim_comm_send_text(void) {
     message_value_t msgv;
     int i = 0;
@@ -206,6 +217,7 @@ void sim_comm_send_text(void) {
     strbuff_idx = 0;
 }
 
+// BP
 int sim_comm_getchar(void) {
     unsigned char c;
     int r;
@@ -224,6 +236,7 @@ int sim_comm_getchar(void) {
 }
 
 // Simulation HAL
+// BP
 void qc_hal_init(qc_hal_t* hal) {
     hal->enable_motors_fn = sim_enable_motors_fn;
     hal->get_inputs_fn = sim_get_inputs_fn;
@@ -241,10 +254,12 @@ void qc_hal_init(qc_hal_t* hal) {
     hal->get_time_us_fn = time_get_us;
 }
 
+// BP
 void sim_tx_byte_fn(uint8_t byte) {
     write(fifo_to_term, &byte, 1);
 }
 
+// BP
 void sim_get_inputs_fn(qc_state_t* state) {
     state->sensor.voltage = 1100;
     state->sensor.pressure = 100;
@@ -258,6 +273,7 @@ void sim_get_inputs_fn(qc_state_t* state) {
     qc_kalman_filter(state);
 }
 
+// BP
 void sim_set_outputs_fn(qc_state_t* state) {
     if (enable_motors) {
         model.ae1sq = state->motor.ae1 * state->motor.ae1;
@@ -272,24 +288,29 @@ void sim_set_outputs_fn(qc_state_t* state) {
     }
 }
 
+// BP
 void sim_enable_motors_fn(bool enable) {
     enable_motors = enable;
 }
 
+// BP
 void sim_rx_complete(message_t* message) {
     qc_command_rx_message(&qc_command, message);
 }
 
+// BP
 uint32_t time_get_us(void) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
     return (uint32_t)(ts.tv_sec * 1000000ull + ts.tv_nsec / 1000ull);
 }
 
+// BP
 bool sim_flash_init(void) {
     return true;
 }
 
+// BP
 bool sim_flash_read(uint32_t addr, uint8_t* buf, uint32_t size) {
     while (size--) {
         *buf++ = logbuff[addr++];
@@ -297,6 +318,7 @@ bool sim_flash_read(uint32_t addr, uint8_t* buf, uint32_t size) {
     return true;
 }
 
+// BP
 bool sim_flash_write(uint32_t addr, uint8_t* buf, uint32_t size) {
     while (size--) {
         logbuff[addr++] = *buf++;
@@ -304,8 +326,10 @@ bool sim_flash_write(uint32_t addr, uint8_t* buf, uint32_t size) {
     return true;
 }
 
+// BP
 bool sim_flash_erase(void) {
     return true;
 }
 
+// BP
 void sim_void(void) {}

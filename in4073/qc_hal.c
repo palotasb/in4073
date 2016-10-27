@@ -63,7 +63,7 @@ void qc_hal_tx_byte(uint8_t byte) {
  *  Parameters:
  *  - state: The qc_state_t variable to update with the
  *      sensor data.
- *  Author: Boldizsar Palotas
+ *  Author: Koos Eerden
 **/
 void qc_hal_get_inputs(qc_state_t* state) {
   
@@ -140,6 +140,8 @@ void qc_hal_set_outputs(qc_state_t* state) {
 **/
 void qc_hal_enable_motors(bool enable) {
     if (enable && motors_enabled == false) {
+        // Don't uncomment this. It will __REPROGRAM__ the **MOTORS**
+        // of the quadcopter...
       //  NVIC_EnableIRQ(TIMER1_IRQn);
         motors_enabled = true;
     }

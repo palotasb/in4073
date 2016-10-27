@@ -24,6 +24,8 @@ static void qc_command_set_lift_roll_pitch_yaw(qc_command_t* command,
  *  - tx_byte_fn: The function to transfer a single byte.
  *  - rx_complete_fn: The function to call after a
  *      received message. 
+ *  - system: The systom object to modify when specific
+ *      commands arrive.
  *  Author: Boldizsar Palotas
 **/
 void qc_command_init(qc_command_t* command,
@@ -182,6 +184,16 @@ void qc_command_set_lift_roll_pitch_yaw(qc_command_t* command,
     command->system->state->orient.yaw   = (yaw) << YAW_SHIFT;
 }
 
+/** =======================================================
+ *  qc_command_tick -- Check timeout of the comm channel
+ *  =======================================================
+ *  Send the QC into panic mode if no valid messages have
+ *  been received for a specific amount of time.
+ *
+ *  Parameters:
+ *  - command: Pointer to the command struct.
+ *  Author: Boldizsar Palotas
+**/
 void qc_command_tick(qc_command_t* command) {
     if (COMMAND_TIMEOUT < command->system->hal->get_time_us_fn() - command->timer) {
         printf("Panic because of comm timeout.\n");

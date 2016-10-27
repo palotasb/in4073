@@ -8,6 +8,9 @@
  *  Quadcopter system diagram
  *  -------------------------
  *
+ *  WARNING: this diagram is a bit outdated compared to how the
+ *  actual code evolved.
+ *
  *  +-----+
  *  | PC  |
  *  +-----+
@@ -88,7 +91,7 @@ static qc_mode_t active_mode = MODE_0_SAFE;
 static bool prev_height_control = false;
 
 /** =======================================================
- *  mode_5_full_init -- Initialise mode table for FULL.
+ *  mode_2_manual_init -- Initialise mode table for MANUAL mode.
  *  =======================================================
  *  Parameters:
  *  - mode_table: Pointer to the mode table to initialise.
@@ -102,7 +105,7 @@ void mode_2_manual_init(qc_mode_table_t* mode_table) {
 }
 
 /** =======================================================
- *  mode_5_full_init -- Initialise mode table for FULL.
+ *  mode_4_yaw_init -- Initialise mode table for YAW mode.
  *  =======================================================
  *  Parameters:
  *  - mode_table: Pointer to the mode table to initialise.
@@ -116,7 +119,7 @@ void mode_4_yaw_init(qc_mode_table_t* mode_table) {
 }
 
 /** =======================================================
- *  mode_5_full_init -- Initialise mode table for FULL.
+ *  mode_5_full_init -- Initialise mode table for FULL mode.
  *  =======================================================
  *  Parameters:
  *  - mode_table: Pointer to the mode table to initialise.

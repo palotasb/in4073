@@ -249,6 +249,14 @@ void serialcomm_send(serialcomm_t* sc) {
         0
     };
 
+    /* ---------------------------------------------------------------
+     * message_id_to_qc_name -- Returns the name of a PC2QC message
+     * ---------------------------------------------------------------
+     *  Parameters:
+     *      - id: The ID of the message
+     *  Returns: pointer to the string containing the name.
+     *  Author: Boldizsar Palotas
+     */
     const char * const message_id_to_qc_name(uint8_t id) {
         if (message_id_names_to_qc[id])
             return message_id_names_to_qc[id];
@@ -272,6 +280,14 @@ void serialcomm_send(serialcomm_t* sc) {
         0
     };
 
+    /* ---------------------------------------------------------------
+     * message_id_to_pc_name -- Returns the name of a QC2PC message
+     * ---------------------------------------------------------------
+     *  Parameters:
+     *      - id: The ID of the message
+     *  Returns: pointer to the string containing the name.
+     *  Author: Boldizsar Palotas
+     */
     const char * const message_id_to_pc_name(uint8_t id) {
         if (message_id_names_to_pc[id])
             return message_id_names_to_pc[id];

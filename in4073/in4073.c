@@ -49,6 +49,11 @@ uint32_t iteration = 0;
 uint32_t control_iteration = 0;
 bool is_test_device = false;
 
+// Main entry point and scheduler for various "tasks" in the quadcopter
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 int main(void) {
     init_all();
 
@@ -91,6 +96,11 @@ int main(void) {
     }
 }
 
+// TASK: Process sensor inputs and apply outputs. Also measure timing.
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 bool process_and_control(void) {
     // Start measuring pr0: Time from sensor interrupt until outputs are applied to the motor.
     profile_start_tag(&qc_state.prof.pr[0], get_time_us(), control_iteration);
@@ -117,6 +127,11 @@ bool process_and_control(void) {
     return finished;
 }
 
+// Process sensor inputs when in raw mode.
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 bool process_raw_data(void) {
     static int iter_count = 0;
     do {
@@ -141,6 +156,11 @@ bool process_raw_data(void) {
     return (sensor_fifo_count == 0);
 }
 
+// Process sensor inputs when using the DMP of the IMU
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void process_dmp_data(void) {
     int iter_count = 0;
     do {
@@ -166,11 +186,21 @@ void process_dmp_data(void) {
     qc_kalman_height(&qc_state);
 }
 
+// TASK to receive commands from PC
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void receive_commands(void) {
     while (rx_queue.count)
         serialcomm_receive_char(&serialcomm, dequeue(&rx_queue));
 }
 
+// TASK to measure the free time we have (and diagnose clogging)
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void idle_task(bool is_idle) {
     // This is used only to measure the time when the processor is
     // idle. If this time is very low or especially zero then we have
@@ -184,6 +214,11 @@ void idle_task(bool is_idle) {
     was_idle = is_idle;
 }
 
+// Initializes all drivers and objects.
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Mostly the original code, modified by Boldizsar Palotas
 void init_all(void) {
     is_test_device = NRF_FICR->DEVICEID[0] == TESTDEVICE_ID0 && NRF_FICR->DEVICEID[1] == TESTDEVICE_ID1;
     // Hardware init
@@ -214,6 +249,11 @@ void init_all(void) {
     qc_command.timer = qc_hal.get_time_us_fn();
 }
 
+// Initialize the mode tables for all modes
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void init_modes(void) {
     mode_0_safe_init(&qc_mode_tables[MODE_0_SAFE]);
     mode_1_panic_init(&qc_mode_tables[MODE_1_PANIC]);
@@ -223,6 +263,11 @@ void init_modes(void) {
     mode_5_full_init(&qc_mode_tables[MODE_5_FULL_CONTROL]);
 }
 
+// TASK: transmit text from internal buffer to PC (8 chars at a time)
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void transmit_text(void) {
     message_value_t msgv;
     msgv.v32[0] = 0;
@@ -233,10 +278,27 @@ void transmit_text(void) {
     serialcomm_quick_send(&serialcomm, MESSAGE_TEXT_ID, msgv.v32[0], msgv.v32[1]);
 }
 
+// Dummy function to route received messages to the qc_command
+// message receiver entry point.
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void qc_rx_complete(message_t* message) {
     qc_command_rx_message(&qc_command, message);
 }
 
+// LED display implementation
+// Blue: continuous ~1 Hz blinking when QC is operating normally
+//      (otherwise see the IRQ handlers in this file)
+// Green: Blinks as many times at a high rate as the number of the
+// active mode (no blinks in safe mode and off in panic)
+// Yellow: Signals if idle task time is low (below 0,1 ms)
+// Red: Signals panic mode
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void led_display(void) {
     static uint32_t counter = 0;
     static const uint32_t colors[] = {BLUE, GREEN, YELLOW, RED};
@@ -291,6 +353,11 @@ void led_display(void) {
     //    printf("> I'm alive!\n");
 }
 
+// Signals that an unhandled exception occured (see LED values)
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void Default_Handler(void) {
     nrf_gpio_pin_set(BLUE);
     nrf_gpio_pin_set(GREEN);
@@ -302,6 +369,11 @@ void Default_Handler(void) {
     }
 }
 
+// Signals that an unhandled exception occured (see LED values)
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void NMI_Handler (void) {
     nrf_gpio_pin_clear(BLUE);
     nrf_gpio_pin_set(GREEN);
@@ -313,6 +385,11 @@ void NMI_Handler (void) {
     }
 }
 
+// Signals that an unhandled exception occured (see LED values)
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void HardFault_Handler (void) {
     nrf_gpio_pin_set(BLUE);
     nrf_gpio_pin_clear(GREEN);
@@ -324,6 +401,11 @@ void HardFault_Handler (void) {
     }
 }
 
+// Signals that an unhandled exception occured (see LED values)
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void SVC_Handler (void) {
     nrf_gpio_pin_clear(BLUE);
     nrf_gpio_pin_clear(GREEN);
@@ -335,6 +417,11 @@ void SVC_Handler (void) {
     }
 }
 
+// Signals that an unhandled exception occured (see LED values)
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void PendSV_Handler (void) {
     nrf_gpio_pin_set(BLUE);
     nrf_gpio_pin_set(GREEN);
@@ -346,6 +433,11 @@ void PendSV_Handler (void) {
     }
 }
 
+// Signals that an unhandled exception occured (see LED values)
+// ---
+// Parameters: none
+// Returns: nothing
+// Author: Boldizsar Palotas
 void SysTick_Handler (void) {
     nrf_gpio_pin_clear(BLUE);
     nrf_gpio_pin_set(GREEN);

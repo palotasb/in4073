@@ -25,6 +25,8 @@ extern uint32_t iteration;
  *      processing and dispatching of incoming commands.
  *  - serialcomm: Pointer to the serialcomm_t struct that
  *      controls the serial communication.
+ *  - rx_complete_fn: The function to be called when a
+ *      message is received succesfully.
  *  - hal: Pointer to the qc_hal_t quadcopter hardware
  *      abstraction layer.
  *  Author: Boldizsar Palotas
@@ -103,6 +105,17 @@ void qc_system_step(qc_system_t* system) {
     system->hal->set_outputs_fn(system->state);
 }
 
+/** =======================================================
+ *  qc_kalman_filter -- Predict/filter attitude and spin bias
+ *  =======================================================
+ *  Predicts the values of phi, theta and psi and also
+ *  continously updates the offset (bias) values of sp and
+ *  sq based on the accelerometer readings.
+ *
+ *  Parameters:
+ *  - state: The state in which to do the filtering.
+ *  Author: Boldizsar Palotas
+**/
 void qc_kalman_filter(qc_state_t* state) {
     // Task 1: Estimate attitude angles phi and theta
     // ----------------------------------------------
@@ -155,6 +168,18 @@ void qc_kalman_filter(qc_state_t* state) {
     qc_kalman_height(state);
 }
 
+/** =======================================================
+ *  qc_kalman_height -- Predict/filter z coordinate and w.
+ *  =======================================================
+ *  Predicts the values of the vertical position in the QC
+ *  frame (higher values towards the ground) based on mostly
+ *  the pressure sensor readings (and the accelerometer a
+ *  bit).
+ *
+ *  Parameters:
+ *  - state: The state in which to do the filtering.
+ *  Author: Boldizsar Palotas
+**/
 void qc_kalman_height(qc_state_t* state) {
     const int t = state->option.raw_control ? T_CONST_RAW : T_CONST;
 
@@ -197,8 +222,19 @@ void qc_kalman_height(qc_state_t* state) {
     }
     state->pos.z = z_est;
 
-} 
+}
 
+/** =======================================================
+ *  qc_system_set_raw -- Set the raw mode of the QC.
+ *  =======================================================
+ *  Tries setting the raw control option to the desired
+ *  value. If this is not possible, return without change.
+ *
+ *  Parameters:
+ *  - system: The system to apply the change to.
+ *  - raw: The desired value.
+ *  Author: Boldizsar Palotas
+**/
 void qc_system_set_raw(qc_system_t* system, bool raw) {
     if (system->mode != MODE_0_SAFE) {
         printf("Not in safe mode, not changing raw mode!\n");
@@ -248,6 +284,16 @@ void qc_system_set_mode(qc_system_t* system, qc_mode_t mode) {
         system->mode | (system->state->sensor.voltage << 16) );
 }
 
+/** =======================================================
+ *  qc_system_log_data -- Do logging and telemetry collection.
+ *  =======================================================
+ *  Logs and/or sends the desired telemetry based on the bit
+ *  mask set by the user.
+ *
+ *  Parameters:
+ *  - system: The system from which to log the data.
+ *  Author: Boldizsar Palotas
+**/
 void qc_system_log_data(qc_system_t* system) {
     int send_cnt = 0;
     uint32_t bit_mask, index;
