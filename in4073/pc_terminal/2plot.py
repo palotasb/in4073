@@ -100,13 +100,13 @@ class SubplotAnimation(animation.TimedAnimation):
         self.axes_2 = [self.ax_setpoint, self.ax_att, self.ax_spin, self.ax_torque, self.ax_motor]
 
 
-        self.ax_pos      = fig.add_subplot(5, 6, 5)
-        self.ax_velo     = fig.add_subplot(5, 6, 6)
+        self.ax_pos     = fig.add_subplot(5, 3, 3)
+        #self.ax_velo     = fig.add_subplot(5, 6, 6)
         self.ax_satt     = fig.add_subplot(5, 3, 6)
         self.ax_sp       = fig.add_subplot(5, 3, 9)
         self.ax_sacc     = fig.add_subplot(5, 3, 12)
         self.ax_force    = fig.add_subplot(5, 3, 15)
-        self.axes_3 = [self.ax_pos, self.ax_velo, self.ax_satt, self.ax_sp, self.ax_sacc, self.ax_force]
+        self.axes_3 = [self.ax_pos, self.ax_force, self.ax_satt, self.ax_sp, self.ax_sacc]
 
         self.axes_all = self.axes_1 + self.axes_2 + self.axes_3
 
@@ -127,11 +127,12 @@ class SubplotAnimation(animation.TimedAnimation):
         self.ax_prof.set_yscale('log')
 
         self.ax_pos.set_ylabel('Pos [m]')
-        self.axes_autoscale = self.axes_autoscale + [self.ax_pos]
-        self.ax_velo.set_ylabel('Velo [m/s]')
-        self.ax_velo.set_ylim(-3, 3)
-        self.ax_force.set_ylabel('Force [N]')
-        self.ax_force.set_ylim(-5, 5)
+        self.ax_pos.set_ylim(2, -5)
+        #self.axes_autoscale = self.axes_autoscale + [self.ax_pos]
+        #self.ax_velo.set_ylabel('Velo [m/s]')
+        #self.ax_velo.set_ylim(-3, 3)
+        self.ax_force.set_ylabel('Z [N]')
+        self.ax_force.set_ylim(-10, 1)
         self.ax_setpoint.set_ylabel('Setpoints [?]')
         self.ax_setpoint.set_ylim(-0.6, 0.6)
         self.ax_motor.set_ylabel('Motor')
@@ -177,22 +178,22 @@ class SubplotAnimation(animation.TimedAnimation):
             self.ax_prof.add_line(l)
         self.lines_1 = [self.line_mode, self.line_voltage, self.line_pressure, self.line_temp] + self.lines_prof
 
-        self.line_x = Line2D([], [], color=c1, label='x')
-        self.line_y = Line2D([], [], color=c2, label='y')
+        #self.line_x = Line2D([], [], color=c1, label='x')
+        #self.line_y = Line2D([], [], color=c2, label='y')
         self.line_z = Line2D([], [], color=c3, label='z')
-        self.lines_pos = [self.line_x, self.line_y, self.line_z]
+        self.lines_pos = [self.line_z]
         for l in self.lines_pos:
             self.ax_pos.add_line(l)
-        self.line_u = Line2D([], [], color=c1, label='u')
-        self.line_v = Line2D([], [], color=c2, label='v')
-        self.line_w = Line2D([], [], color=c3, label='w')
-        self.lines_velo = [self.line_u, self.line_v, self.line_w]
-        for l in self.lines_velo:
-            self.ax_velo.add_line(l)
-        self.line_X = Line2D([], [], color=c1, label='X')
-        self.line_Y = Line2D([], [], color=c2, label='Y')
+        #self.line_u = Line2D([], [], color=c1, label='u')
+        #self.line_v = Line2D([], [], color=c2, label='v')
+        #self.line_w = Line2D([], [], color=c3, label='w')
+        #self.lines_velo = [self.line_u, self.line_v, self.line_w]
+        #for l in self.lines_velo:
+        #    self.ax_velo.add_line(l)
+        #self.line_X = Line2D([], [], color=c1, label='X')
+        #self.line_Y = Line2D([], [], color=c2, label='Y')
         self.line_Z = Line2D([], [], color=c3, label='Z')
-        self.lines_force = [self.line_X, self.line_Y, self.line_Z]
+        self.lines_force = [self.line_Z]
         for l in self.lines_force:
             self.ax_force.add_line(l)
         self.line_lift  = Line2D([], [], color=c4, label='lift')
@@ -209,7 +210,7 @@ class SubplotAnimation(animation.TimedAnimation):
         self.lines_motor = [self.line_ae1, self.line_ae2, self.line_ae3, self.line_ae4]
         for l in self.lines_motor:
             self.ax_motor.add_line(l)
-        self.lines_2 = self.lines_pos + self.lines_velo + self.lines_force + self.lines_setpoint + self.lines_motor
+        self.lines_2 = self.lines_pos + self.lines_force + self.lines_setpoint + self.lines_motor
         
         self.line_phi   = Line2D([], [], color=c1, label='phi')
         self.line_theta = Line2D([], [], color=c2, label='theta')
@@ -295,21 +296,21 @@ class SubplotAnimation(animation.TimedAnimation):
         self.put_word(words[17], self.v_temp, self.line_temp)
         self.put_word(words[18], self.v_pressure, self.line_pressure)
         self.put_word(words[19], self.v_voltage, self.line_voltage)
-        self.put_word(words[20], self.v_x, self.line_x)
-        self.put_word(words[21], self.v_y, self.line_y)
+        #self.put_word(words[20], self.v_x, self.line_x)
+        #self.put_word(words[21], self.v_y, self.line_y)
         self.put_word(words[22], self.v_z, self.line_z)
         self.put_word(words[23], self.v_phi, self.line_phi)
         self.put_word(words[24], self.v_theta, self.line_theta)
         self.put_word(words[25], self.v_psi, self.line_psi)
-        self.put_word(words[26], self.v_X, self.line_X)
-        self.put_word(words[27], self.v_Y, self.line_Y)
+        #self.put_word(words[26], self.v_X, self.line_X)
+        #self.put_word(words[27], self.v_Y, self.line_Y)
         self.put_word(words[28], self.v_Z, self.line_Z)
         self.put_word(words[29], self.v_L, self.line_L)
         self.put_word(words[30], self.v_M, self.line_M)
         self.put_word(words[31], self.v_N, self.line_N)
-        self.put_word(words[32], self.v_u, self.line_u)
-        self.put_word(words[33], self.v_v, self.line_v)
-        self.put_word(words[34], self.v_w, self.line_w)
+        #self.put_word(words[32], self.v_u, self.line_u)
+        #self.put_word(words[33], self.v_v, self.line_v)
+        #self.put_word(words[34], self.v_w, self.line_w)
         self.put_word(words[35], self.v_p, self.line_p)
         self.put_word(words[36], self.v_q, self.line_q)
         self.put_word(words[37], self.v_r, self.line_r)
