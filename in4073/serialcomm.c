@@ -257,41 +257,19 @@ void serialcomm_send(serialcomm_t* sc) {
     }
 
     static const char * const message_id_names_to_pc[256] = {
-        "TIME_MODE_VOLTAGE", // 0
-        "SPQR",
-        "SAXYZ",
-        "S_ATT",
-        "AE1234",
-        "LMN", // 5
-        "PQR",
-        "PHI_THETA_PSI",
+        "TIME MODE VOLTAGE", // 0
+        "SP SQ SR",
+        "SAX SAY SAZ",
+        "SPHI STHETA SPSI",
+        "AE1-4",
+        "L M N", // 5
+        "P Q R",
+        "PHI THETA PSI",
         "SETPOINT",
-        "XYZFORCE",
-        "UVW", // 10
-        "XYZPOS",
-        "TEMP_PRESSURE",
-        "P12",
-        0, // 14
-        0, // 15
-        "MESSAGE_PROFILE_0_CURR_ID", // 16
-        "MESSAGE_PROFILE_1_CURR_ID",
-        "MESSAGE_PROFILE_2_CURR_ID",
-        "MESSAGE_PROFILE_3_CURR_ID",
-        "MESSAGE_PROFILE_4_CURR_ID",
-        "MESSAGE_PROFILE_0_MAX_ID", // 21
-        "MESSAGE_PROFILE_1_MAX_ID",
-        "MESSAGE_PROFILE_2_MAX_ID",
-        "MESSAGE_PROFILE_3_MAX_ID",
-        "MESSAGE_PROFILE_4_MAX_ID",
-        0, // 26
-        0, // 27
-        0, // 28
-        0, // 29
-        0, // 30
-        0, // 31,
-        "LOG_END", // 32
-        "LOG_START", // 33
-        "TEXT" // 34
+        "Z FORCE POS PRESSURE",
+        "PROFILE 0-3",
+        "PROFILE 4",
+        0
     };
 
     const char * const message_id_to_pc_name(uint8_t id) {
