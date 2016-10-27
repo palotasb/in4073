@@ -238,6 +238,11 @@ void height_control(qc_state_t* state) {
 
     if(state->option.height_control == true) {
         if(prev_height_control == false) {   //check if height_control is just turned on
+            if (state->force.Z < HC_Z_MIN || HC_Z_MAX < state->force.Z) {
+                state->option.height_control = false;
+                printf("Height control still off because lift is out of bounds.\n");
+                return;
+            }
             height_setpoint = state->pos.z;
             current_lift = state->orient.lift;
             err_i = state->force.Z;
