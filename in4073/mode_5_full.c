@@ -311,9 +311,9 @@ void height_control(qc_state_t* state) {
 
 
 
-void acc_filer(qc_state_t* state) {
+void acc_filter(qc_state_t* state) {
 
-    #define ACC_FILTER_CONST_A  ((f16p16_t) FP_FLOAT(0.239067, 16));
+    #define ACC_FILTER_CONST_A  ((f16p16_t) FP_FLOAT(0.239067, 16))
     #define ACC_FILTER_CONST_B  1
 
     static f16p16_t    sax_p = 0;
