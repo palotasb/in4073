@@ -318,6 +318,40 @@ void height_control(qc_state_t* state) {
     prev_height_control = state->option.height_control;
 }
 
+
+
+void acc_filter(qc_state_t* state) {
+
+    #define ACC_FILTER_CONST_A  ((f16p16_t) FP_FLOAT(0.3858, 16))
+    #define ACC_FILTER_CONST_B  1
+
+    static f16p16_t    sax_p = 0;
+    static f16p16_t    say_p = 0;
+    static f16p16_t    saz_p = 0;
+    f16p16_t    sax_n;
+    f16p16_t    say_n;
+    f16p16_t    saz_n;
+
+    sax_n = state->sensor.sax;
+    sax_p -= sax_p >> 3;
+    sax_p += sax_n >> 3;
+    state->sensor.sax = sax_p;
+
+    say_n = state->sensor.say;
+    say_p -= say_p >> 3;
+    say_p += say_n >> 3;
+    state->sensor.say = say_p;
+
+    saz_n = state->sensor.saz;
+    saz_p -= saz_p >> 3;
+    saz_p += saz_n >> 3;
+    state->sensor.saz = saz_p;
+
+
+}
+
+
+
 /** =======================================================
  *  trans_fn -- Mode transition function.
  *  =======================================================
